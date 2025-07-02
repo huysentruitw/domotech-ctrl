@@ -1,12 +1,11 @@
 #include "esp_wifi.h"
 #include "esp_event.h"
 #include "esp_log.h"
+#include "driver/gpio.h"
 #include "nvs_flash.h"
 #include "freertos/event_groups.h"
 #include "esp_http_server.h"
-
-#define WIFI_SSID "***"
-#define WIFI_PASS "***"
+#include "secrets.h"
 
 static EventGroupHandle_t wifi_event_group;
 #define WIFI_CONNECTED_BIT BIT0
@@ -68,8 +67,36 @@ httpd_handle_t start_webserver(void) {
     return server;
 }
 
+#define LED_GPIO GPIO_NUM_2
+
+void led_toggle_task(void *arg) {
+    gpio_reset_pin(LED_GPIO);
+    gpio_set_direction(LED_GPIO, GPIO_MODE_OUTPUT);
+
+    while (1) {
+        gpio_set_level(LED_GPIO, 1); // Turn LED on
+        vTaskDelay(pdMS_TO_TICKS(500));
+
+        gpio_set_level(LED_GPIO, 0); // Turn LED off
+        vTaskDelay(pdMS_TO_TICKS(500));
+    }
+
+    // Optional: cleanup (never reached unless the task is explicitly deleted)
+    vTaskDelete(NULL);
+}
+
 extern "C" void app_main() {
-    nvs_flash_init();     // Required for Wi-Fi
-    wifi_init_sta();      // Connect to Wi-Fi
-    start_webserver();    // Launch HTTP server
+    nvs_flash_init();       // Required for Wi-Fi
+    wifi_init_sta();        // Connect to Wi-Fi
+
+    xTaskCreate(
+        led_toggle_task,    // Task function
+        "LED toggle",       // Name (for debugging)
+        4096,               // Stack size in bytes
+        NULL,               // Task parameter
+        5,                  // Task priority (higher = more important)
+        NULL                // Optional handle
+    );
+
+    start_webserver();      // Launch HTTP server
 }

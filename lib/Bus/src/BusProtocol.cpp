@@ -6,12 +6,12 @@
 
 #define REPLY_BACKOFF_DELAY_US     500
 
-BusProtocol::BusProtocol(BusDriver& driver)
+BusProtocol::BusProtocol(const BusDriver& driver)
     : driver(driver)
 {
 }
 
-ScanResponse BusProtocol::Poll(const uint8_t address, const uint8_t retries)
+ScanResponse BusProtocol::Poll(const uint8_t address, const uint8_t retries) const
 {
     for (uint8_t i = 0; i <= retries; i++)
     {
@@ -24,7 +24,7 @@ ScanResponse BusProtocol::Poll(const uint8_t address, const uint8_t retries)
     return ScanResponse { .Success = false };
 }
 
-ScanResponse BusProtocol::Exchange(const uint8_t address, const uint16_t data, const uint8_t retries)
+ScanResponse BusProtocol::Exchange(const uint8_t address, const uint16_t data, const uint8_t retries) const
 {
     for (uint8_t i = 0; i <= retries; i++)
     {
@@ -37,7 +37,7 @@ ScanResponse BusProtocol::Exchange(const uint8_t address, const uint16_t data, c
     return ScanResponse { .Success = false };
 }
 
-ScanResponse BusProtocol::ExchangeInternal(const uint8_t address, const uint16_t data, const bool forceDataExchange)
+ScanResponse BusProtocol::ExchangeInternal(const uint8_t address, const uint16_t data, const bool forceDataExchange) const
 {
     this->driver.FlushInput();
 

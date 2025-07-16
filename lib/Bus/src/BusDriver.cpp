@@ -1,6 +1,9 @@
+#ifndef NATIVE_BUILD
+
 #include "driver/gpio.h"
 #include "driver/uart.h"
 #include "esp_rom_sys.h"
+
 #include "BusDriver.h"
 
 #define READ_TIMEOUT_MS   16
@@ -12,7 +15,7 @@
 
 #undef AUTO_DE
 
-void BusDriver::Init()
+void BusDriver::Init() const
 {
     // Configure UART2 for RS485 (no parity, 1 stop bit, 8 data bits)
     #pragma GCC diagnostic push
@@ -45,7 +48,7 @@ void BusDriver::Init()
     ESP_ERROR_CHECK(uart_set_rx_timeout(UART_PORT, 1));
 }
 
-void BusDriver::WriteBytes(const uint8_t* data, const uint16_t len)
+void BusDriver::WriteBytes(const uint8_t* data, const uint16_t len) const
 {
 #ifndef AUTO_DE    
     gpio_set_level(DE_PIN, 1);
@@ -64,12 +67,39 @@ void BusDriver::WriteBytes(const uint8_t* data, const uint16_t len)
 #endif
 }
 
-bool BusDriver::ReadBytes(uint8_t* data, const uint16_t len)
+bool BusDriver::ReadBytes(uint8_t* data, const uint16_t len) const
 {
     return uart_read_bytes(UART_PORT, data, len, pdMS_TO_TICKS(READ_TIMEOUT_MS)) == len;
 }
 
-void BusDriver::FlushInput()
+void BusDriver::FlushInput() const
 {
     uart_flush_input(UART_PORT);
 }
+
+#else // NATIVE_BUILD
+
+#include "BusDriver.h"
+
+void BusDriver::Init() const
+{
+    // No-op for native build
+}
+
+void BusDriver::WriteBytes(const uint8_t* data, const uint16_t len) const
+{
+    // No-op for native build
+}
+
+bool BusDriver::ReadBytes(uint8_t* data, const uint16_t len) const
+{
+    // No-op for native build
+    return true;
+}
+
+void BusDriver::FlushInput() const
+{
+    // No-op for native build
+}
+
+#endif // NATIVE_BUILD

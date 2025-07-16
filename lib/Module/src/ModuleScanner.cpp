@@ -1,7 +1,11 @@
 #include <memory>
-#include "ModuleScanner.h"
 
+#ifndef NATIVE_BUILD
 #include "freertos/FreeRTOS.h"
+#endif
+
+#include "ModuleFactory.h"
+#include "ModuleScanner.h"
 
 ModuleScanner::ModuleScanner(BusProtocol& bus)
     : bus(bus)
@@ -14,16 +18,21 @@ std::vector<std::unique_ptr<ModuleBase>> ModuleScanner::DetectModules()
 
     for (uint8_t address = 1; address < 128; address++)
     {
-        auto response = bus.Exchange(address, 0, 3);
+        auto response = bus.Exchange(address, 0);
 
         if (!response.Success || !response.RespondedWithTypeAndData)
             continue;
 
-        std::unique_ptr<ModuleBase> module;
-        module = std::make_unique<ModuleBase>(address, response.ModuleType);
+        auto module = ModuleFactory::CreateModule((ModuleType)response.ModuleType, address, response.Data);
+
+        if (module == nullptr)
+            continue; // Module type not recognized, skip this address
+
         foundModules.push_back(std::move(module));
 
+#ifndef NATIVE_BUILD        
         vTaskDelay(1);  // Let other tasks run, then resume
+#endif
     }
 
     return foundModules;

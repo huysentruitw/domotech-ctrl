@@ -1,17 +1,23 @@
 #pragma once
 
 #include <stdint.h>
+#include <BusProtocol.h>
+#include <Node.h>
 #include "ModuleType.h"
 
-class ModuleBase
+class ModuleBase : public Node
 {
 public:
-    ModuleBase(uint8_t address, ModuleType moduleType);
+    ModuleBase(const uint8_t address, const ModuleType moduleType);
 
-    virtual void Process();
+    virtual bool Process(const BusProtocol& bus) const = 0;
 
-    uint8_t GetAddress();
-    ModuleType GetType();
+    uint8_t GetAddress() const;
+    ModuleType GetType() const;
+
+protected:
+    ScanResponse Poll(const BusProtocol& bus) const;
+    ScanResponse Exchange(const BusProtocol& bus, const uint16_t data) const;
 
 private:
     const uint8_t address;

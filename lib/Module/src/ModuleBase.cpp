@@ -1,21 +1,27 @@
 #include "ModuleBase.h"
 
-ModuleBase::ModuleBase(uint8_t address, ModuleType type)
-    : address(address), type(type)
+ModuleBase::ModuleBase(const uint8_t address, const ModuleType type)
+    : address(address)
+    , type(type)
 {
 }
 
-uint8_t ModuleBase::GetAddress()
+ScanResponse ModuleBase::Poll(const BusProtocol& bus) const
+{
+    return bus.Poll(this->address);
+}
+
+ScanResponse ModuleBase::Exchange(const BusProtocol& bus, const uint16_t data) const
+{
+    return bus.Exchange(this->address, data);
+}
+
+uint8_t ModuleBase::GetAddress() const
 {
     return this->address;
 }
 
-ModuleType ModuleBase::GetType()
+ModuleType ModuleBase::GetType() const
 {
     return this->type;
-}
-
-void ModuleBase::Process()
-{
-    // Default behavior (can be overridden by derived classes)
 }

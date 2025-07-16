@@ -2,6 +2,7 @@
 #include <format>
 #include <BusDriver.h>
 #include <ModuleScanner.h>
+#include <Pin.h>
 
 #include "esp_wifi.h"
 #include "esp_event.h"

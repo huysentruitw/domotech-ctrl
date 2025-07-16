@@ -1,7 +1,8 @@
 #include "BusProtocol.h"
+
+#ifndef NATIVE_BUILD
 #include "esp_rom_sys.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
+#endif
 
 #define REPLY_BACKOFF_DELAY_US     500
 
@@ -68,9 +69,11 @@ ScanResponse BusProtocol::ExchangeInternal(const uint8_t address, const uint16_t
     if ((responseByte & 0xF0) == 0x80)
     {
         parity1 ^= responseByte;
-        ModuleType moduleType = (ModuleType)(responseByte & 0x0F);
+        uint8_t moduleType = responseByte & 0x0F;
 
+#ifndef NATIVE_BUILD
         esp_rom_delay_us(REPLY_BACKOFF_DELAY_US);
+#endif
 
         uint8_t sendBuffer[4] = { 0x90, 0x90, 0x90, 0x90 };
         for (int i = 0; i < 4; i++)
@@ -114,7 +117,9 @@ ScanResponse BusProtocol::ExchangeInternal(const uint8_t address, const uint16_t
         parity2 &= 0x0F;
         parity2 |= 0xB0; 
 
+#ifndef NATIVE_BUILD
         esp_rom_delay_us(REPLY_BACKOFF_DELAY_US);
+#endif
 
         if (success)
         {

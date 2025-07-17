@@ -1,0 +1,47 @@
+#include "PushButtonModule.h"
+
+static const uint8_t ButtonMasks8[8] = { 0x10, 0x20, 0x40, 0x80, 0x08, 0x04, 0x02, 0x01 };
+
+PushButtonModule::PushButtonModule(const uint8_t address, const uint16_t initialData)
+    : ModuleBase(address, ModuleType::PushButtons)
+    , numberOfButtons((initialData >> 12) & 0x0F)
+{
+    for (uint8_t i = 0; i < this->numberOfButtons; ++i)
+        this->buttonPins.push_back(std::make_shared<OutputPin<bool>>(false));
+}
+
+bool PushButtonModule::Process(const BusProtocol& bus)
+{
+    auto response = this->hasPressedButtons ? this->Exchange(bus, 0x06) : this->Poll(bus);
+
+    if (!response.Success)
+        return false;
+
+    if (response.RespondedWithTypeAndData)
+    {
+        for (uint8_t i = 0; i < this->numberOfButtons; ++i)
+            this->buttonPins[i]->SetState(this->MapButtonState(i, response.Data));
+
+        this->hasPressedButtons = (response.Data & 0x0FFF) != 0;
+    }
+
+    return true;
+}
+
+std::vector<std::weak_ptr<OutputPin<bool>>> PushButtonModule::GetDigitalOutputPins() const
+{
+    std::vector<std::weak_ptr<OutputPin<bool>>> outputPins;
+    for (const auto& pin : buttonPins)
+        outputPins.push_back(pin);
+    return outputPins;
+}
+
+bool PushButtonModule::MapButtonState(const uint8_t buttonIndex, const uint16_t data) const
+{
+    if (this->numberOfButtons == 8)
+    {
+        return (data & ButtonMasks8[buttonIndex]) != 0;
+    }
+
+    return false;
+}

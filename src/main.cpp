@@ -2,7 +2,8 @@
 #include <format>
 #include <BusDriver.h>
 #include <ModuleScanner.h>
-#include <Pin.h>
+#include <Modules/PushButtonModule.h>
+#include <Pins.h>
 
 #include "esp_wifi.h"
 #include "esp_event.h"
@@ -15,6 +16,9 @@
 BusDriver driver;
 BusProtocol bus(driver);
 ModuleScanner scanner(bus);
+
+std::shared_ptr<InputPin<bool>> inputPin = std::make_shared<InputPin<bool>>(false);
+PushButtonModule pushButtonModule(0x03, 0x8000);
 
 static EventGroupHandle_t wifi_event_group;
 #define WIFI_CONNECTED_BIT BIT0
@@ -65,18 +69,29 @@ void wifi_init_sta(void)
 
 esp_err_t hello_handler(httpd_req_t *req)
 {
-    auto modules = scanner.DetectModules();
-    std::string response = std::format("Found {} module(s)", modules.size());
+    // auto modules = scanner.DetectModules();
+    // std::string response = std::format("Found {} module(s)", modules.size());
 
-    for (int i = 0; i < modules.size(); i++)
-    {
-        response += std::format("\nAddr: {} - Type: {}", (int)modules[i]->GetAddress(), (int)modules[i]->GetType());
-    }
+    // for (int i = 0; i < modules.size(); i++)
+    // {
+    //     response += std::format("\nAddr: {} - Type: {}", (int)modules[i]->GetAddress(), (int)modules[i]->GetType());
+    // }
 
-    httpd_resp_send(req, response.c_str(), response.length());
+    // httpd_resp_send(req, response.c_str(), response.length());
 
-    /*bus.Exchange(0x03, 0x0006, 1);
-    httpd_resp_send(req, "OK", 2);*/
+    httpd_resp_send(req, "Hello from Domotech!", HTTPD_RESP_USE_STRLEN);
+
+    // auto response = bus.Poll(0x03);
+
+    // if (response.Success)
+    // {
+    //     std::string responseStr = std::format("Module at address 0x03 responded with type {} and data {}", response.ModuleType, response.Data);
+    //     httpd_resp_send(req, responseStr.c_str(), responseStr.length());
+    // }
+    // else
+    // {
+    //     httpd_resp_send(req, "Module not found or communication failed", HTTPD_RESP_USE_STRLEN);
+    // }
 
     return ESP_OK;
 }
@@ -103,21 +118,35 @@ httpd_handle_t start_webserver(void)
 
 #define LED_GPIO GPIO_NUM_2
 
-void led_toggle_task(void *arg)
+void LedTask(void *arg)
 {
     gpio_reset_pin(LED_GPIO);
     gpio_set_direction(LED_GPIO, GPIO_MODE_OUTPUT);
 
-    while (1)
+    while (true)
     {
-        gpio_set_level(LED_GPIO, 1); // Turn LED on
-        vTaskDelay(pdMS_TO_TICKS(500));
+        auto state = inputPin->GetState();
+        gpio_set_level(LED_GPIO, state ? 1 : 0); // Set LED
+        vTaskDelay(1);
 
-        gpio_set_level(LED_GPIO, 0); // Turn LED off
-        vTaskDelay(pdMS_TO_TICKS(500));
+        // gpio_set_level(LED_GPIO, 1); // Turn LED on
+        // vTaskDelay(pdMS_TO_TICKS(500));
+
+        // gpio_set_level(LED_GPIO, 0); // Turn LED off
+        // vTaskDelay(pdMS_TO_TICKS(500));
     }
 
-    // Optional: cleanup (never reached unless the task is explicitly deleted)
+    vTaskDelete(NULL);
+}
+
+void ScanTask(void *arg)
+{
+    while (true)
+    {
+        pushButtonModule.Process(bus);
+        vTaskDelay(1);
+    }
+
     vTaskDelete(NULL);
 }
 
@@ -127,13 +156,24 @@ extern "C" void app_main()
     nvs_flash_init();       // Required for Wi-Fi
     wifi_init_sta();        // Connect to Wi-Fi
 
+    inputPin->ConnectTo(pushButtonModule.GetDigitalOutputPins()[0]);
+
     xTaskCreate(
-        led_toggle_task,    // Task function
-        "LED toggle",       // Name (for debugging)
-        4096,               // Stack size in bytes
-        NULL,               // Task parameter
-        5,                  // Task priority (higher = more important)
-        NULL                // Optional handle
+        LedTask,     // Task function
+        "Led task",  // Name (for debugging)
+        4096,        // Stack size in bytes
+        NULL,        // Task parameter
+        5,           // Task priority (higher = more important)
+        NULL         // Optional handle
+    );
+
+    xTaskCreate(
+        ScanTask,    // Task function
+        "Scan task", // Name (for debugging)
+        4096,        // Stack size in bytes
+        NULL,        // Task parameter
+        5,           // Task priority (higher = more important)
+        NULL         // Optional handle
     );
 
     start_webserver();      // Launch HTTP server

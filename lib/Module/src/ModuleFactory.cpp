@@ -1,5 +1,6 @@
 #include "ModuleFactory.h"
-#include "Modules.h"
+#include "Modules/PushButtonModule.h"
+#include "Modules/RelaisPulseModule.h"
 
 std::unique_ptr<ModuleBase> ModuleFactory::CreateModule(const ModuleType type, const uint8_t address, const uint16_t initialData)
 {

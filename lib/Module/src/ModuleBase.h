@@ -10,7 +10,7 @@ class ModuleBase : public Node
 public:
     ModuleBase(const uint8_t address, const ModuleType moduleType);
 
-    virtual bool Process(const BusProtocol& bus) const = 0;
+    virtual bool Process(const BusProtocol& bus) = 0;
 
     uint8_t GetAddress() const;
     ModuleType GetType() const;

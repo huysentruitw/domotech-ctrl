@@ -1,25 +1,32 @@
 #pragma once
 
 #include <stdint.h>
-#include <BusProtocol.h>
+#include <Bus.h>
 #include <Node.h>
 #include "ModuleType.h"
+
+struct ProcessResponse
+{
+    bool Success;
+    bool RaisePriority = false;
+};
 
 class ModuleBase : public Node
 {
 public:
-    ModuleBase(const uint8_t address, const ModuleType moduleType);
+    ModuleBase(const Bus& bus, const uint8_t address, const ModuleType moduleType);
 
-    virtual bool Process(const BusProtocol& bus) = 0;
+    virtual ProcessResponse Process() = 0;
 
     uint8_t GetAddress() const;
     ModuleType GetType() const;
 
 protected:
-    ScanResponse Poll(const BusProtocol& bus) const;
-    ScanResponse Exchange(const BusProtocol& bus, const uint16_t data) const;
+    ScanResponse Poll() const;
+    ScanResponse Exchange(const uint16_t data) const;
 
 private:
+    const Bus& bus;
     const uint8_t address;
     const ModuleType type;
 };

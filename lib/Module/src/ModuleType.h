@@ -14,7 +14,7 @@ enum class ModuleType
     PushButtonsWithLeds = 12,
 
     Relais = 10,
-    RelaisPulse = 8,
+    Teleruptor = 8,
 
     Inputs = 13,
 };

@@ -1,19 +1,20 @@
 #include "ModuleBase.h"
 
-ModuleBase::ModuleBase(const uint8_t address, const ModuleType type)
-    : address(address)
+ModuleBase::ModuleBase(const Bus& bus, const uint8_t address, const ModuleType type)
+    : bus(bus)
+    , address(address)
     , type(type)
 {
 }
 
-ScanResponse ModuleBase::Poll(const BusProtocol& bus) const
+ScanResponse ModuleBase::Poll() const
 {
-    return bus.Poll(this->address);
+    return this->bus.Poll(this->address);
 }
 
-ScanResponse ModuleBase::Exchange(const BusProtocol& bus, const uint16_t data) const
+ScanResponse ModuleBase::Exchange(const uint16_t data) const
 {
-    return bus.Exchange(this->address, data);
+    return this->bus.Exchange(this->address, data);
 }
 
 uint8_t ModuleBase::GetAddress() const

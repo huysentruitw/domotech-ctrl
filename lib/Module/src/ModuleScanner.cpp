@@ -7,7 +7,7 @@
 #include "ModuleFactory.h"
 #include "ModuleScanner.h"
 
-ModuleScanner::ModuleScanner(BusProtocol& bus)
+ModuleScanner::ModuleScanner(Bus& bus)
     : bus(bus)
 {
 }
@@ -23,7 +23,7 @@ std::vector<std::unique_ptr<ModuleBase>> ModuleScanner::DetectModules()
         if (!response.Success || !response.RespondedWithTypeAndData)
             continue;
 
-        auto module = ModuleFactory::CreateModule((ModuleType)response.ModuleType, address, response.Data);
+        auto module = ModuleFactory::CreateModule(this->bus, (ModuleType)response.ModuleType, address, response.Data);
 
         if (module == nullptr)
             continue; // Module type not recognized, skip this address

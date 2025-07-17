@@ -1,10 +1,10 @@
+#include "BusDriver.h"
+
 #ifndef NATIVE_BUILD
 
 #include "driver/gpio.h"
 #include "driver/uart.h"
 #include "esp_rom_sys.h"
-
-#include "BusDriver.h"
 
 #define READ_TIMEOUT_MS   16
 
@@ -79,27 +79,9 @@ void BusDriver::FlushInput() const
 
 #else // NATIVE_BUILD
 
-#include "BusDriver.h"
-
-void BusDriver::Init() const
-{
-    // No-op for native build
-}
-
-void BusDriver::WriteBytes(const uint8_t* data, const uint16_t len) const
-{
-    // No-op for native build
-}
-
-bool BusDriver::ReadBytes(uint8_t* data, const uint16_t len) const
-{
-    // No-op for native build
-    return true;
-}
-
-void BusDriver::FlushInput() const
-{
-    // No-op for native build
-}
+void BusDriver::Init() const {}
+void BusDriver::WriteBytes(const uint8_t* data, const uint16_t len) const {}
+bool BusDriver::ReadBytes(uint8_t* data, const uint16_t len) const { return true; }
+void BusDriver::FlushInput() const {}
 
 #endif // NATIVE_BUILD

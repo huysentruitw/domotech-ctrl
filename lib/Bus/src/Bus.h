@@ -4,10 +4,10 @@
 #include "BusDriver.h"
 #include "ScanResponse.h"
 
-class BusProtocol
+class Bus
 {
 public:
-    BusProtocol(const BusDriver& driver);
+    Bus(const BusDriver& driver);
     ScanResponse Poll(const uint8_t address, const uint8_t retries = 2) const;
     ScanResponse Exchange(const uint8_t address, const uint16_t data, const uint8_t retries = 2) const;
 

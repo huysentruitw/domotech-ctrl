@@ -3,6 +3,7 @@
 #include <BusDriver.h>
 #include <ModuleScanner.h>
 #include <Modules/PushButtonModule.h>
+#include <Modules/TeleruptorModule.h>
 #include <Pins.h>
 
 #include "esp_wifi.h"
@@ -13,12 +14,16 @@
 #include "esp_http_server.h"
 #include "secrets.h"
 
+#define LED_GPIO GPIO_NUM_2
+
 BusDriver driver;
-BusProtocol bus(driver);
+Bus bus(driver);
 ModuleScanner scanner(bus);
 
-std::shared_ptr<InputPin<bool>> inputPin = std::make_shared<InputPin<bool>>(false);
-PushButtonModule pushButtonModule(0x03, 0x8000);
+auto inputPin = std::make_shared<InputPin<bool>>([](bool state) { gpio_set_level(LED_GPIO, state ? 0 : 1); }, false);
+PushButtonModule pushButtonModule(bus, 0x03, 0x8000);
+
+TeleruptorModule teleruptorModule(bus, 0x05, 0x0008);
 
 static EventGroupHandle_t wifi_event_group;
 #define WIFI_CONNECTED_BIT BIT0
@@ -81,7 +86,7 @@ esp_err_t hello_handler(httpd_req_t *req)
 
     httpd_resp_send(req, "Hello from Domotech!", HTTPD_RESP_USE_STRLEN);
 
-    // auto response = bus.Poll(0x03);
+    // auto response = bus.Exchange(0x05, 0x06);
 
     // if (response.Success)
     // {
@@ -116,34 +121,13 @@ httpd_handle_t start_webserver(void)
     return server;
 }
 
-#define LED_GPIO GPIO_NUM_2
-
-void LedTask(void *arg)
-{
-    gpio_reset_pin(LED_GPIO);
-    gpio_set_direction(LED_GPIO, GPIO_MODE_OUTPUT);
-
-    while (true)
-    {
-        auto state = inputPin->GetState();
-        gpio_set_level(LED_GPIO, state ? 1 : 0); // Set LED
-        vTaskDelay(1);
-
-        // gpio_set_level(LED_GPIO, 1); // Turn LED on
-        // vTaskDelay(pdMS_TO_TICKS(500));
-
-        // gpio_set_level(LED_GPIO, 0); // Turn LED off
-        // vTaskDelay(pdMS_TO_TICKS(500));
-    }
-
-    vTaskDelete(NULL);
-}
-
 void ScanTask(void *arg)
 {
     while (true)
     {
-        pushButtonModule.Process(bus);
+        pushButtonModule.Process();
+        vTaskDelay(1);
+        teleruptorModule.Process();
         vTaskDelay(1);
     }
 
@@ -156,16 +140,30 @@ extern "C" void app_main()
     nvs_flash_init();       // Required for Wi-Fi
     wifi_init_sta();        // Connect to Wi-Fi
 
-    inputPin->ConnectTo(pushButtonModule.GetDigitalOutputPins()[0]);
+    gpio_reset_pin(LED_GPIO);
+    gpio_set_direction(LED_GPIO, GPIO_MODE_OUTPUT);
 
-    xTaskCreate(
-        LedTask,     // Task function
-        "Led task",  // Name (for debugging)
-        4096,        // Stack size in bytes
-        NULL,        // Task parameter
-        5,           // Task priority (higher = more important)
-        NULL         // Optional handle
-    );
+    inputPin->ConnectTo(teleruptorModule.GetDigitalOutputPins()[2]);
+
+    auto pbPins = pushButtonModule.GetDigitalOutputPins();
+    auto telPins = teleruptorModule.GetDigitalInputPins();
+
+    for (uint8_t i = 0; i < pbPins.size(); ++i)
+    {
+        auto pbPin = pbPins[i].lock();
+        auto telPin = telPins[i].lock();
+
+        telPin->ConnectTo(pbPin);
+    }
+
+    // xTaskCreate(
+    //     LedTask,     // Task function
+    //     "Led task",  // Name (for debugging)
+    //     4096,        // Stack size in bytes
+    //     NULL,        // Task parameter
+    //     5,           // Task priority (higher = more important)
+    //     NULL         // Optional handle
+    // );
 
     xTaskCreate(
         ScanTask,    // Task function

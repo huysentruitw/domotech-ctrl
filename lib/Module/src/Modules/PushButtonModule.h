@@ -5,9 +5,9 @@
 class PushButtonModule final : public ModuleBase
 {
 public:
-    PushButtonModule(const uint8_t address, const uint16_t initialData);
+    PushButtonModule(const Bus& bus, const uint8_t address, const uint16_t initialData);
 
-    bool Process(const BusProtocol& bus) override;
+    ProcessResponse Process() override;
 
     std::vector<std::weak_ptr<OutputPin<bool>>> GetDigitalOutputPins() const override;
 

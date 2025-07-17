@@ -1,6 +1,6 @@
 #include <vector>
 #include <unity.h>
-#include <BusProtocol.h>
+#include <Bus.h>
 
 #include "../../Mocks/MockBusDriver.h"
 
@@ -18,7 +18,7 @@ void Poll_FlushesInput()
 {
     // Arrange
     MockBusDriver driver;
-    BusProtocol bus(driver);
+    Bus bus(driver);
 
     // Act
     auto response = bus.Poll(0x01);
@@ -31,7 +31,7 @@ void Poll_Successful()
 {
     // Arrange
     MockBusDriver driver;
-    BusProtocol bus(driver);
+    Bus bus(driver);
     uint8_t expectedBytesWritten[] = { 0xC4, 0xF1 };
     driver.BytesToRead = { 0xD5 }; // Simulate a success response from the bus
 
@@ -49,7 +49,7 @@ void Exchange_FlushesInput()
 {
     // Arrange
     MockBusDriver driver;
-    BusProtocol bus(driver);
+    Bus bus(driver);
 
     // Act
     auto response = bus.Exchange(0x01, 0x1234);
@@ -62,7 +62,7 @@ void Exchange_Successful()
 {
     // Arrange
     MockBusDriver driver;
-    BusProtocol bus(driver);
+    Bus bus(driver);
     uint8_t expectedBytesWritten[] = { 0xC4, 0xE1, 0x94, 0x93, 0x92, 0x91, 0xBC };
     driver.BytesToRead = { 0x84, 0xB5, 0xA8, 0xA7, 0xA6, 0xA5, 0xBC };
 

@@ -1,4 +1,4 @@
-#include "BusProtocol.h"
+#include "Bus.h"
 
 #ifndef NATIVE_BUILD
 #include "esp_rom_sys.h"
@@ -6,12 +6,12 @@
 
 #define REPLY_BACKOFF_DELAY_US     500
 
-BusProtocol::BusProtocol(const BusDriver& driver)
+Bus::Bus(const BusDriver& driver)
     : driver(driver)
 {
 }
 
-ScanResponse BusProtocol::Poll(const uint8_t address, const uint8_t retries) const
+ScanResponse Bus::Poll(const uint8_t address, const uint8_t retries) const
 {
     for (uint8_t i = 0; i <= retries; i++)
     {
@@ -24,7 +24,7 @@ ScanResponse BusProtocol::Poll(const uint8_t address, const uint8_t retries) con
     return ScanResponse { .Success = false };
 }
 
-ScanResponse BusProtocol::Exchange(const uint8_t address, const uint16_t data, const uint8_t retries) const
+ScanResponse Bus::Exchange(const uint8_t address, const uint16_t data, const uint8_t retries) const
 {
     for (uint8_t i = 0; i <= retries; i++)
     {
@@ -37,7 +37,7 @@ ScanResponse BusProtocol::Exchange(const uint8_t address, const uint16_t data, c
     return ScanResponse { .Success = false };
 }
 
-ScanResponse BusProtocol::ExchangeInternal(const uint8_t address, const uint16_t data, const bool forceDataExchange) const
+ScanResponse Bus::ExchangeInternal(const uint8_t address, const uint16_t data, const bool forceDataExchange) const
 {
     this->driver.FlushInput();
 

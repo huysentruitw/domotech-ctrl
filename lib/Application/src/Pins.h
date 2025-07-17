@@ -1,6 +1,7 @@
 #pragma once
 
-#include <cstdint>
+#include <algorithm>
+#include <functional>
 #include <memory>
 #include <vector>
 
@@ -10,15 +11,22 @@ template<typename TState> class OutputPin;
 template<typename TState> class InputPin final : public std::enable_shared_from_this<InputPin<TState>>
 {
 public:
-    InputPin(const TState initialState = TState()) : state(initialState) {}
+    InputPin(std::function<void(TState)> onStateChange, const TState initialState = TState())
+        : onStateChange(onStateChange)
+        , state(initialState)
+    {}
 
     TState GetState() const { return this->state; }
+
     void SetState(const TState newState)
     {
         if (newState == this->state)
             return; // No change, no need to update
 
         this->state = newState;
+
+        if (this->onStateChange)
+            this->onStateChange(newState);
     }
 
     bool ConnectTo(std::weak_ptr<OutputPin<TState>> outputPin)
@@ -55,6 +63,7 @@ public:
     }
 
 private:
+    std::function<void(TState)> onStateChange;
     TState state;
     std::weak_ptr<OutputPin<TState>> connectedOutputPin;
 };
@@ -67,6 +76,7 @@ public:
     OutputPin(const TState initialState = TState()) : state(initialState) {}
 
     TState GetState() const { return this->state; }
+
     void SetState(const TState newState)
     { 
         if (newState == this->state)
@@ -94,6 +104,3 @@ private:
     TState state;
     std::vector<std::weak_ptr<InputPin<TState>>> connectedInputPins;
 };
-
-template class InputPin<bool>;
-template class OutputPin<bool>;

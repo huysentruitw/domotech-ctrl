@@ -2,15 +2,15 @@
 
 #include <memory>
 #include <vector>
-#include <BusProtocol.h>
+#include <Bus.h>
 #include "ModuleBase.h"
 
 class ModuleScanner final
 {
 public:
-    ModuleScanner(BusProtocol& bus);
+    ModuleScanner(Bus& bus);
     std::vector<std::unique_ptr<ModuleBase>> DetectModules();
 
 private:
-    BusProtocol& bus;
+    Bus& bus;
 };

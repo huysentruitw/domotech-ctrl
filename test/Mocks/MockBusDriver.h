@@ -1,6 +1,6 @@
 #pragma once
 
-#include <stdint.h>
+#include <cstdint>
 #include <vector>
 
 #include <BusDriver.h>
@@ -12,26 +12,26 @@ public:
     
     void WriteBytes(const uint8_t* data, const uint16_t len) const override
     {
-        this->BytesWritten.insert(this->BytesWritten.end(), data, data + len);
+        BytesWritten.insert(BytesWritten.end(), data, data + len);
     }
     
     bool ReadBytes(uint8_t* data, const uint16_t len) const override
     {
-        if (this->BytesToRead.size() < len)
+        if (BytesToRead.size() < len) {
             return false; // Not enough data to read
+        }
 
-        for (uint16_t i = 0; i < len; ++i)
-        {
-            data[i] = this->BytesToRead[i];
+        for (uint16_t i = 0; i < len; ++i) {
+            data[i] = BytesToRead[i];
         }
         
-        this->BytesToRead.erase(this->BytesToRead.begin(), this->BytesToRead.begin() + len);
+        BytesToRead.erase(BytesToRead.begin(), BytesToRead.begin() + len);
         return true;
     }
 
     void FlushInput() const override
     {
-        this->FlushInputCalled = true;
+        FlushInputCalled = true;
     }
 
 public:

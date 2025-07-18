@@ -4,8 +4,7 @@
 
 std::unique_ptr<ModuleBase> ModuleFactory::CreateModule(const Bus& bus, const ModuleType type, const uint8_t address, const uint16_t initialData)
 {
-    switch (type)
-    {
+    switch (type) {
         case ModuleType::PushButtons:
             return std::make_unique<PushButtonModule>(bus, address, initialData);
         case ModuleType::Teleruptor:
@@ -13,4 +12,17 @@ std::unique_ptr<ModuleBase> ModuleFactory::CreateModule(const Bus& bus, const Mo
         default:
             return nullptr;
     };
+}
+
+std::unique_ptr<ModuleBase> ModuleFactory::CreateModule(const Bus& bus, const std::string moduleString)
+{
+    if (auto module = PushButtonModule::ConstructFromString(bus, moduleString)) {
+        return module;
+    }
+
+    if (auto module = TeleruptorModule::ConstructFromString(bus, moduleString)) {
+        return module;
+    }
+    
+    return nullptr;
 }

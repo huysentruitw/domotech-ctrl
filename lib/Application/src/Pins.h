@@ -12,60 +12,66 @@ template<typename TState> class InputPin final : public std::enable_shared_from_
 {
 public:
     InputPin(std::function<void(TState)> onStateChange, const TState initialState = TState())
-        : onStateChange(onStateChange)
-        , state(initialState)
-    {}
-
-    TState GetState() const { return this->state; }
-
-    void SetState(const TState newState)
-    {
-        if (newState == this->state)
-            return; // No change, no need to update
-
-        this->state = newState;
-
-        if (this->onStateChange)
-            this->onStateChange(newState);
+        : m_onStateChange(onStateChange)
+        , m_state(initialState) {
     }
 
-    bool ConnectTo(std::weak_ptr<OutputPin<TState>> outputPin)
-    {
+    TState GetState() const {
+        return m_state;
+    }
+
+    void SetState(const TState newState) {
+        if (newState == m_state) {
+            // No change, no need to update
+            return;
+        }
+
+        m_state = newState;
+
+        if (m_onStateChange) {
+            m_onStateChange(newState);
+        }
+    }
+
+    bool ConnectTo(std::weak_ptr<OutputPin<TState>> outputPin) {
         auto outputPinPtr = outputPin.lock();
-        if (!outputPinPtr)
-            return false; // Output pin is not valid
+        if (!outputPinPtr) {
+            // Output pin is not valid
+            return false;
+        }
 
-        if (!this->connectedOutputPin.expired())
-            return false; // Already connected to something
+        if (!m_connectedOutputPin.expired()) {
+            // Already connected to something
+            return false;
+        }
 
-        this->connectedOutputPin = outputPin;
-        outputPinPtr->connectedInputPins.push_back(this->shared_from_this());
+        m_connectedOutputPin = outputPin;
+        outputPinPtr->m_connectedInputPins.push_back(this->shared_from_this());
 
         auto state = outputPinPtr->GetState();
-        this->SetState(state); // Initialize state from output pin
-            
+        SetState(state); // Initialize state from output pin
+
         return true;
     }
 
-    void Disconnect()
-    {
-        if (auto outputPin = this->connectedOutputPin.lock())
-        {
-            auto& inputs = outputPin->connectedInputPins;
+    void Disconnect() {
+        if (auto outputPin = m_connectedOutputPin.lock()) {
+            auto& inputs = outputPin->m_connectedInputPins;
             inputs.erase(std::remove_if(inputs.begin(), inputs.end(),
                                          [this](const std::weak_ptr<InputPin<TState>>& input) {
                                              return input.lock() == this->shared_from_this();
                                          }), inputs.end());
-            this->connectedOutputPin.reset();
+            m_connectedOutputPin.reset();
         }
 
-        this->state = TState(); // Reset state when disconnected
+        // Reset state on disconnected
+        SetState(TState());
     }
 
 private:
-    std::function<void(TState)> onStateChange;
-    TState state;
-    std::weak_ptr<OutputPin<TState>> connectedOutputPin;
+    std::function<void(TState)> m_onStateChange;
+    TState m_state;
+    std::weak_ptr<OutputPin<TState>> m_connectedOutputPin;
 };
 
 template<typename TState> class OutputPin final
@@ -73,34 +79,34 @@ template<typename TState> class OutputPin final
     friend class InputPin<TState>;
 
 public:
-    OutputPin(const TState initialState = TState()) : state(initialState) {}
+    OutputPin(const TState initialState = TState()) : m_state(initialState) {
+    }
 
-    TState GetState() const { return this->state; }
+    TState GetState() const {
+        return m_state;
+    }
 
-    void SetState(const TState newState)
-    { 
-        if (newState == this->state)
-            return; // No change, no need to update
+    void SetState(const TState newState) { 
+        if (newState == m_state) {
+            // No change, no need to update
+            return;
+        }
 
-        this->state = newState;
+        m_state = newState;
 
         // Notify all connected inputs
-        for (auto it = this->connectedInputPins.begin(); it != this->connectedInputPins.end();)
-        {
-            if (auto input = it->lock())
-            {
+        for (auto it = m_connectedInputPins.begin(); it != m_connectedInputPins.end();) {
+            if (auto input = it->lock()) {
                 input->SetState(newState);
                 ++it;
-            }
-            else
-            {
+            } else {
                 // Remove expired weak pointers
-                it = this->connectedInputPins.erase(it);
+                it = m_connectedInputPins.erase(it);
             }
         }
     }
 
 private:
-    TState state;
-    std::vector<std::weak_ptr<InputPin<TState>>> connectedInputPins;
+    TState m_state;
+    std::vector<std::weak_ptr<InputPin<TState>>> m_connectedInputPins;
 };

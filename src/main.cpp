@@ -30,12 +30,9 @@ static EventGroupHandle_t wifi_event_group;
 
 static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data)
 {
-    if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START)
-    {
+    if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
         esp_wifi_connect();
-    }
-    else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP)
-    {
+    } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
         xEventGroupSetBits(wifi_event_group, WIFI_CONNECTED_BIT);
     }
 }
@@ -54,10 +51,8 @@ void wifi_init_sta(void)
 
     #pragma GCC diagnostic push
     #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
-    wifi_config_t wifi_config =
-    {
-        .sta =
-        {
+    wifi_config_t wifi_config ={
+        .sta = {
             .ssid = WIFI_SSID,
             .password = WIFI_PASS,
         },
@@ -77,8 +72,7 @@ esp_err_t hello_handler(httpd_req_t *req)
     // auto modules = scanner.DetectModules();
     // std::string response = std::format("Found {} module(s)", modules.size());
 
-    // for (int i = 0; i < modules.size(); i++)
-    // {
+    // for (int i = 0; i < modules.size(); i++) {
     //     response += std::format("\nAddr: {} - Type: {}", (int)modules[i]->GetAddress(), (int)modules[i]->GetType());
     // }
 
@@ -88,13 +82,10 @@ esp_err_t hello_handler(httpd_req_t *req)
 
     // auto response = bus.Exchange(0x05, 0x06);
 
-    // if (response.Success)
-    // {
+    // if (response.Success) {
     //     std::string responseStr = std::format("Module at address 0x03 responded with type {} and data {}", response.ModuleType, response.Data);
     //     httpd_resp_send(req, responseStr.c_str(), responseStr.length());
-    // }
-    // else
-    // {
+    // } else {
     //     httpd_resp_send(req, "Module not found or communication failed", HTTPD_RESP_USE_STRLEN);
     // }
 
@@ -106,15 +97,14 @@ httpd_handle_t start_webserver(void)
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     httpd_handle_t server = NULL;
 
-    if (httpd_start(&server, &config) == ESP_OK)
-    {
-        httpd_uri_t hello_uri =
-        {
+    if (httpd_start(&server, &config) == ESP_OK) {
+        httpd_uri_t hello_uri = {
             .uri       = "/",
             .method    = HTTP_GET,
             .handler   = hello_handler,
             .user_ctx  = NULL,
         };
+
         httpd_register_uri_handler(server, &hello_uri);
     }
 
@@ -123,8 +113,7 @@ httpd_handle_t start_webserver(void)
 
 void ScanTask(void *arg)
 {
-    while (true)
-    {
+    while (true) {
         pushButtonModule.Process();
         vTaskDelay(1);
         teleruptorModule.Process();
@@ -148,8 +137,7 @@ extern "C" void app_main()
     auto pbPins = pushButtonModule.GetDigitalOutputPins();
     auto telPins = teleruptorModule.GetDigitalInputPins();
 
-    for (uint8_t i = 0; i < pbPins.size(); ++i)
-    {
+    for (uint8_t i = 0; i < pbPins.size(); ++i) {
         auto pbPin = pbPins[i].lock();
         auto telPin = telPins[i].lock();
 

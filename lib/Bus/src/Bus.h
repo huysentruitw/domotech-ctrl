@@ -1,6 +1,6 @@
 #pragma once
 
-#include <stdint.h>
+#include <cstdint>
 #include "BusDriver.h"
 #include "ScanResponse.h"
 
@@ -12,6 +12,6 @@ public:
     ScanResponse Exchange(const uint8_t address, const uint16_t data, const uint8_t retries = 2) const;
 
 private:
-    const BusDriver& driver;
+    const BusDriver& m_driver;
     ScanResponse ExchangeInternal(const uint8_t address, const uint16_t data, const bool forceDataExchange) const;
 };

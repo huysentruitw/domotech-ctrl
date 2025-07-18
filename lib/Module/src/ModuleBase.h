@@ -1,6 +1,7 @@
 #pragma once
 
-#include <stdint.h>
+#include <cstdint>
+
 #include <Bus.h>
 #include <Node.h>
 #include "ModuleType.h"
@@ -26,7 +27,7 @@ protected:
     ScanResponse Exchange(const uint16_t data) const;
 
 private:
-    const Bus& bus;
-    const uint8_t address;
-    const ModuleType type;
+    const Bus& m_bus;
+    const uint8_t m_address;
+    const ModuleType m_type;
 };

@@ -13,10 +13,10 @@ public:
     std::vector<std::weak_ptr<OutputPin<bool>>> GetDigitalOutputPins() const override;
 
 private:
-    const uint8_t numberOfTeleruptors;
-    bool feedbackStateInSync = false;
-    std::vector<std::shared_ptr<InputPin<bool>>> teleruptorPins;
-    std::vector<std::shared_ptr<OutputPin<bool>>> teleruptorFeedbackPins;
+    const uint8_t m_numberOfTeleruptors;
+    bool m_feedbackStateInSync = false;
+    std::vector<std::shared_ptr<InputPin<bool>>> m_teleruptorPins;
+    std::vector<std::shared_ptr<OutputPin<bool>>> m_teleruptorFeedbackPins;
 
     void UpdateTeleruptorState(const uint8_t teleruptorIndex, const bool newState);
 };

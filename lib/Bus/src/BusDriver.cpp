@@ -20,8 +20,7 @@ void BusDriver::Init() const
     // Configure UART2 for RS485 (no parity, 1 stop bit, 8 data bits)
     #pragma GCC diagnostic push
     #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
-    const uart_config_t uart_config =
-    {
+    const uart_config_t uart_config = {
         .baud_rate = 9600,
         .data_bits = UART_DATA_8_BITS,
         .parity    = UART_PARITY_DISABLE,
@@ -55,9 +54,10 @@ void BusDriver::WriteBytes(const uint8_t* data, const uint16_t len) const
 #endif
 
     // Need to send in a loop, otherwise PICs can't process the incoming bytes fast enough
-    for (int i = 0; i < len; i++)
-    {
-        if (i > 0) esp_rom_delay_us(104);
+    for (int i = 0; i < len; i++) {
+        if (i > 0) {
+            esp_rom_delay_us(104);
+        }
         uart_write_bytes(UART_PORT, &data[i], 1);
         uart_wait_tx_done(UART_PORT, pdMS_TO_TICKS(20));
     }

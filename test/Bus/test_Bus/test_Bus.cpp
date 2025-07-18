@@ -1,7 +1,8 @@
-#include <vector>
 #include <unity.h>
-#include <Bus.h>
 
+#include <vector>
+
+#include <Bus.h>
 #include "../../Mocks/MockBusDriver.h"
 
 void setUp(void)

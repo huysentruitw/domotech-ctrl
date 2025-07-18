@@ -12,5 +12,5 @@ public:
     std::vector<std::unique_ptr<ModuleBase>> DetectModules();
 
 private:
-    Bus& bus;
+    Bus& m_bus;
 };

@@ -206,7 +206,24 @@ void PushButtonModule_Process_FailedPoll()
     TEST_ASSERT_TRUE(bus.PollCalled);
 }
 
-int main(int argc, char **argv) {
+void PushButtonModule_ToString()
+{
+    // Arrange
+    MockBus bus;
+    const uint8_t address = 0x10;
+    const uint16_t initialData = 0x8000; // 8 buttons
+    
+    PushButtonModule module(bus, address, initialData);
+    
+    // Act
+    std::string result = module.ToString();
+    
+    // Assert
+    TEST_ASSERT_EQUAL_STRING("PB 16 8", result.c_str());
+}
+
+int main()
+{
     UNITY_BEGIN();
     
     RUN_TEST(PushButtonModule_Constructor_InitializesCorrectly);
@@ -215,6 +232,7 @@ int main(int argc, char **argv) {
     RUN_TEST(PushButtonModule_Process_ButtonsReleased);
     RUN_TEST(PushButtonModule_Process_ButtonsPressedThenExchangeRequested);
     RUN_TEST(PushButtonModule_Process_FailedPoll);
+    RUN_TEST(PushButtonModule_ToString);
     
     return UNITY_END();
 }

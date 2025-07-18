@@ -200,7 +200,24 @@ void TeleruptorModule_UpdateTeleruptorState()
     TEST_ASSERT_EQUAL(0x21, bus.LastExchangeData); // CMD1 (0x01) | (teleruptorIndex(2) << 4) = 0x21
 }
 
-int main(int argc, char **argv) {
+void TeleruptorModule_ToString()
+{
+    // Arrange
+    MockBus bus;
+    const uint8_t address = 0x20;
+    const uint16_t initialData = 0x0004; // 4 teleruptors
+    
+    TeleruptorModule module(bus, address, initialData);
+    
+    // Act
+    std::string result = module.ToString();
+    
+    // Assert
+    TEST_ASSERT_EQUAL_STRING("TEL 32 4", result.c_str());
+}
+
+int main()
+{
     UNITY_BEGIN();
     
     RUN_TEST(TeleruptorModule_Constructor_InitializesCorrectly);
@@ -209,6 +226,7 @@ int main(int argc, char **argv) {
     RUN_TEST(TeleruptorModule_Process_FailedPoll);
     RUN_TEST(TeleruptorModule_Process_FailedFeedbackExchange);
     RUN_TEST(TeleruptorModule_UpdateTeleruptorState);
+    RUN_TEST(TeleruptorModule_ToString);
     
     return UNITY_END();
 }

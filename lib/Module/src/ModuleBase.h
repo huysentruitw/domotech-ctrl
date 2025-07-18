@@ -1,9 +1,11 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
 
 #include <Bus.h>
 #include <Node.h>
+
 #include "ModuleType.h"
 
 struct ProcessResponse
@@ -21,6 +23,8 @@ public:
 
     uint8_t GetAddress() const;
     ModuleType GetType() const;
+
+    virtual std::string ToString() const = 0;
 
 protected:
     ScanResponse Poll() const;

@@ -1,3 +1,8 @@
+#include <sstream>
+#include <string>
+
+#include <KnownModuleIdentifiers.h>
+
 #include "PushButtonModule.h"
 
 static const uint8_t ButtonMasks8[8] = { 0x10, 0x20, 0x40, 0x80, 0x08, 0x04, 0x02, 0x01 };
@@ -57,4 +62,24 @@ DigitalValue PushButtonModule::MapButtonState(const uint8_t buttonIndex, const u
     }
 
     return DigitalValue(false);
+}
+
+std::string PushButtonModule::ToString() const
+{
+    return (std::string)KnownModuleIdentifiers::PushButtons + " " + std::to_string(GetAddress()) + " " + std::to_string(m_numberOfButtons);
+}
+
+std::unique_ptr<PushButtonModule> PushButtonModule::TryConstructFromString(const Bus& bus, const std::string& encodedModuleInfo)
+{
+    std::istringstream stream(encodedModuleInfo);
+    std::string identifier;
+    uint8_t address;
+    uint8_t numberOfButtons;
+
+    if (!(stream >> identifier) || identifier != KnownModuleIdentifiers::PushButtons ||
+        !(stream >> address) || !(stream >> numberOfButtons)) {
+        return nullptr; // Invalid format
+    }
+
+    return std::make_unique<PushButtonModule>(bus, address, numberOfButtons);
 }

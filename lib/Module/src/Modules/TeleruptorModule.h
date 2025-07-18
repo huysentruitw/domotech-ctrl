@@ -12,6 +12,9 @@ public:
     std::vector<std::weak_ptr<InputPin<DigitalValue>>> GetDigitalInputPins() const override;
     std::vector<std::weak_ptr<OutputPin<DigitalValue>>> GetDigitalOutputPins() const override;
 
+    std::string ToString() const override;
+    static std::unique_ptr<TeleruptorModule> TryConstructFromString(const Bus& bus, const std::string& encodedModuleInfo);
+
 private:
     const uint8_t m_numberOfTeleruptors;
     bool m_feedbackStateInSync = false;

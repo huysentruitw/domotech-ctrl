@@ -221,7 +221,6 @@ void PinConnection_AlreadyConnected()
     TEST_ASSERT_FALSE(inputPin->GetState()); // State should be from first pin
 }
 
-// Main test runner
 int main()
 {
     UNITY_BEGIN();

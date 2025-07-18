@@ -20,7 +20,7 @@ BusDriver driver;
 Bus bus(driver);
 ModuleScanner scanner(bus);
 
-auto inputPin = std::make_shared<InputPin<bool>>([](bool state) { gpio_set_level(LED_GPIO, state ? 0 : 1); }, false);
+auto inputPin = std::make_shared<InputPin<DigitalValue>>([](DigitalValue value) { gpio_set_level(LED_GPIO, value ? 0 : 1); }, DigitalValue(false));
 PushButtonModule pushButtonModule(bus, 0x03, 0x8000);
 
 TeleruptorModule teleruptorModule(bus, 0x05, 0x0008);
@@ -78,7 +78,9 @@ esp_err_t hello_handler(httpd_req_t *req)
 
     // httpd_resp_send(req, response.c_str(), response.length());
 
-    httpd_resp_send(req, "Hello from Domotech!", HTTPD_RESP_USE_STRLEN);
+    std::string response = pushButtonModule.ToString() + "\n" + teleruptorModule.ToString();
+
+    httpd_resp_send(req, response.c_str(), HTTPD_RESP_USE_STRLEN);
 
     // auto response = bus.Exchange(0x05, 0x06);
 

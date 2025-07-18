@@ -79,7 +79,7 @@ void Exchange_Successful()
     TEST_ASSERT_EQUAL_UINT16(0x5678, response.Data); // Response data is 0x5678
 }
 
-int main(int argc, char **argv)
+int main()
 {
     UNITY_BEGIN();
 

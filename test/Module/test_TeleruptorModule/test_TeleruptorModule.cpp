@@ -192,7 +192,7 @@ void TeleruptorModule_UpdateTeleruptorState()
     
     // Get input pin and set its state to trigger UpdateTeleruptorState
     auto inputPins = module.GetDigitalInputPins();
-    inputPins[2].lock()->SetState(true); // Set third teleruptor to ON
+    inputPins[2].lock()->SetState(DigitalValue(true)); // Set third teleruptor to ON
     
     // Assert
     TEST_ASSERT_TRUE(bus.ExchangeCalled);

@@ -7,7 +7,7 @@ PushButtonModule::PushButtonModule(const Bus& bus, const uint8_t address, const 
     , m_numberOfButtons((initialData >> 12) & 0x0F)
 {
     for (uint8_t i = 0; i < m_numberOfButtons; ++i) {
-        m_buttonPins.push_back(std::make_shared<OutputPin<bool>>(false));
+        m_buttonPins.push_back(std::make_shared<OutputPin<DigitalValue>>(DigitalValue(false)));
     }
 }
 
@@ -33,16 +33,16 @@ ProcessResponse PushButtonModule::Process()
     if (m_hasPressedButtons){
         m_hasPressedButtons = false;
         for (const auto& pin : m_buttonPins) {
-            pin->SetState(false);
+            pin->SetState(DigitalValue(false));
         }
     }
 
     return { .Success = true };
 }
 
-std::vector<std::weak_ptr<OutputPin<bool>>> PushButtonModule::GetDigitalOutputPins() const
+std::vector<std::weak_ptr<OutputPin<DigitalValue>>> PushButtonModule::GetDigitalOutputPins() const
 {
-    std::vector<std::weak_ptr<OutputPin<bool>>> outputPins;
+    std::vector<std::weak_ptr<OutputPin<DigitalValue>>> outputPins;
     for (const auto& pin : m_buttonPins) {
         outputPins.push_back(pin);
     }
@@ -50,11 +50,11 @@ std::vector<std::weak_ptr<OutputPin<bool>>> PushButtonModule::GetDigitalOutputPi
     return outputPins;
 }
 
-bool PushButtonModule::MapButtonState(const uint8_t buttonIndex, const uint16_t data) const
+DigitalValue PushButtonModule::MapButtonState(const uint8_t buttonIndex, const uint16_t data) const
 {
     if (m_numberOfButtons == 8) {
-        return (data & ButtonMasks8[buttonIndex]) != 0;
+        return DigitalValue((data & ButtonMasks8[buttonIndex]) != 0);
     }
 
-    return false;
+    return DigitalValue(false);
 }

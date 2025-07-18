@@ -9,12 +9,12 @@ public:
 
     ProcessResponse Process() override;
 
-    std::vector<std::weak_ptr<OutputPin<bool>>> GetDigitalOutputPins() const override;
+    std::vector<std::weak_ptr<OutputPin<DigitalValue>>> GetDigitalOutputPins() const override;
 
 private:
     const uint8_t m_numberOfButtons;
-    std::vector<std::shared_ptr<OutputPin<bool>>> m_buttonPins;
+    std::vector<std::shared_ptr<OutputPin<DigitalValue>>> m_buttonPins;
     bool m_hasPressedButtons = false;
 
-    bool MapButtonState(const uint8_t buttonIndex, const uint16_t data) const;
+    DigitalValue MapButtonState(const uint8_t buttonIndex, const uint16_t data) const;
 };

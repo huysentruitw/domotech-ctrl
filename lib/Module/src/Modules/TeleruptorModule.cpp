@@ -5,8 +5,8 @@ TeleruptorModule::TeleruptorModule(const Bus& bus, const uint8_t address, const 
     , m_numberOfTeleruptors(initialData & 0x0F)
 {
     for (uint8_t i = 0; i < m_numberOfTeleruptors; ++i) {
-        m_teleruptorPins.push_back(std::make_shared<InputPin<bool>>([this, i](bool state) { UpdateTeleruptorState(i, state); }, false));
-        m_teleruptorFeedbackPins.push_back(std::make_shared<OutputPin<bool>>(false));
+        m_teleruptorPins.push_back(std::make_shared<InputPin<DigitalValue>>([this, i](DigitalValue value) { UpdateTeleruptor(i, value); }, DigitalValue(false)));
+        m_teleruptorFeedbackPins.push_back(std::make_shared<OutputPin<DigitalValue>>(DigitalValue(false)));
     }
 }
 
@@ -28,7 +28,7 @@ ProcessResponse TeleruptorModule::Process()
         }
 
         for (uint8_t i = 0; i < m_numberOfTeleruptors; ++i) {
-            m_teleruptorFeedbackPins[i]->SetState((response.Data & (1 << i)) != 0);
+            m_teleruptorFeedbackPins[i]->SetState(DigitalValue((response.Data & (1 << i)) != 0));
         }
 
         m_feedbackStateInSync = true;
@@ -37,9 +37,9 @@ ProcessResponse TeleruptorModule::Process()
     return { .Success = true };
 }
 
-std::vector<std::weak_ptr<InputPin<bool>>> TeleruptorModule::GetDigitalInputPins() const
+std::vector<std::weak_ptr<InputPin<DigitalValue>>> TeleruptorModule::GetDigitalInputPins() const
 {
-    std::vector<std::weak_ptr<InputPin<bool>>> inputPins;
+    std::vector<std::weak_ptr<InputPin<DigitalValue>>> inputPins;
     for (const auto& pin : m_teleruptorPins) {
         inputPins.push_back(pin);
     }
@@ -47,9 +47,9 @@ std::vector<std::weak_ptr<InputPin<bool>>> TeleruptorModule::GetDigitalInputPins
     return inputPins;
 }
 
-std::vector<std::weak_ptr<OutputPin<bool>>> TeleruptorModule::GetDigitalOutputPins() const
+std::vector<std::weak_ptr<OutputPin<DigitalValue>>> TeleruptorModule::GetDigitalOutputPins() const
 {
-    std::vector<std::weak_ptr<OutputPin<bool>>> outputPins;
+    std::vector<std::weak_ptr<OutputPin<DigitalValue>>> outputPins;
     for (const auto& pin : m_teleruptorFeedbackPins) {
         outputPins.push_back(pin);
     }
@@ -57,8 +57,8 @@ std::vector<std::weak_ptr<OutputPin<bool>>> TeleruptorModule::GetDigitalOutputPi
     return outputPins;
 }
 
-void TeleruptorModule::UpdateTeleruptorState(const uint8_t teleruptorIndex, const bool newState)
+void TeleruptorModule::UpdateTeleruptor(const uint8_t teleruptorIndex, const DigitalValue newValue)
 {
-    uint16_t command = newState ? 0x01 : 0x02; // CMD1 - Set teleruptor ON, CMD2 - Set teleruptor OFF
+    uint16_t command = newValue ? 0x01 : 0x02; // CMD1 - Set teleruptor ON, CMD2 - Set teleruptor OFF
     Exchange(command | (teleruptorIndex << 4));
 }

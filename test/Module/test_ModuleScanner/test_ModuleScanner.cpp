@@ -182,11 +182,14 @@ void ModuleScanner_DetectModules_UnknownModuleTypeSkipped()
     TEST_ASSERT_NOT_NULL(pushButtonModule);
 }
 
-int main(int argc, char **argv) {
+int main()
+{
     UNITY_BEGIN();
+
     RUN_TEST(ModuleScanner_DetectModules_NoModulesFound);
     RUN_TEST(ModuleScanner_DetectModules_OneModuleFound);
     RUN_TEST(ModuleScanner_DetectModules_MultipleModulesFound);
     RUN_TEST(ModuleScanner_DetectModules_UnknownModuleTypeSkipped);
+    
     return UNITY_END();
 }

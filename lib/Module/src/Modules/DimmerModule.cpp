@@ -25,7 +25,7 @@ ProcessResponse DimmerModule::Process()
     return { .Success = response.Success };
 }
 
-std::vector<std::weak_ptr<InputPin<DimmerControlValue>>> DimmerModule::GetDimmerControlPins() const
+std::vector<std::weak_ptr<InputPin<DimmerControlValue>>> DimmerModule::GetDimmerControlInputPins() const
 {
     std::vector<std::weak_ptr<InputPin<DimmerControlValue>>> inputPins;
     for (const auto& pin : m_dimmerControlPins) {

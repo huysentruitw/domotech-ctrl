@@ -140,7 +140,7 @@ extern "C" void app_main()
     inputPin->ConnectTo(teleruptorModule.GetDigitalOutputPins()[2]);
 
     auto pbPins = pushButtonModule.GetDigitalOutputPins();
-    auto dimmerPins = dimmerModule.GetDimmerControlPins();
+    auto dimmerPins = dimmerModule.GetDimmerControlInputPins();
     auto telPins = teleruptorModule.GetDigitalInputPins();
 
     std::vector<std::shared_ptr<InputPin<DigitalValue>>> pins;

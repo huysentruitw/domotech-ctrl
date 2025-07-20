@@ -1,7 +1,7 @@
 {
   "name": "Module",
   "version": "1.0.0",
-  "description": "Module base and scanner for ESP32 using ESP-IDF",
+  "description": "Modules and module scanner",
   "keywords": "module, scanner, esp32, esp-idf",
   "frameworks": "espidf",
   "platforms": [

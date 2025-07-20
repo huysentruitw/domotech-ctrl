@@ -14,7 +14,7 @@ public:
 
     ProcessResponse Process() override;
 
-    std::vector<std::weak_ptr<InputPin<DimmerControlValue>>> GetDimmerControlPins() const override;
+    std::vector<std::weak_ptr<InputPin<DimmerControlValue>>> GetDimmerControlInputPins() const override;
 
 private:
     const uint8_t m_numberOfChannels;

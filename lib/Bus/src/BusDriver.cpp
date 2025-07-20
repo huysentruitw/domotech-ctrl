@@ -13,7 +13,7 @@
 #define RXD_PIN           GPIO_NUM_16
 #define DE_PIN            GPIO_NUM_4     // RS485 DE/RE control pin
 
-#undef AUTO_DE
+#define AUTO_DE
 
 void BusDriver::Init() const
 {

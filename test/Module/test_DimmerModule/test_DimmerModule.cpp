@@ -16,7 +16,7 @@ void tearDown(void)
     // Cleanup after each test
 }
 
-void DimmerModule_Constructor_InitializesCorrectly()
+void DimmerModule_CreateFromInitialData_InitializesCorrectly()
 {
     // Arrange
     MockBus bus;
@@ -24,14 +24,14 @@ void DimmerModule_Constructor_InitializesCorrectly()
     const uint16_t initialData = 0;
     
     // Act
-    DimmerModule module(bus, address, initialData);
+    auto module = DimmerModule::CreateFromInitialData(bus, address, initialData);
     
     // Assert
-    TEST_ASSERT_EQUAL(ModuleType::Dimmer, module.GetType());
-    TEST_ASSERT_EQUAL(address, module.GetAddress());
+    TEST_ASSERT_EQUAL(ModuleType::Dimmer, module->GetType());
+    TEST_ASSERT_EQUAL(address, module->GetAddress());
     
-    auto dimmerPins = module.GetDimmerControlPins();
-    TEST_ASSERT_EQUAL(12, dimmerPins.size()); // 12 dimmer channels as defined in the constructor
+    auto dimmerPins = module->GetDimmerControlPins();
+    TEST_ASSERT_EQUAL(16, dimmerPins.size());
     
     // Verify each pin is initially set to 0% with 0 fade time
     for (const auto& weakPin : dimmerPins) {
@@ -47,7 +47,7 @@ void DimmerModule_Process_SuccessfulPoll()
     // Arrange
     MockBus bus;
     const uint8_t address = 0x10;
-    const uint16_t initialData = 0;
+    const uint8_t numberOfChannels = 12; 
     
     // Setup mock responses
     ScanResponse pollResponse = {
@@ -56,7 +56,7 @@ void DimmerModule_Process_SuccessfulPoll()
     };
     bus.QueueResponse(pollResponse);
     
-    DimmerModule module(bus, address, initialData);
+    DimmerModule module(bus, address, numberOfChannels);
     
     // Act
     auto response = module.Process();
@@ -74,7 +74,7 @@ void DimmerModule_Process_FailedPoll()
     // Arrange
     MockBus bus;
     const uint8_t address = 0x10;
-    const uint16_t initialData = 0;
+    const uint8_t numberOfChannels = 12;
     
     // Setup mock responses with a failed poll
     ScanResponse pollResponse = {
@@ -82,7 +82,7 @@ void DimmerModule_Process_FailedPoll()
     };
     bus.QueueResponse(pollResponse);
     
-    DimmerModule module(bus, address, initialData);
+    DimmerModule module(bus, address, numberOfChannels);
     
     // Act
     auto response = module.Process();
@@ -99,7 +99,7 @@ void DimmerModule_UpdateChannel_SendsCorrectCommands()
     // Arrange
     MockBus bus;
     const uint8_t address = 0x10;
-    const uint16_t initialData = 0;
+    const uint8_t numberOfChannels = 12;
     
     // Setup mock responses for the two Exchange calls
     ScanResponse response1 = {
@@ -111,7 +111,7 @@ void DimmerModule_UpdateChannel_SendsCorrectCommands()
     bus.QueueResponse(response1);
     bus.QueueResponse(response2);
     
-    DimmerModule module(bus, address, initialData);
+    DimmerModule module(bus, address, numberOfChannels);
     
     // Get a handle to the first dimmer channel pin
     auto dimmerPins = module.GetDimmerControlPins();
@@ -130,36 +130,19 @@ void DimmerModule_UpdateChannel_SendsCorrectCommands()
     TEST_ASSERT_EQUAL(0x01 | (75 << 8) | (1 << 4), bus.LastExchangeData);
 }
 
-void DimmerModule_ToString_ReturnsCorrectString()
-{
-    // Arrange
-    MockBus bus;
-    const uint8_t address = 0x15;
-    const uint16_t initialData = 0;
-    
-    DimmerModule module(bus, address, initialData);
-    
-    // Act
-    std::string result = module.ToString();
-    
-    // Assert
-    std::string expected = std::string(KnownModuleIdentifiers::Dimmer) + " 21 12"; // address in decimal is 21
-    TEST_ASSERT_EQUAL_STRING(expected.c_str(), result.c_str());
-}
-
 void DimmerModule_UpdateMultipleChannels_SendsCorrectCommands()
 {
     // Arrange
     MockBus bus;
     const uint8_t address = 0x10;
-    const uint16_t initialData = 0;
+    const uint8_t numberOfChannels = 12;
     
     // Setup mock responses for the Exchange calls (4 calls for 2 channels)
     for (int i = 0; i < 4; i++) {
         bus.QueueResponse({ .Success = true });
     }
     
-    DimmerModule module(bus, address, initialData);
+    DimmerModule module(bus, address, numberOfChannels);
     
     // Get handles to multiple dimmer channel pins
     auto dimmerPins = module.GetDimmerControlPins();
@@ -184,11 +167,10 @@ void DimmerModule_UpdateMultipleChannels_SendsCorrectCommands()
 int main(int argc, char **argv) {
     UNITY_BEGIN();
     
-    RUN_TEST(DimmerModule_Constructor_InitializesCorrectly);
+    RUN_TEST(DimmerModule_CreateFromInitialData_InitializesCorrectly);
     RUN_TEST(DimmerModule_Process_SuccessfulPoll);
     RUN_TEST(DimmerModule_Process_FailedPoll);
     RUN_TEST(DimmerModule_UpdateChannel_SendsCorrectCommands);
-    RUN_TEST(DimmerModule_ToString_ReturnsCorrectString);
     RUN_TEST(DimmerModule_UpdateMultipleChannels_SendsCorrectCommands);
     
     return UNITY_END();

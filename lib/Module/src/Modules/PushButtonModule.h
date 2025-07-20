@@ -2,17 +2,19 @@
 
 #include "../ModuleBase.h"
 
+#include <memory>
+#include <vector>
+
 class PushButtonModule final : public ModuleBase
 {
 public:
-    PushButtonModule(const Bus& bus, const uint8_t address, const uint16_t initialData);
+    PushButtonModule(const Bus& bus, const uint8_t address, const uint8_t numberOfButtons);
+
+    static std::unique_ptr<PushButtonModule> CreateFromInitialData(const Bus& bus, const uint8_t address, const uint16_t initialData);
 
     ProcessResponse Process() override;
 
     std::vector<std::weak_ptr<OutputPin<DigitalValue>>> GetDigitalOutputPins() const override;
-
-    std::string ToString() const override;
-    static std::unique_ptr<PushButtonModule> TryConstructFromString(const Bus& bus, const std::string& encodedModuleInfo);
 
 private:
     const uint8_t m_numberOfButtons;

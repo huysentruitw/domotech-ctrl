@@ -14,7 +14,7 @@ void tearDown(void)
     // Cleanup after each test
 }
 
-void PushButtonModule_Constructor_InitializesCorrectly()
+void PushButtonModule_CreateFromInitialData_InitializesCorrectly()
 {
     // Arrange
     MockBus bus;
@@ -22,10 +22,10 @@ void PushButtonModule_Constructor_InitializesCorrectly()
     const uint16_t initialData = 0x4000; // 4 in the top 4 bits (4 buttons)
     
     // Act
-    PushButtonModule module(bus, address, initialData);
+    auto module = PushButtonModule::CreateFromInitialData(bus, address, initialData);
     
     // Assert
-    auto outputPins = module.GetDigitalOutputPins();
+    auto outputPins = module->GetDigitalOutputPins();
     TEST_ASSERT_EQUAL(4, outputPins.size());
     
     // Verify each pin is initially set to false
@@ -41,7 +41,7 @@ void PushButtonModule_Process_SuccessfulPoll_NoButtonsPressed()
     // Arrange
     MockBus bus;
     const uint8_t address = 0x10;
-    const uint16_t initialData = 0x2000; // 2 buttons
+    const uint16_t numberOfButtons = 2;
     
     // Setup mock responses
     ScanResponse pollResponse = {
@@ -50,7 +50,7 @@ void PushButtonModule_Process_SuccessfulPoll_NoButtonsPressed()
     };
     bus.QueueResponse(pollResponse);
     
-    PushButtonModule module(bus, address, initialData);
+    PushButtonModule module(bus, address, numberOfButtons);
     
     // Act
     auto response = module.Process();
@@ -68,7 +68,7 @@ void PushButtonModule_Process_SuccessfulPoll_ButtonsPressed()
     // Arrange
     MockBus bus;
     const uint8_t address = 0x10;
-    const uint16_t initialData = 0x8000; // 8 buttons
+    const uint16_t numberOfButtons = 8;
     
     // Setup mock response with buttons pressed (0x0010 is button 0 pressed)
     ScanResponse pollResponse = {
@@ -78,7 +78,7 @@ void PushButtonModule_Process_SuccessfulPoll_ButtonsPressed()
     };
     bus.QueueResponse(pollResponse);
     
-    PushButtonModule module(bus, address, initialData);
+    PushButtonModule module(bus, address, numberOfButtons);
     
     // Act
     auto response = module.Process();
@@ -100,7 +100,7 @@ void PushButtonModule_Process_ButtonsReleased()
     // Arrange
     MockBus bus;
     const uint8_t address = 0x10;
-    const uint16_t initialData = 0x8000; // 8 buttons
+    const uint16_t numberOfButtons = 8;
     
     // First response with buttons pressed
     ScanResponse firstResponse = {
@@ -117,7 +117,7 @@ void PushButtonModule_Process_ButtonsReleased()
     };
     bus.QueueResponse(secondResponse);
     
-    PushButtonModule module(bus, address, initialData);
+    PushButtonModule module(bus, address, numberOfButtons);
     
     // Press the button first
     auto firstProcessResponse = module.Process();
@@ -144,7 +144,7 @@ void PushButtonModule_Process_ButtonsPressedThenExchangeRequested()
     // Arrange
     MockBus bus;
     const uint8_t address = 0x10;
-    const uint16_t initialData = 0x8000; // 8 buttons
+    const uint16_t numberOfButtons = 8;
     
     // First response with buttons pressed
     ScanResponse firstResponse = {
@@ -162,7 +162,7 @@ void PushButtonModule_Process_ButtonsPressedThenExchangeRequested()
     };
     bus.QueueResponse(secondResponse);
     
-    PushButtonModule module(bus, address, initialData);
+    PushButtonModule module(bus, address, numberOfButtons);
     
     // Act - First process sets m_hasPressedButtons to true
     auto firstProcessResponse = module.Process();
@@ -188,7 +188,7 @@ void PushButtonModule_Process_FailedPoll()
     // Arrange
     MockBus bus;
     const uint8_t address = 0x10;
-    const uint16_t initialData = 0x8000; // 8 buttons
+    const uint16_t numberOfButtons = 8;
     
     // Setup mock response for failed poll
     ScanResponse failedResponse = {
@@ -196,7 +196,7 @@ void PushButtonModule_Process_FailedPoll()
     };
     bus.QueueResponse(failedResponse);
     
-    PushButtonModule module(bus, address, initialData);
+    PushButtonModule module(bus, address, numberOfButtons);
     
     // Act
     auto response = module.Process();
@@ -206,33 +206,16 @@ void PushButtonModule_Process_FailedPoll()
     TEST_ASSERT_TRUE(bus.PollCalled);
 }
 
-void PushButtonModule_ToString()
-{
-    // Arrange
-    MockBus bus;
-    const uint8_t address = 0x10;
-    const uint16_t initialData = 0x8000; // 8 buttons
-    
-    PushButtonModule module(bus, address, initialData);
-    
-    // Act
-    std::string result = module.ToString();
-    
-    // Assert
-    TEST_ASSERT_EQUAL_STRING("PB 16 8", result.c_str());
-}
-
 int main()
 {
     UNITY_BEGIN();
     
-    RUN_TEST(PushButtonModule_Constructor_InitializesCorrectly);
+    RUN_TEST(PushButtonModule_CreateFromInitialData_InitializesCorrectly);
     RUN_TEST(PushButtonModule_Process_SuccessfulPoll_NoButtonsPressed);
     RUN_TEST(PushButtonModule_Process_SuccessfulPoll_ButtonsPressed);
     RUN_TEST(PushButtonModule_Process_ButtonsReleased);
     RUN_TEST(PushButtonModule_Process_ButtonsPressedThenExchangeRequested);
     RUN_TEST(PushButtonModule_Process_FailedPoll);
-    RUN_TEST(PushButtonModule_ToString);
     
     return UNITY_END();
 }

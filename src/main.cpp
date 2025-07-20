@@ -2,6 +2,7 @@
 #include <format>
 #include <BusDriver.h>
 #include <ModuleScanner.h>
+#include <Modules/DimmerModule.h>
 #include <Modules/PushButtonModule.h>
 #include <Modules/TeleruptorModule.h>
 #include <Pins.h>
@@ -21,9 +22,9 @@ Bus bus(driver);
 ModuleScanner scanner(bus);
 
 auto inputPin = std::make_shared<InputPin<DigitalValue>>([](DigitalValue value) { gpio_set_level(LED_GPIO, value ? 0 : 1); }, DigitalValue(false));
-PushButtonModule pushButtonModule(bus, 0x03, 0x8000);
-
-TeleruptorModule teleruptorModule(bus, 0x05, 0x0008);
+PushButtonModule pushButtonModule(bus, 0x03, 8);
+DimmerModule dimmerModule(bus, 0x04, 12);
+TeleruptorModule teleruptorModule(bus, 0x05, 8);
 
 static EventGroupHandle_t wifi_event_group;
 #define WIFI_CONNECTED_BIT BIT0
@@ -78,18 +79,18 @@ esp_err_t hello_handler(httpd_req_t *req)
 
     // httpd_resp_send(req, response.c_str(), response.length());
 
-    std::string response = pushButtonModule.ToString() + "\n" + teleruptorModule.ToString();
+    // std::string response = pushButtonModule.ToString() + "\n" + teleruptorModule.ToString();
 
-    httpd_resp_send(req, response.c_str(), HTTPD_RESP_USE_STRLEN);
+    // httpd_resp_send(req, response.c_str(), HTTPD_RESP_USE_STRLEN);
 
-    // auto response = bus.Exchange(0x05, 0x06);
+    auto response = bus.Exchange(0x04, 0);
 
-    // if (response.Success) {
-    //     std::string responseStr = std::format("Module at address 0x03 responded with type {} and data {}", response.ModuleType, response.Data);
-    //     httpd_resp_send(req, responseStr.c_str(), responseStr.length());
-    // } else {
-    //     httpd_resp_send(req, "Module not found or communication failed", HTTPD_RESP_USE_STRLEN);
-    // }
+    if (response.Success) {
+        std::string responseStr = std::format("Module at address 0x03 responded with type {} and data {}", response.ModuleType, response.Data);
+        httpd_resp_send(req, responseStr.c_str(), responseStr.length());
+    } else {
+        httpd_resp_send(req, "Module not found or communication failed", HTTPD_RESP_USE_STRLEN);
+    }
 
     return ESP_OK;
 }
@@ -118,6 +119,8 @@ void ScanTask(void *arg)
     while (true) {
         pushButtonModule.Process();
         vTaskDelay(1);
+        dimmerModule.Process();
+        vTaskDelay(1);
         teleruptorModule.Process();
         vTaskDelay(1);
     }
@@ -137,13 +140,21 @@ extern "C" void app_main()
     inputPin->ConnectTo(teleruptorModule.GetDigitalOutputPins()[2]);
 
     auto pbPins = pushButtonModule.GetDigitalOutputPins();
+    auto dimmerPins = dimmerModule.GetDimmerControlPins();
     auto telPins = teleruptorModule.GetDigitalInputPins();
 
+    std::vector<std::shared_ptr<InputPin<DigitalValue>>> pins;
+
     for (uint8_t i = 0; i < pbPins.size(); ++i) {
+        pins.push_back(std::make_shared<InputPin<DigitalValue>>([dimmerPins, i](DigitalValue value) {
+            dimmerPins[i].lock()->SetState(DimmerControlValue(value ? 100 : 0, i + 1));
+        }, DigitalValue(false)));
+
         auto pbPin = pbPins[i].lock();
         auto telPin = telPins[i].lock();
 
         telPin->ConnectTo(pbPin);
+        pins[i]->ConnectTo(pbPin);
     }
 
     // xTaskCreate(
@@ -165,4 +176,8 @@ extern "C" void app_main()
     );
 
     start_webserver();      // Launch HTTP server
+
+    while (true) {
+        vTaskDelay(pdMS_TO_TICKS(1000)); // Sleep for 1 second
+    }
 }

@@ -2,18 +2,20 @@
 
 #include "../ModuleBase.h"
 
+#include <memory>
+#include <vector>
+
 class TeleruptorModule final : public ModuleBase
 {
 public:
-    TeleruptorModule(const Bus& bus, const uint8_t address, const uint16_t initialData);
+    TeleruptorModule(const Bus& bus, const uint8_t address, const uint8_t numberOfTeleruptors);
+
+    static std::unique_ptr<TeleruptorModule> CreateFromInitialData(const Bus& bus, const uint8_t address, const uint16_t initialData);
 
     ProcessResponse Process() override;
 
     std::vector<std::weak_ptr<InputPin<DigitalValue>>> GetDigitalInputPins() const override;
     std::vector<std::weak_ptr<OutputPin<DigitalValue>>> GetDigitalOutputPins() const override;
-
-    std::string ToString() const override;
-    static std::unique_ptr<TeleruptorModule> TryConstructFromString(const Bus& bus, const std::string& encodedModuleInfo);
 
 private:
     const uint8_t m_numberOfTeleruptors;

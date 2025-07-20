@@ -1,3 +1,5 @@
+#include "ModuleScanner.h"
+
 #include <memory>
 
 #ifndef NATIVE_BUILD
@@ -5,7 +7,6 @@
 #endif
 
 #include "ModuleFactory.h"
-#include "ModuleScanner.h"
 
 ModuleScanner::ModuleScanner(Bus& bus)
     : m_bus(bus)

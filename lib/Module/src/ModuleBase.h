@@ -24,8 +24,6 @@ public:
     uint8_t GetAddress() const;
     ModuleType GetType() const;
 
-    virtual std::string ToString() const = 0;
-
 protected:
     ScanResponse Poll() const;
     ScanResponse Exchange(const uint16_t data) const;

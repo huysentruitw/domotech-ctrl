@@ -14,7 +14,7 @@ void tearDown(void)
     // Cleanup after each test
 }
 
-void TeleruptorModule_Constructor_InitializesCorrectly()
+void TeleruptorModule_CreateFromInitialData_InitializesCorrectly()
 {
     // Arrange
     MockBus bus;
@@ -22,11 +22,11 @@ void TeleruptorModule_Constructor_InitializesCorrectly()
     const uint16_t initialData = 0x0004; // 4 teleruptors
     
     // Act
-    TeleruptorModule module(bus, address, initialData);
+    auto module = TeleruptorModule::CreateFromInitialData(bus, address, initialData);
     
     // Assert
-    auto inputPins = module.GetDigitalInputPins();
-    auto outputPins = module.GetDigitalOutputPins();
+    auto inputPins = module->GetDigitalInputPins();
+    auto outputPins = module->GetDigitalOutputPins();
     
     TEST_ASSERT_EQUAL(4, inputPins.size());
     TEST_ASSERT_EQUAL(4, outputPins.size());
@@ -50,7 +50,7 @@ void TeleruptorModule_Process_SuccessfulPoll_NoFeedbackChange()
     // Arrange
     MockBus bus;
     const uint8_t address = 0x20;
-    const uint16_t initialData = 0x0004; // 4 teleruptors
+    const uint16_t numberOfTeleruptors = 4;
     
     // Setup mock response for poll
     ScanResponse pollResponse = {
@@ -65,7 +65,7 @@ void TeleruptorModule_Process_SuccessfulPoll_NoFeedbackChange()
     bus.QueueResponse(pollResponse);
     bus.QueueResponse(exchangeResponse);
     
-    TeleruptorModule module(bus, address, initialData);
+    TeleruptorModule module(bus, address, numberOfTeleruptors);
     
     // Act
     auto response = module.Process();
@@ -82,7 +82,7 @@ void TeleruptorModule_Process_WithFeedbackChange()
     // Arrange
     MockBus bus;
     const uint8_t address = 0x20;
-    const uint16_t initialData = 0x0004; // 4 teleruptors
+    const uint16_t numberOfTeleruptors = 4;
     
     // Setup mock responses
     // First poll response indicates change in feedback
@@ -100,7 +100,7 @@ void TeleruptorModule_Process_WithFeedbackChange()
     };
     bus.QueueResponse(feedbackResponse);
     
-    TeleruptorModule module(bus, address, initialData);
+    TeleruptorModule module(bus, address, numberOfTeleruptors);
     
     // Act
     auto response = module.Process();
@@ -125,7 +125,7 @@ void TeleruptorModule_Process_FailedPoll()
     // Arrange
     MockBus bus;
     const uint8_t address = 0x20;
-    const uint16_t initialData = 0x0004; // 4 teleruptors
+    const uint16_t numberOfTeleruptors = 4;
     
     // Setup mock response for failed poll
     ScanResponse failedResponse = {
@@ -133,7 +133,7 @@ void TeleruptorModule_Process_FailedPoll()
     };
     bus.QueueResponse(failedResponse);
     
-    TeleruptorModule module(bus, address, initialData);
+    TeleruptorModule module(bus, address, numberOfTeleruptors);
     
     // Act
     auto response = module.Process();
@@ -148,7 +148,7 @@ void TeleruptorModule_Process_FailedFeedbackExchange()
     // Arrange
     MockBus bus;
     const uint8_t address = 0x20;
-    const uint16_t initialData = 0x0004; // 4 teleruptors
+    const uint16_t numberOfTeleruptors = 4;
     
     // Setup mock responses
     // First poll response indicates change in feedback
@@ -164,7 +164,7 @@ void TeleruptorModule_Process_FailedFeedbackExchange()
     };
     bus.QueueResponse(failedFeedbackResponse);
     
-    TeleruptorModule module(bus, address, initialData);
+    TeleruptorModule module(bus, address, numberOfTeleruptors);
     
     // Act
     auto response = module.Process();
@@ -180,7 +180,7 @@ void TeleruptorModule_UpdateTeleruptorState()
     // Arrange
     MockBus bus;
     const uint8_t address = 0x20;
-    const uint16_t initialData = 0x0004; // 4 teleruptors
+    const uint16_t numberOfTeleruptors = 4;
     
     // Setup mock response for Exchange
     ScanResponse exchangeResponse = {
@@ -188,7 +188,7 @@ void TeleruptorModule_UpdateTeleruptorState()
     };
     bus.QueueResponse(exchangeResponse);
     
-    TeleruptorModule module(bus, address, initialData);
+    TeleruptorModule module(bus, address, numberOfTeleruptors);
     
     // Get input pin and set its state to trigger UpdateTeleruptorState
     auto inputPins = module.GetDigitalInputPins();
@@ -200,33 +200,16 @@ void TeleruptorModule_UpdateTeleruptorState()
     TEST_ASSERT_EQUAL(0x21, bus.LastExchangeData); // CMD1 (0x01) | (teleruptorIndex(2) << 4) = 0x21
 }
 
-void TeleruptorModule_ToString()
-{
-    // Arrange
-    MockBus bus;
-    const uint8_t address = 0x20;
-    const uint16_t initialData = 0x0004; // 4 teleruptors
-    
-    TeleruptorModule module(bus, address, initialData);
-    
-    // Act
-    std::string result = module.ToString();
-    
-    // Assert
-    TEST_ASSERT_EQUAL_STRING("TEL 32 4", result.c_str());
-}
-
 int main()
 {
     UNITY_BEGIN();
     
-    RUN_TEST(TeleruptorModule_Constructor_InitializesCorrectly);
+    RUN_TEST(TeleruptorModule_CreateFromInitialData_InitializesCorrectly);
     RUN_TEST(TeleruptorModule_Process_SuccessfulPoll_NoFeedbackChange);
     RUN_TEST(TeleruptorModule_Process_WithFeedbackChange);
     RUN_TEST(TeleruptorModule_Process_FailedPoll);
     RUN_TEST(TeleruptorModule_Process_FailedFeedbackExchange);
     RUN_TEST(TeleruptorModule_UpdateTeleruptorState);
-    RUN_TEST(TeleruptorModule_ToString);
     
     return UNITY_END();
 }

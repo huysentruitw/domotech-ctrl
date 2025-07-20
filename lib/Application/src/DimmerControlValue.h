@@ -9,7 +9,7 @@ public:
     DimmerControlValue(int percentage, int fadeTimeInSeconds = 0)
     {
         m_percentage = std::clamp(percentage, 0, 100);
-        m_fadeTimeInSeconds = std::clamp(fadeTimeInSeconds, 0, 255);
+        m_fadeTimeInSeconds = std::clamp(fadeTimeInSeconds, 0, 99);
     }
 
     bool operator==(const DimmerControlValue& other) const = default;

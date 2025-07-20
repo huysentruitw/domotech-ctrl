@@ -1,17 +1,22 @@
+#include "TeleruptorModule.h"
+
 #include <sstream>
 #include <string>
 #include <KnownModuleIdentifiers.h>
 
-#include "TeleruptorModule.h"
-
-TeleruptorModule::TeleruptorModule(const Bus& bus, const uint8_t address, const uint16_t initialData)
+TeleruptorModule::TeleruptorModule(const Bus& bus, const uint8_t address, const uint8_t numberOfTeleruptors)
     : ModuleBase(bus, address, ModuleType::Teleruptor)
-    , m_numberOfTeleruptors(initialData & 0x0F)
+    , m_numberOfTeleruptors(numberOfTeleruptors)
 {
     for (uint8_t i = 0; i < m_numberOfTeleruptors; ++i) {
         m_teleruptorPins.push_back(std::make_shared<InputPin<DigitalValue>>([this, i](DigitalValue value) { UpdateTeleruptor(i, value); }, DigitalValue(false)));
         m_teleruptorFeedbackPins.push_back(std::make_shared<OutputPin<DigitalValue>>(DigitalValue(false)));
     }
+}
+
+std::unique_ptr<TeleruptorModule> TeleruptorModule::CreateFromInitialData(const Bus& bus, const uint8_t address, const uint16_t initialData)
+{
+    return std::make_unique<TeleruptorModule>(bus, address, initialData & 0x0F);
 }
 
 ProcessResponse TeleruptorModule::Process()
@@ -65,24 +70,4 @@ void TeleruptorModule::UpdateTeleruptor(const uint8_t teleruptorIndex, const Dig
 {
     uint16_t command = newValue ? 0x01 : 0x02; // CMD1 - Set teleruptor ON, CMD2 - Set teleruptor OFF
     Exchange(command | (teleruptorIndex << 4));
-}
-
-std::string TeleruptorModule::ToString() const
-{
-    return (std::string)KnownModuleIdentifiers::Teleruptor + " " + std::to_string(GetAddress()) + " " + std::to_string(m_numberOfTeleruptors);
-}
-
-std::unique_ptr<TeleruptorModule> TeleruptorModule::TryConstructFromString(const Bus& bus, const std::string& encodedModuleInfo)
-{
-    std::istringstream stream(encodedModuleInfo);
-    std::string identifier;
-    uint8_t address;
-    uint8_t numberOfTeleruptors;
-
-    if (!(stream >> identifier) || identifier != KnownModuleIdentifiers::Teleruptor ||
-        !(stream >> address) || !(stream >> numberOfTeleruptors)) {
-        return nullptr;
-    }
-
-    return std::make_unique<TeleruptorModule>(bus, address, numberOfTeleruptors);
 }

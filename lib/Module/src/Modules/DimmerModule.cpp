@@ -1,17 +1,22 @@
+#include "DimmerModule.h"
+
 #include <sstream>
 #include <string>
 
 #include <KnownModuleIdentifiers.h>
 
-#include "DimmerModule.h"
-
-DimmerModule::DimmerModule(const Bus& bus, const uint8_t address, const uint16_t initialData)
+DimmerModule::DimmerModule(const Bus& bus, const uint8_t address, const uint8_t numberOfChannels)
     : ModuleBase(bus, address, ModuleType::Dimmer)
-    , m_numberOfChannels(12)
+    , m_numberOfChannels(numberOfChannels)
 {
     for (uint8_t i = 0; i < m_numberOfChannels; ++i) {
         m_dimmerControlPins.push_back(std::make_shared<InputPin<DimmerControlValue>>([this, i](DimmerControlValue value) { UpdateChannel(i, value); }, DimmerControlValue(0, 0)));
     }
+}
+
+std::unique_ptr<DimmerModule> DimmerModule::CreateFromInitialData(const Bus& bus, const uint8_t address, const uint16_t initialData)
+{
+    return std::make_unique<DimmerModule>(bus, address, 16);
 }
 
 ProcessResponse DimmerModule::Process()
@@ -37,24 +42,4 @@ void DimmerModule::UpdateChannel(const uint8_t channelIndex, const DimmerControl
 
     command = 0x01; // CMD1 - Set dimmer percentage
     Exchange(command | (newValue.GetPercentage() << 8) | ((channelIndex + 1) << 4));
-}
-
-std::string DimmerModule::ToString() const
-{
-    return (std::string)KnownModuleIdentifiers::Dimmer + " " + std::to_string(GetAddress()) + " " + std::to_string(m_numberOfChannels);
-}
-
-std::unique_ptr<DimmerModule> DimmerModule::TryConstructFromString(const Bus& bus, const std::string& encodedModuleInfo)
-{
-    std::istringstream stream(encodedModuleInfo);
-    std::string identifier;
-    uint8_t address;
-    uint8_t numberOfChannels;
-
-    if (!(stream >> identifier) || identifier != KnownModuleIdentifiers::Dimmer ||
-        !(stream >> address) || !(stream >> numberOfChannels)) {
-        return nullptr; // Invalid format
-    }
-
-    return std::make_unique<DimmerModule>(bus, address, 0);
 }

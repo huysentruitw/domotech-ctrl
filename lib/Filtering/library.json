@@ -1,0 +1,18 @@
+{
+  "name": "Filtering",
+  "version": "1.0.0",
+  "description": "Filtering library",
+  "keywords": "filtering, esp32, esp-idf",
+  "frameworks": "espidf",
+  "platforms": [
+    "espressif32",
+    "native"
+  ],
+  "srcDir": "src",
+  "build": {
+    "flags": [
+      "-I$IDF_PATH/components/driver/include",
+      "-I$IDF_PATH/components/esp_rom/include"
+    ]
+  }
+}

@@ -6,6 +6,7 @@
 #include <Modules/PushButtonModule.h>
 #include <Modules/TeleruptorModule.h>
 #include <Pins.h>
+#include <Configuration.h>
 
 #include "esp_wifi.h"
 #include "esp_event.h"
@@ -20,6 +21,8 @@
 BusDriver driver;
 Bus bus(driver);
 ModuleScanner scanner(bus);
+
+Configuration config;
 
 auto inputPin = std::make_shared<InputPin<DigitalValue>>([](DigitalValue value) { gpio_set_level(LED_GPIO, value ? 0 : 1); }, DigitalValue(false));
 PushButtonModule pushButtonModule(bus, 0x03, 8);
@@ -81,16 +84,16 @@ esp_err_t hello_handler(httpd_req_t *req)
 
     // std::string response = pushButtonModule.ToString() + "\n" + teleruptorModule.ToString();
 
-    // httpd_resp_send(req, response.c_str(), HTTPD_RESP_USE_STRLEN);
+    httpd_resp_send(req, config.ToString().c_str(), HTTPD_RESP_USE_STRLEN);
 
-    auto response = bus.Exchange(0x04, 0);
+    // auto response = bus.Exchange(0x04, 0);
 
-    if (response.Success) {
-        std::string responseStr = std::format("Module at address 0x03 responded with type {} and data {}", response.ModuleType, response.Data);
-        httpd_resp_send(req, responseStr.c_str(), responseStr.length());
-    } else {
-        httpd_resp_send(req, "Module not found or communication failed", HTTPD_RESP_USE_STRLEN);
-    }
+    // if (response.Success) {
+    //     std::string responseStr = std::format("Module at address 0x03 responded with type {} and data {}", response.ModuleType, response.Data);
+    //     httpd_resp_send(req, responseStr.c_str(), responseStr.length());
+    // } else {
+    //     httpd_resp_send(req, "Module not found or communication failed", HTTPD_RESP_USE_STRLEN);
+    // }
 
     return ESP_OK;
 }

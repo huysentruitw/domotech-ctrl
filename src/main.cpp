@@ -5,7 +5,7 @@
 #include <Modules/DimmerModule.h>
 #include <Modules/PushButtonModule.h>
 #include <Modules/TeleruptorModule.h>
-#include <Pins.h>
+#include <Pin.h>
 #include <Configuration.h>
 
 #include "esp_wifi.h"
@@ -24,7 +24,7 @@ ModuleScanner scanner(bus);
 
 Configuration config;
 
-auto inputPin = std::make_shared<InputPin<DigitalValue>>([](DigitalValue value) { gpio_set_level(LED_GPIO, value ? 0 : 1); }, DigitalValue(false));
+const auto inputPin = std::make_shared<Pin>(PinDirection::Input, DigitalValue(false), [](const Pin& pin) { gpio_set_level(LED_GPIO, pin.GetStateAs<DigitalValue>() ? 0 : 1); });
 PushButtonModule pushButtonModule(bus, 0x03, 8);
 DimmerModule dimmerModule(bus, 0x04, 12);
 TeleruptorModule teleruptorModule(bus, 0x05, 8);
@@ -140,24 +140,24 @@ extern "C" void app_main()
     gpio_reset_pin(LED_GPIO);
     gpio_set_direction(LED_GPIO, GPIO_MODE_OUTPUT);
 
-    inputPin->ConnectTo(teleruptorModule.GetDigitalOutputPins()[2]);
+    Pin::Connect(inputPin, teleruptorModule.GetOutputPins()[2]);
 
-    auto pbPins = pushButtonModule.GetDigitalOutputPins();
-    auto dimmerPins = dimmerModule.GetDimmerControlInputPins();
-    auto telPins = teleruptorModule.GetDigitalInputPins();
+    auto pbPins = pushButtonModule.GetOutputPins();
+    auto dimmerPins = dimmerModule.GetInputPins();
+    auto telPins = teleruptorModule.GetInputPins();
 
-    std::vector<std::shared_ptr<InputPin<DigitalValue>>> pins;
+    std::vector<std::shared_ptr<Pin>> inputPins;
 
     for (uint8_t i = 0; i < pbPins.size(); ++i) {
-        pins.push_back(std::make_shared<InputPin<DigitalValue>>([dimmerPins, i](DigitalValue value) {
-            dimmerPins[i].lock()->SetState(DimmerControlValue(value ? 100 : 0, i + 1));
-        }, DigitalValue(false)));
+        inputPins.push_back(std::make_shared<Pin>(PinDirection::Input, DigitalValue(false), [dimmerPins, i](const Pin& pin) {
+            dimmerPins[i].lock()->SetState(DimmerControlValue(pin.GetStateAs<DigitalValue>() ? 100 : 0, i + 1));
+        }));
 
         auto pbPin = pbPins[i].lock();
         auto telPin = telPins[i].lock();
 
-        telPin->ConnectTo(pbPin);
-        pins[i]->ConnectTo(pbPin);
+        Pin::Connect(telPin, pbPin);
+        Pin::Connect(inputPins[i], pbPin);
     }
 
     // xTaskCreate(

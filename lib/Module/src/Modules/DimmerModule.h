@@ -14,11 +14,11 @@ public:
 
     ProcessResponse Process() override;
 
-    std::vector<std::weak_ptr<InputPin<DimmerControlValue>>> GetDimmerControlInputPins() const override;
+    std::vector<std::weak_ptr<Pin>> GetInputPins() const override;
 
 private:
     const uint8_t m_numberOfChannels;
-    std::vector<std::shared_ptr<InputPin<DimmerControlValue>>> m_dimmerControlPins;
+    std::vector<std::shared_ptr<Pin>> m_dimmerControlPins;
 
     void UpdateChannel(const uint8_t channelIndex, const DimmerControlValue newValue);
 };

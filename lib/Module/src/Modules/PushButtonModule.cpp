@@ -4,6 +4,7 @@
 #include <string>
 
 #include <KnownModuleIdentifiers.h>
+#include <PinFactory.h>
 
 static const uint8_t ButtonMasks8[8] = { 0x10, 0x20, 0x40, 0x80, 0x08, 0x04, 0x02, 0x01 };
 
@@ -12,7 +13,7 @@ PushButtonModule::PushButtonModule(const Bus& bus, const uint8_t address, const 
     , m_numberOfButtons(numberOfButtons)
 {
     for (uint8_t i = 0; i < m_numberOfButtons; ++i) {
-        m_buttonPins.push_back(std::make_shared<OutputPin<DigitalValue>>(DigitalValue(false)));
+        m_buttonPins.push_back(PinFactory::CreateOutputPin<DigitalValue>());
     }
 }
 
@@ -50,9 +51,9 @@ ProcessResponse PushButtonModule::Process()
     return { .Success = true };
 }
 
-std::vector<std::weak_ptr<OutputPin<DigitalValue>>> PushButtonModule::GetDigitalOutputPins() const
+std::vector<std::weak_ptr<Pin>> PushButtonModule::GetOutputPins() const
 {
-    std::vector<std::weak_ptr<OutputPin<DigitalValue>>> outputPins;
+    std::vector<std::weak_ptr<Pin>> outputPins;
     for (const auto& pin : m_buttonPins) {
         outputPins.push_back(pin);
     }

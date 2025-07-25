@@ -25,8 +25,8 @@ void TeleruptorModule_CreateFromInitialData_InitializesCorrectly()
     auto module = TeleruptorModule::CreateFromInitialData(bus, address, initialData);
     
     // Assert
-    auto inputPins = module->GetDigitalInputPins();
-    auto outputPins = module->GetDigitalOutputPins();
+    auto inputPins = module->GetInputPins();
+    auto outputPins = module->GetOutputPins();
     
     TEST_ASSERT_EQUAL(4, inputPins.size());
     TEST_ASSERT_EQUAL(4, outputPins.size());
@@ -35,13 +35,14 @@ void TeleruptorModule_CreateFromInitialData_InitializesCorrectly()
     for (const auto& weakPin : inputPins) {
         auto pin = weakPin.lock();
         TEST_ASSERT_NOT_NULL(pin.get());
+        TEST_ASSERT_EQUAL(DigitalValue(false), pin->GetStateAs<DigitalValue>());
     }
     
     // Verify each output pin is initially set to false
     for (const auto& weakPin : outputPins) {
         auto pin = weakPin.lock();
         TEST_ASSERT_NOT_NULL(pin.get());
-        TEST_ASSERT_FALSE(pin->GetState());
+        TEST_ASSERT_EQUAL(DigitalValue(false), pin->GetStateAs<DigitalValue>());
     }
 }
 
@@ -113,11 +114,11 @@ void TeleruptorModule_Process_WithFeedbackChange()
     TEST_ASSERT_EQUAL(0x06, bus.LastExchangeData); // Command 6 - Request feedback state
     
     // Verify feedback pins state
-    auto outputPins = module.GetDigitalOutputPins();
-    TEST_ASSERT_TRUE(outputPins[0].lock()->GetState());  // First teleruptor ON
-    TEST_ASSERT_TRUE(outputPins[1].lock()->GetState());  // Second teleruptor ON
-    TEST_ASSERT_FALSE(outputPins[2].lock()->GetState()); // Third teleruptor OFF
-    TEST_ASSERT_FALSE(outputPins[3].lock()->GetState()); // Fourth teleruptor OFF
+    auto outputPins = module.GetOutputPins();
+    TEST_ASSERT_EQUAL(DigitalValue(true), outputPins[0].lock()->GetStateAs<DigitalValue>());  // First teleruptor ON
+    TEST_ASSERT_EQUAL(DigitalValue(true), outputPins[1].lock()->GetStateAs<DigitalValue>());  // Second teleruptor ON
+    TEST_ASSERT_EQUAL(DigitalValue(false), outputPins[2].lock()->GetStateAs<DigitalValue>()); // Third teleruptor OFF
+    TEST_ASSERT_EQUAL(DigitalValue(false), outputPins[3].lock()->GetStateAs<DigitalValue>()); // Fourth teleruptor OFF
 }
 
 void TeleruptorModule_Process_FailedPoll()
@@ -191,7 +192,7 @@ void TeleruptorModule_UpdateTeleruptorState()
     TeleruptorModule module(bus, address, numberOfTeleruptors);
     
     // Get input pin and set its state to trigger UpdateTeleruptorState
-    auto inputPins = module.GetDigitalInputPins();
+    auto inputPins = module.GetInputPins();
     inputPins[2].lock()->SetState(DigitalValue(true)); // Set third teleruptor to ON
     
     // Assert

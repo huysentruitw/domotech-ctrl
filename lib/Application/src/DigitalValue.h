@@ -3,7 +3,7 @@
 struct DigitalValue
 {
 public:    
-    explicit DigitalValue(bool value) : m_value(value) {}
+    explicit DigitalValue(bool value = false) : m_value(value) {}
 
     bool operator==(const DigitalValue& other) const = default;
 

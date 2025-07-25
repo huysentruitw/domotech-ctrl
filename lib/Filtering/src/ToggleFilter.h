@@ -8,24 +8,12 @@
 class ToggleFilter : public FilterBase
 {
 public:
-    ToggleFilter()
-    {
-        m_inputPin = std::make_shared<InputPin<DigitalValue>>(
-            [this](const DigitalValue& value) {
-                if (value) {
-                    m_outputPin->SetState(DigitalValue(!m_outputPin->GetState()));
-                }
-            },
-            DigitalValue(false)
-        );
+    ToggleFilter();
 
-        m_outputPin = std::make_shared<OutputPin<DigitalValue>>(DigitalValue(false));
-    }
-
-    std::vector<std::weak_ptr<InputPin<DigitalValue>>> GetDigitalInputPins() const override { return { m_inputPin }; }
-    std::vector<std::weak_ptr<OutputPin<DigitalValue>>> GetDigitalOutputPins() const override { return { m_outputPin }; }
+    std::vector<std::weak_ptr<Pin>> GetInputPins() const override;
+    std::vector<std::weak_ptr<Pin>> GetOutputPins() const override;
 
 private:
-    std::shared_ptr<InputPin<DigitalValue>> m_inputPin;
-    std::shared_ptr<OutputPin<DigitalValue>> m_outputPin;
+    std::shared_ptr<Pin> m_inputPin;
+    std::shared_ptr<Pin> m_outputPin;
 };

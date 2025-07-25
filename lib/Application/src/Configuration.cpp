@@ -32,7 +32,7 @@ std::string Configuration::ToString() const
         switch (module->GetType())
         {
             case ModuleType::Dimmer:
-                result << KnownModuleIdentifiers::Dimmer << " " << std::to_string(module->GetDimmerControlInputPins().size());
+                result << KnownModuleIdentifiers::Dimmer << " " << std::to_string(module->GetInputPins().size());
                 break;
             case ModuleType::Temperature:
                 result << KnownModuleIdentifiers::Temperature;
@@ -41,25 +41,25 @@ std::string Configuration::ToString() const
                 result << KnownModuleIdentifiers::Audio;
                 break;
             case ModuleType::PushButtons:
-                result << KnownModuleIdentifiers::PushButtons << " " << std::to_string(module->GetDigitalOutputPins().size());
+                result << KnownModuleIdentifiers::PushButtons << " " << std::to_string(module->GetOutputPins().size());
                 break;
             case ModuleType::PushButtonsWithIr:
-                result << KnownModuleIdentifiers::PushButtonsWithIr << " " << std::to_string(module->GetDigitalOutputPins().size());
+                result << KnownModuleIdentifiers::PushButtonsWithIr << " " << std::to_string(module->GetOutputPins().size());
                 break;
             case ModuleType::PushButtonsWithTemperature:
-                result << KnownModuleIdentifiers::PushButtonsWithTemperature << " " << std::to_string(module->GetDigitalOutputPins().size());
+                result << KnownModuleIdentifiers::PushButtonsWithTemperature << " " << std::to_string(module->GetOutputPins().size());
                 break;
             case ModuleType::PushButtonsWithLeds:
-                result << KnownModuleIdentifiers::PushButtonsWithLeds << " " << std::to_string(module->GetDigitalOutputPins().size());
+                result << KnownModuleIdentifiers::PushButtonsWithLeds << " " << std::to_string(module->GetOutputPins().size());
                 break;
             case ModuleType::Relais:
-                result << KnownModuleIdentifiers::Relais << " " << std::to_string(module->GetDigitalInputPins().size());
+                result << KnownModuleIdentifiers::Relais << " " << std::to_string(module->GetInputPins().size());
                 break;
             case ModuleType::Teleruptor:
-                result << KnownModuleIdentifiers::Teleruptor << " " << std::to_string(module->GetDigitalInputPins().size());
+                result << KnownModuleIdentifiers::Teleruptor << " " << std::to_string(module->GetInputPins().size());
                 break;
             case ModuleType::Inputs:
-                result << KnownModuleIdentifiers::Inputs << " " << std::to_string(module->GetDigitalOutputPins().size());
+                result << KnownModuleIdentifiers::Inputs << " " << std::to_string(module->GetInputPins().size());
                 break;
             default:
                 result << "UNK";

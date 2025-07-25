@@ -30,15 +30,15 @@ void DimmerModule_CreateFromInitialData_InitializesCorrectly()
     TEST_ASSERT_EQUAL(ModuleType::Dimmer, module->GetType());
     TEST_ASSERT_EQUAL(address, module->GetAddress());
     
-    auto dimmerPins = module->GetDimmerControlInputPins();
+    auto dimmerPins = module->GetInputPins();
     TEST_ASSERT_EQUAL(16, dimmerPins.size());
     
     // Verify each pin is initially set to 0% with 0 fade time
     for (const auto& weakPin : dimmerPins) {
         auto pin = weakPin.lock();
         TEST_ASSERT_NOT_NULL(pin.get());
-        TEST_ASSERT_EQUAL(0, pin->GetState().GetPercentage());
-        TEST_ASSERT_EQUAL(0, pin->GetState().GetFadeTimeInSeconds());
+        TEST_ASSERT_EQUAL(0, pin->GetStateAs<DimmerControlValue>().GetPercentage());
+        TEST_ASSERT_EQUAL(0, pin->GetStateAs<DimmerControlValue>().GetFadeTimeInSeconds());
     }
 }
 
@@ -114,7 +114,7 @@ void DimmerModule_UpdateChannel_SendsCorrectCommands()
     DimmerModule module(bus, address, numberOfChannels);
     
     // Get a handle to the first dimmer channel pin
-    auto dimmerPins = module.GetDimmerControlInputPins();
+    auto dimmerPins = module.GetInputPins();
     auto pin = dimmerPins[0].lock();
     
     // Act - set the dimmer to 75% with a fade time of 5 seconds
@@ -145,7 +145,7 @@ void DimmerModule_UpdateMultipleChannels_SendsCorrectCommands()
     DimmerModule module(bus, address, numberOfChannels);
     
     // Get handles to multiple dimmer channel pins
-    auto dimmerPins = module.GetDimmerControlInputPins();
+    auto dimmerPins = module.GetInputPins();
     auto pin0 = dimmerPins[0].lock();
     auto pin5 = dimmerPins[5].lock();
     

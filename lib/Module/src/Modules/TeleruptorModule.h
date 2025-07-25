@@ -14,14 +14,14 @@ public:
 
     ProcessResponse Process() override;
 
-    std::vector<std::weak_ptr<InputPin<DigitalValue>>> GetDigitalInputPins() const override;
-    std::vector<std::weak_ptr<OutputPin<DigitalValue>>> GetDigitalOutputPins() const override;
+    std::vector<std::weak_ptr<Pin>> GetInputPins() const override;
+    std::vector<std::weak_ptr<Pin>> GetOutputPins() const override;
 
 private:
     const uint8_t m_numberOfTeleruptors;
     bool m_feedbackStateInSync = false;
-    std::vector<std::shared_ptr<InputPin<DigitalValue>>> m_teleruptorPins;
-    std::vector<std::shared_ptr<OutputPin<DigitalValue>>> m_teleruptorFeedbackPins;
+    std::vector<std::shared_ptr<Pin>> m_teleruptorPins;
+    std::vector<std::shared_ptr<Pin>> m_teleruptorFeedbackPins;
 
     void UpdateTeleruptor(const uint8_t teleruptorIndex, const DigitalValue newValue);
 };

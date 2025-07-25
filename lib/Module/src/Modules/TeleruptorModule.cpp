@@ -2,15 +2,21 @@
 
 #include <sstream>
 #include <string>
+
 #include <KnownModuleIdentifiers.h>
+#include <PinFactory.h>
 
 TeleruptorModule::TeleruptorModule(const Bus& bus, const uint8_t address, const uint8_t numberOfTeleruptors)
     : ModuleBase(bus, address, ModuleType::Teleruptor)
     , m_numberOfTeleruptors(numberOfTeleruptors)
 {
     for (uint8_t i = 0; i < m_numberOfTeleruptors; ++i) {
-        m_teleruptorPins.push_back(std::make_shared<InputPin<DigitalValue>>([this, i](DigitalValue value) { UpdateTeleruptor(i, value); }, DigitalValue(false)));
-        m_teleruptorFeedbackPins.push_back(std::make_shared<OutputPin<DigitalValue>>(DigitalValue(false)));
+        const auto onStateChange = [this, i](const Pin& pin) {
+            UpdateTeleruptor(i, pin.GetStateAs<DigitalValue>());
+        };
+
+        m_teleruptorPins.push_back(PinFactory::CreateInputPin<DigitalValue>(onStateChange));
+        m_teleruptorFeedbackPins.push_back(PinFactory::CreateOutputPin<DigitalValue>());
     }
 }
 
@@ -46,9 +52,9 @@ ProcessResponse TeleruptorModule::Process()
     return { .Success = true };
 }
 
-std::vector<std::weak_ptr<InputPin<DigitalValue>>> TeleruptorModule::GetDigitalInputPins() const
+std::vector<std::weak_ptr<Pin>> TeleruptorModule::GetInputPins() const
 {
-    std::vector<std::weak_ptr<InputPin<DigitalValue>>> inputPins;
+    std::vector<std::weak_ptr<Pin>> inputPins;
     for (const auto& pin : m_teleruptorPins) {
         inputPins.push_back(pin);
     }
@@ -56,9 +62,9 @@ std::vector<std::weak_ptr<InputPin<DigitalValue>>> TeleruptorModule::GetDigitalI
     return inputPins;
 }
 
-std::vector<std::weak_ptr<OutputPin<DigitalValue>>> TeleruptorModule::GetDigitalOutputPins() const
+std::vector<std::weak_ptr<Pin>> TeleruptorModule::GetOutputPins() const
 {
-    std::vector<std::weak_ptr<OutputPin<DigitalValue>>> outputPins;
+    std::vector<std::weak_ptr<Pin>> outputPins;
     for (const auto& pin : m_teleruptorFeedbackPins) {
         outputPins.push_back(pin);
     }

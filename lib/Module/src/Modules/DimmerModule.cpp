@@ -4,13 +4,18 @@
 #include <string>
 
 #include <KnownModuleIdentifiers.h>
+#include <PinFactory.h>
 
 DimmerModule::DimmerModule(const Bus& bus, const uint8_t address, const uint8_t numberOfChannels)
     : ModuleBase(bus, address, ModuleType::Dimmer)
     , m_numberOfChannels(numberOfChannels)
 {
     for (uint8_t i = 0; i < m_numberOfChannels; ++i) {
-        m_dimmerControlPins.push_back(std::make_shared<InputPin<DimmerControlValue>>([this, i](DimmerControlValue value) { UpdateChannel(i, value); }, DimmerControlValue(0, 0)));
+        const auto onStateChange = [this, i](const Pin& pin) {
+            UpdateChannel(i, pin.GetStateAs<DimmerControlValue>());
+        };
+
+        m_dimmerControlPins.push_back(PinFactory::CreateInputPin<DimmerControlValue>(onStateChange));
     }
 }
 
@@ -25,9 +30,9 @@ ProcessResponse DimmerModule::Process()
     return { .Success = response.Success };
 }
 
-std::vector<std::weak_ptr<InputPin<DimmerControlValue>>> DimmerModule::GetDimmerControlInputPins() const
+std::vector<std::weak_ptr<Pin>> DimmerModule::GetInputPins() const
 {
-    std::vector<std::weak_ptr<InputPin<DimmerControlValue>>> inputPins;
+    std::vector<std::weak_ptr<Pin>> inputPins;
     for (const auto& pin : m_dimmerControlPins) {
         inputPins.push_back(pin);
     }

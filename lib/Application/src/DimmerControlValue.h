@@ -6,7 +6,7 @@
 struct DimmerControlValue
 {
 public:
-    DimmerControlValue(int percentage, int fadeTimeInSeconds = 0)
+    DimmerControlValue(int percentage = 0, int fadeTimeInSeconds = 0)
     {
         m_percentage = std::clamp(percentage, 0, 100);
         m_fadeTimeInSeconds = std::clamp(fadeTimeInSeconds, 0, 99);

@@ -25,14 +25,14 @@ void PushButtonModule_CreateFromInitialData_InitializesCorrectly()
     auto module = PushButtonModule::CreateFromInitialData(bus, address, initialData);
     
     // Assert
-    auto outputPins = module->GetDigitalOutputPins();
+    auto outputPins = module->GetOutputPins();
     TEST_ASSERT_EQUAL(4, outputPins.size());
     
     // Verify each pin is initially set to false
     for (const auto& weakPin : outputPins) {
         auto pin = weakPin.lock();
         TEST_ASSERT_NOT_NULL(pin.get());
-        TEST_ASSERT_FALSE(pin->GetState());
+        TEST_ASSERT_EQUAL(DigitalValue(false), pin->GetStateAs<DigitalValue>());
     }
 }
 
@@ -88,10 +88,10 @@ void PushButtonModule_Process_SuccessfulPoll_ButtonsPressed()
     TEST_ASSERT_TRUE(response.RaisePriority);
     
     // Verify button pin states
-    auto outputPins = module.GetDigitalOutputPins();
-    TEST_ASSERT_TRUE(outputPins[0].lock()->GetState()); // Button 0 should be pressed
+    auto outputPins = module.GetOutputPins();
+    TEST_ASSERT_EQUAL(DigitalValue(true), outputPins[0].lock()->GetStateAs<DigitalValue>()); // Button 0 should be pressed
     for (size_t i = 1; i < outputPins.size(); i++) {
-        TEST_ASSERT_FALSE(outputPins[i].lock()->GetState()); // Other buttons should not be pressed
+        TEST_ASSERT_EQUAL(DigitalValue(false), outputPins[i].lock()->GetStateAs<DigitalValue>()); // Other buttons should not be pressed
     }
 }
 
@@ -133,9 +133,9 @@ void PushButtonModule_Process_ButtonsReleased()
     TEST_ASSERT_FALSE(secondProcessResponse.RaisePriority);
     
     // Verify all buttons are released
-    auto outputPins = module.GetDigitalOutputPins();
+    auto outputPins = module.GetOutputPins();
     for (const auto& weakPin : outputPins) {
-        TEST_ASSERT_FALSE(weakPin.lock()->GetState());
+        TEST_ASSERT_EQUAL(DigitalValue(false), weakPin.lock()->GetStateAs<DigitalValue>());
     }
 }
 

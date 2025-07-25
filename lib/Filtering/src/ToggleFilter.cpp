@@ -4,23 +4,24 @@
 
 ToggleFilter::ToggleFilter()
 {
-    m_inputPin = PinFactory::CreateInputPin<DigitalValue>(
+    m_toggleInputPin = PinFactory::CreateInputPin<DigitalValue>(
+        "Toggle",
         [this](const Pin& pin) {
             if (pin.GetStateAs<DigitalValue>() == DigitalValue(true)) {
-                const auto newState = m_outputPin->GetStateAs<DigitalValue>() == DigitalValue(true) ? DigitalValue(false) : DigitalValue(true);
-                m_outputPin->SetState(newState);
+                const auto newState = m_controlOutputPin->GetStateAs<DigitalValue>() == DigitalValue(true) ? DigitalValue(false) : DigitalValue(true);
+                m_controlOutputPin->SetState(newState);
             }
         });
 
-    m_outputPin = PinFactory::CreateOutputPin<DigitalValue>();
+    m_controlOutputPin = PinFactory::CreateOutputPin<DigitalValue>("Control");
 }
 
 std::vector<std::weak_ptr<Pin>> ToggleFilter::GetInputPins() const
 {
-    return { m_inputPin };
+    return { m_toggleInputPin };
 }
 
 std::vector<std::weak_ptr<Pin>> ToggleFilter::GetOutputPins() const
 {
-    return { m_outputPin };
+    return { m_controlOutputPin };
 }

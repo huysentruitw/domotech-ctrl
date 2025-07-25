@@ -14,6 +14,6 @@ public:
     std::vector<std::weak_ptr<Pin>> GetOutputPins() const override;
 
 private:
-    std::shared_ptr<Pin> m_dimmerInputPin;
-    std::shared_ptr<Pin> m_dimmerOutputPin;
+    std::shared_ptr<Pin> m_toggleInputPin;
+    std::shared_ptr<Pin> m_controlOutputPin;
 };

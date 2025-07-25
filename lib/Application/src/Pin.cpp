@@ -1,10 +1,17 @@
 #include "Pin.h"
 
-Pin::Pin(const PinDirection direction, const PinState defaultState, const std::optional<std::function<void(const Pin&)>> onStateChange)
+Pin::Pin(
+    const PinDirection direction,
+    const PinState defaultState,
+    const std::optional<std::function<void(const Pin&)>> onStateChange,
+    const std::string name)
     : m_direction(direction)
     , m_defaultState(defaultState)
     , m_state(defaultState)
-    , m_onStateChange(onStateChange) {}
+    , m_onStateChange(onStateChange)
+    , m_name(name)
+{
+}
 
 PinDirection Pin::GetDirection() const
 {

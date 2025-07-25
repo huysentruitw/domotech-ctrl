@@ -14,6 +14,6 @@ public:
     std::vector<std::weak_ptr<Pin>> GetOutputPins() const override;
 
 private:
-    std::shared_ptr<Pin> m_inputPin;
-    std::shared_ptr<Pin> m_outputPin;
+    std::shared_ptr<Pin> m_toggleInputPin;
+    std::shared_ptr<Pin> m_controlOutputPin;
 };

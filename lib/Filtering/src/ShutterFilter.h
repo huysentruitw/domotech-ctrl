@@ -22,10 +22,10 @@ public:
 
 private:
     ShutterCommand m_currentShutterCommand = ShutterCommand::Stop;
-    std::shared_ptr<Pin> m_inputOpenPin;
-    std::shared_ptr<Pin> m_inputClosePin;
-    std::shared_ptr<Pin> m_inputOpenFeedbackPin;
-    std::shared_ptr<Pin> m_inputCloseFeedbackPin;
-    std::shared_ptr<Pin> m_outputOpenPin;
-    std::shared_ptr<Pin> m_outputClosePin;
+    std::shared_ptr<Pin> m_openInputPin;
+    std::shared_ptr<Pin> m_closeInputPin;
+    std::shared_ptr<Pin> m_openFeedbackInputPin;
+    std::shared_ptr<Pin> m_closeFeedbackInputPin;
+    std::shared_ptr<Pin> m_openOutputPin;
+    std::shared_ptr<Pin> m_closeOutputPin;
 };

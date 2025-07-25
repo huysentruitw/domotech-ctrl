@@ -4,82 +4,86 @@
 
 ShutterFilter::ShutterFilter()
 {
-    m_inputOpenPin = PinFactory::CreateInputPin<DigitalValue>(
+    m_openInputPin = PinFactory::CreateInputPin<DigitalValue>(
+        "Open",
         [this](const Pin &pin)
         {
             if (pin.GetStateAs<DigitalValue>() == DigitalValue(true))
             {
                 m_currentShutterCommand = ShutterCommand::Open;
 
-                if (m_inputCloseFeedbackPin->GetStateAs<DigitalValue>() == DigitalValue(true))
+                if (m_closeFeedbackInputPin->GetStateAs<DigitalValue>() == DigitalValue(true))
                 {
-                    m_outputClosePin->SetState(DigitalValue(false));
+                    m_closeOutputPin->SetState(DigitalValue(false));
                 }
                 else
                 {
-                    m_outputOpenPin->SetState(DigitalValue(true));
+                    m_openOutputPin->SetState(DigitalValue(true));
                 }
             }
             else
             {
                 m_currentShutterCommand = ShutterCommand::Stop;
-                m_outputOpenPin->SetState(DigitalValue(false));
-                m_outputClosePin->SetState(DigitalValue(false));
+                m_openOutputPin->SetState(DigitalValue(false));
+                m_closeOutputPin->SetState(DigitalValue(false));
             }
         });
 
-    m_inputClosePin = PinFactory::CreateInputPin<DigitalValue>(
+    m_closeInputPin = PinFactory::CreateInputPin<DigitalValue>(
+        "Close",
         [this](const Pin &pin)
         {
             if (pin.GetStateAs<DigitalValue>() == DigitalValue(true))
             {
                 m_currentShutterCommand = ShutterCommand::Close;
 
-                if (m_inputOpenFeedbackPin->GetStateAs<DigitalValue>() == DigitalValue(true))
+                if (m_openFeedbackInputPin->GetStateAs<DigitalValue>() == DigitalValue(true))
                 {
-                    m_outputOpenPin->SetState(DigitalValue(false));
+                    m_openOutputPin->SetState(DigitalValue(false));
                 }
                 else
                 {
-                    m_outputClosePin->SetState(DigitalValue(true));
+                    m_closeOutputPin->SetState(DigitalValue(true));
                 }
             }
             else
             {
                 m_currentShutterCommand = ShutterCommand::Stop;
-                m_outputOpenPin->SetState(DigitalValue(false));
-                m_outputClosePin->SetState(DigitalValue(false));
+                m_openOutputPin->SetState(DigitalValue(false));
+                m_closeOutputPin->SetState(DigitalValue(false));
             }
         });
 
-    m_inputOpenFeedbackPin = PinFactory::CreateInputPin<DigitalValue>(
+    m_openFeedbackInputPin = PinFactory::CreateInputPin<DigitalValue>(
+        "OpenFeedback",
         [this](const Pin &pin)
         {
             if (pin.GetStateAs<DigitalValue>() == DigitalValue(false) && m_currentShutterCommand == ShutterCommand::Close)
             {
-                m_outputClosePin->SetState(DigitalValue(true));
+                m_closeOutputPin->SetState(DigitalValue(true));
             }
         });
 
-    m_inputCloseFeedbackPin = PinFactory::CreateInputPin<DigitalValue>(
+    m_closeFeedbackInputPin = PinFactory::CreateInputPin<DigitalValue>(
+        "CloseFeedback",
         [this](const Pin &pin)
         {
             if (pin.GetStateAs<DigitalValue>() == DigitalValue(false) && m_currentShutterCommand == ShutterCommand::Open)
             {
-                m_outputOpenPin->SetState(DigitalValue(true));
+                m_openOutputPin->SetState(DigitalValue(true));
             }
         });
 
-    m_outputOpenPin = PinFactory::CreateOutputPin<DigitalValue>();
-    m_outputClosePin = PinFactory::CreateOutputPin<DigitalValue>();
+    m_openOutputPin = PinFactory::CreateOutputPin<DigitalValue>("Open");
+    m_closeOutputPin = PinFactory::CreateOutputPin<DigitalValue>("Close");
 }
 
 std::vector<std::weak_ptr<Pin>> ShutterFilter::GetInputPins() const
 {
-    return {m_inputOpenPin, m_inputClosePin, m_inputOpenFeedbackPin, m_inputCloseFeedbackPin};
+    return {m_openInputPin, m_closeInputPin, m_openFeedbackInputPin, m_closeFeedbackInputPin};
 }
 
 std::vector<std::weak_ptr<Pin>> ShutterFilter::GetOutputPins() const
 {
-    return {m_outputOpenPin, m_outputClosePin};
+    return {m_openOutputPin, m_closeOutputPin};
 }

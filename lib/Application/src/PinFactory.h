@@ -14,8 +14,18 @@ public:
         return std::make_shared<Pin>(PinDirection::Input, defaultState, onStateChange);
     }
 
+    template<typename TState> static const std::shared_ptr<Pin> CreateInputPin(const std::string& name, const std::optional<std::function<void(const Pin&)>> onStateChange = std::nullopt, const TState& defaultState = TState())
+    {
+        return std::make_shared<Pin>(PinDirection::Input, defaultState, onStateChange, name);
+    }
+
     template<typename TState> static const std::shared_ptr<Pin> CreateOutputPin(const TState& defaultState = TState())
     {
         return std::make_shared<Pin>(PinDirection::Output, defaultState);
+    }
+
+    template<typename TState> static const std::shared_ptr<Pin> CreateOutputPin(const std::string name, const TState& defaultState = TState())
+    {
+        return std::make_shared<Pin>(PinDirection::Output, defaultState, std::nullopt, name);
     }
 };

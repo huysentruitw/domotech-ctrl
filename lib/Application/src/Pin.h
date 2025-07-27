@@ -19,7 +19,7 @@ enum class PinDirection
 
 typedef std::variant<DigitalValue, DimmerControlValue> PinState;
 
-class Pin
+class Pin final
 {
 public:
     Pin(

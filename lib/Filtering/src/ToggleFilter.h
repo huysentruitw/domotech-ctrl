@@ -1,11 +1,11 @@
 #pragma once
 
-#include "FilterBase.h"
+#include "Filter.h"
 
 #include <memory>
 #include <vector>
 
-class ToggleFilter : public FilterBase
+class ToggleFilter : public Filter
 {
 public:
     ToggleFilter();

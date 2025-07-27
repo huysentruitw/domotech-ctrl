@@ -3,13 +3,13 @@
 #include <memory>
 #include <vector>
 #include <Bus.h>
-#include "ModuleBase.h"
+#include "Module.h"
 
 class ModuleScanner final
 {
 public:
     ModuleScanner(Bus& bus);
-    std::vector<std::unique_ptr<ModuleBase>> DetectModules();
+    std::vector<std::unique_ptr<Module>> DetectModules();
 
 private:
     Bus& m_bus;

@@ -4,20 +4,20 @@
 #include <string>
 #include <vector>
 
-#include <FilterBase.h>
-#include <ModuleBase.h>
+#include <Filter.h>
+#include <Module.h>
 
 class Configuration final
 {
 public:
     void Clear();
 
-    void AddFilter(std::shared_ptr<FilterBase> filter);
-    void AddModules(std::vector<std::shared_ptr<ModuleBase>> modules);
+    void AddFilter(std::shared_ptr<Filter> filter);
+    void AddModules(std::vector<std::shared_ptr<Module>> modules);
 
     std::string ToString() const;
 
 private:
-    std::vector<std::shared_ptr<FilterBase>> m_filters;
-    std::vector<std::shared_ptr<ModuleBase>> m_modules;
+    std::vector<std::shared_ptr<Filter>> m_filters;
+    std::vector<std::shared_ptr<Module>> m_modules;
 };

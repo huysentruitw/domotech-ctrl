@@ -14,10 +14,10 @@ struct ProcessResponse
     bool RaisePriority = false;
 };
 
-class ModuleBase : public Node
+class Module : public Node
 {
 public:
-    ModuleBase(const Bus& bus, const uint8_t address, const ModuleType moduleType);
+    Module(const Bus& bus, const uint8_t address, const ModuleType moduleType);
 
     virtual ProcessResponse Process() = 0;
 

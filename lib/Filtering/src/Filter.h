@@ -2,6 +2,6 @@
 
 #include <Node.h>
 
-class FilterBase : public Node
+class Filter : public Node
 {
 };

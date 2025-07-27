@@ -13,9 +13,9 @@ ModuleScanner::ModuleScanner(Bus& bus)
 {
 }
 
-std::vector<std::unique_ptr<ModuleBase>> ModuleScanner::DetectModules()
+std::vector<std::unique_ptr<Module>> ModuleScanner::DetectModules()
 {
-    std::vector<std::unique_ptr<ModuleBase>> foundModules;
+    std::vector<std::unique_ptr<Module>> foundModules;
 
     for (uint8_t address = 1; address < 128; address++) {
         auto response = m_bus.Exchange(address, 0);

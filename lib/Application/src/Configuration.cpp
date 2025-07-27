@@ -9,12 +9,12 @@ void Configuration::Clear()
     m_modules.clear();
 }
 
-void Configuration::AddFilter(std::shared_ptr<FilterBase> filter)
+void Configuration::AddFilter(std::shared_ptr<Filter> filter)
 {
     m_filters.push_back(std::move(filter));
 }
 
-void Configuration::AddModules(std::vector<std::shared_ptr<ModuleBase>> modules)
+void Configuration::AddModules(std::vector<std::shared_ptr<Module>> modules)
 {
     m_modules.insert(m_modules.end(), std::make_move_iterator(modules.begin()), std::make_move_iterator(modules.end()));
 }

@@ -7,7 +7,7 @@
 #include <PinFactory.h>
 
 DimmerModule::DimmerModule(const Bus& bus, const uint8_t address, const uint8_t numberOfChannels)
-    : ModuleBase(bus, address, ModuleType::Dimmer)
+    : Module(bus, address, ModuleType::Dimmer)
     , m_numberOfChannels(numberOfChannels)
 {
     for (uint8_t i = 0; i < m_numberOfChannels; ++i) {

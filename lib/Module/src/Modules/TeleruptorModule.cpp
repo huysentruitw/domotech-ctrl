@@ -7,7 +7,7 @@
 #include <PinFactory.h>
 
 TeleruptorModule::TeleruptorModule(const Bus& bus, const uint8_t address, const uint8_t numberOfTeleruptors)
-    : ModuleBase(bus, address, ModuleType::Teleruptor)
+    : Module(bus, address, ModuleType::Teleruptor)
     , m_numberOfTeleruptors(numberOfTeleruptors)
 {
     for (uint8_t i = 0; i < m_numberOfTeleruptors; ++i) {

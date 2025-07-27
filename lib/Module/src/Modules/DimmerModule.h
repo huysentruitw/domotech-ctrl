@@ -1,11 +1,11 @@
 #pragma once
 
-#include "../ModuleBase.h"
+#include "../Module.h"
 
 #include <memory>
 #include <vector>
 
-class DimmerModule final : public ModuleBase
+class DimmerModule final : public Module
 {
 public:
     DimmerModule(const Bus& bus, const uint8_t address, const uint8_t numberOfChannels);

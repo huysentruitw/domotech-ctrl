@@ -1,11 +1,11 @@
 #pragma once
 
-#include "../ModuleBase.h"
+#include "../Module.h"
 
 #include <memory>
 #include <vector>
 
-class TeleruptorModule final : public ModuleBase
+class TeleruptorModule final : public Module
 {
 public:
     TeleruptorModule(const Bus& bus, const uint8_t address, const uint8_t numberOfTeleruptors);

@@ -1,11 +1,11 @@
 #pragma once
 
-#include "../ModuleBase.h"
+#include "../Module.h"
 
 #include <memory>
 #include <vector>
 
-class PushButtonModule final : public ModuleBase
+class PushButtonModule final : public Module
 {
 public:
     PushButtonModule(const Bus& bus, const uint8_t address, const uint8_t numberOfButtons);

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "FilterBase.h"
+#include "Filter.h"
 
 #include <memory>
 #include <vector>
@@ -12,7 +12,7 @@ enum ShutterCommand
     Stop
 };
 
-class ShutterFilter : public FilterBase
+class ShutterFilter : public Filter
 {
 public:
     ShutterFilter();

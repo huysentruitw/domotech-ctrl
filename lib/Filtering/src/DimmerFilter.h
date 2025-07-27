@@ -1,11 +1,11 @@
 #pragma once
 
-#include "FilterBase.h"
+#include "Filter.h"
 
 #include <memory>
 #include <vector>
 
-class DimmerFilter : public FilterBase
+class DimmerFilter : public Filter
 {
 public:
     DimmerFilter();

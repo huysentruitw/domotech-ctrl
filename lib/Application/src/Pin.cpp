@@ -13,6 +13,16 @@ Pin::Pin(
 {
 }
 
+Pin::~Pin()
+{
+    for (auto it = m_connectedInputPins.begin(); it != m_connectedInputPins.end(); ++it) {
+        if (auto input = it->lock()) {
+            input->m_connectedOutputPin.reset(); // Clear the connection
+            input->SetState(input->m_defaultState);
+        }
+    }
+}
+
 PinDirection Pin::GetDirection() const
 {
     return m_direction;

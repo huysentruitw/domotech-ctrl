@@ -28,7 +28,6 @@ void onStateChangeCallback(const Pin& pin)
     g_lastState = pin.GetStateAs<DigitalValue>();
 }
 
-// Test that InputPin initial state works correctly
 void InputPin_InitialState()
 {
     // Arrange & Act
@@ -39,8 +38,7 @@ void InputPin_InitialState()
     TEST_ASSERT_EQUAL(0, g_callbackCounter); // Constructor shouldn't trigger callback
 }
 
-// Test that InputPin state change triggers callback
-void InputPin_StateChangeTriggersCallback()
+void InputPin_StateChange_TriggersCallback()
 {
     // Arrange
     auto pin = PinFactory::CreateInputPin<DigitalValue>(onStateChangeCallback);
@@ -60,7 +58,6 @@ void InputPin_StateChangeTriggersCallback()
     TEST_ASSERT_EQUAL(1, g_callbackCounter); // No additional callback
 }
 
-// Test that OutputPin initial state works correctly
 void OutputPin_InitialState()
 {
     // Arrange & Act
@@ -70,7 +67,6 @@ void OutputPin_InitialState()
     TEST_ASSERT_EQUAL(DigitalValue(true), pin->GetStateAs<DigitalValue>());
 }
 
-// Test OutputPin state change
 void OutputPin_StateChange()
 {
     // Arrange
@@ -83,7 +79,6 @@ void OutputPin_StateChange()
     TEST_ASSERT_EQUAL(DigitalValue(true), pin->GetStateAs<DigitalValue>());
 }
 
-// Test connection between OutputPin and InputPin
 void PinConnection_PropagatesInitialState()
 {
     // Arrange
@@ -94,12 +89,11 @@ void PinConnection_PropagatesInitialState()
     bool result = Pin::Connect(inputPin, outputPin);
     
     // Assert
-    TEST_ASSERT_TRUE(result); // Connection successful
-    TEST_ASSERT_EQUAL(DigitalValue(true), inputPin->GetStateAs<DigitalValue>()); // Input state updated to match output
-    TEST_ASSERT_EQUAL(1, g_callbackCounter); // Callback triggered once
+    TEST_ASSERT_TRUE(result);
+    TEST_ASSERT_EQUAL(DigitalValue(true), inputPin->GetStateAs<DigitalValue>());
+    TEST_ASSERT_EQUAL(1, g_callbackCounter);
 }
 
-// Test propagation of state changes from output to input
 void PinConnection_PropagatesStateChanges()
 {
     // Arrange
@@ -117,8 +111,7 @@ void PinConnection_PropagatesStateChanges()
     TEST_ASSERT_EQUAL(DigitalValue(true), g_lastState);
 }
 
-// Test connection between one output and multiple inputs
-void PinConnection_OneOutputToMultipleInputs()
+void PinConnection_OneOutputToMultipleInputs_AllInputsReceiveState()
 {
     // Arrange
     auto outputPin = PinFactory::CreateOutputPin<DigitalValue>();
@@ -147,8 +140,7 @@ void PinConnection_OneOutputToMultipleInputs()
     TEST_ASSERT_EQUAL(DigitalValue(true), state2);
 }
 
-// Test disconnection of pins
-void PinConnection_Disconnect()
+void PinConnection_Disconnect_InputResetsToDefaultState()
 {
     // Arrange
     auto outputPin = PinFactory::CreateOutputPin<DigitalValue>(DigitalValue(true));
@@ -165,7 +157,6 @@ void PinConnection_Disconnect()
     TEST_ASSERT_EQUAL(1, g_callbackCounter); // Callback triggered by disconnect
 }
 
-// Test that expired output pins are handled correctly
 void PinConnection_ExpiredOutputPin()
 {
     // Arrange
@@ -176,15 +167,15 @@ void PinConnection_ExpiredOutputPin()
     {
         auto tempOutputPin = PinFactory::CreateOutputPin<DigitalValue>(DigitalValue(true));
         result = Pin::Connect(inputPin, tempOutputPin);
+        g_callbackCounter = 0; // Reset after connection
     } // tempOutputPin goes out of scope here
     
     // Assert
     TEST_ASSERT_TRUE(result); // Connection was successful
-    // Input state remains at last known value from output (true)
-    TEST_ASSERT_EQUAL(DigitalValue(true), inputPin->GetStateAs<DigitalValue>());
+    TEST_ASSERT_EQUAL(DigitalValue(false), inputPin->GetStateAs<DigitalValue>()); // Input state back to default
+    TEST_ASSERT_EQUAL(1, g_callbackCounter); // Callback triggered by connection
 }
 
-// Test that expired input pins are handled correctly
 void PinConnection_ExpiredInputPin()
 {
     // Arrange
@@ -204,8 +195,7 @@ void PinConnection_ExpiredInputPin()
     TEST_ASSERT_TRUE(true);
 }
 
-// Test connecting input pin to already connected pin
-void PinConnection_AlreadyConnected()
+void PinConnection_AlreadyConnected_ConnectFails()
 {
     // Arrange
     auto outputPin1 = PinFactory::CreateOutputPin<DigitalValue>(DigitalValue(false));
@@ -227,16 +217,16 @@ int main()
     UNITY_BEGIN();
     
     RUN_TEST(InputPin_InitialState);
-    RUN_TEST(InputPin_StateChangeTriggersCallback);
+    RUN_TEST(InputPin_StateChange_TriggersCallback);
     RUN_TEST(OutputPin_InitialState);
     RUN_TEST(OutputPin_StateChange);
     RUN_TEST(PinConnection_PropagatesInitialState);
     RUN_TEST(PinConnection_PropagatesStateChanges);
-    RUN_TEST(PinConnection_OneOutputToMultipleInputs);
-    RUN_TEST(PinConnection_Disconnect);
+    RUN_TEST(PinConnection_OneOutputToMultipleInputs_AllInputsReceiveState);
+    RUN_TEST(PinConnection_Disconnect_InputResetsToDefaultState);
     RUN_TEST(PinConnection_ExpiredOutputPin);
     RUN_TEST(PinConnection_ExpiredInputPin);
-    RUN_TEST(PinConnection_AlreadyConnected);
+    RUN_TEST(PinConnection_AlreadyConnected_ConnectFails);
     
     return UNITY_END();
 }

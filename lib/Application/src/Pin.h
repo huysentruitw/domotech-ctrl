@@ -28,6 +28,8 @@ public:
         const std::optional<std::function<void(const Pin&)>> onStateChange = std::nullopt,
         const std::string name = "");
 
+    ~Pin();
+
     PinDirection GetDirection() const;
     const PinState& GetState() const;
     template<typename TState> TState GetStateAs() const { return std::get<TState>(m_state); }

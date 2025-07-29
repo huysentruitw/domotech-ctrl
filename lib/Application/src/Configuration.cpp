@@ -28,7 +28,7 @@ std::string Configuration::GetKnownFiltersIni() const
         filter->WriteDescriptor(iniWriter);
     }
 
-    return iniWriter.getContent();
+    return iniWriter.GetContent();
 }
 
 void Configuration::AddFilter(std::shared_ptr<Filter> filter)

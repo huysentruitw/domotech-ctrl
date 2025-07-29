@@ -1,8 +1,8 @@
 {
-  "name": "Bus",
+  "name": "ApplicationAbstractions",
   "version": "1.0.0",
-  "description": "RS485 Bus driver for ESP32 using ESP-IDF",
-  "keywords": "rs485, bus, esp32, esp-idf",
+  "description": "Abstractions of the application module",
+  "keywords": "application-abstractions, esp32, esp-idf",
   "frameworks": "espidf",
   "platforms": [
     "espressif32",

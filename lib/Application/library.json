@@ -8,6 +8,12 @@
     "espressif32",
     "native"
   ],
+  "dependencies": {
+    "ApplicationAbstractions": "*",
+    "Filtering": "*",
+    "Ini": "*",
+    "Module": "*"
+  },
   "srcDir": "src",
   "build": {
     "flags": [

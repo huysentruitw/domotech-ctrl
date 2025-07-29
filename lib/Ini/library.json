@@ -8,6 +8,8 @@
     "espressif32",
     "native"
   ],
+  "dependencies": {
+  },
   "srcDir": "src",
   "build": {
     "flags": [

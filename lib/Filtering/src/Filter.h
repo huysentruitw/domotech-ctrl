@@ -1,5 +1,6 @@
 #pragma once
 
+#include <IniWriter.h>
 #include <Node.h>
 
 class Filter : public Node
@@ -7,7 +8,7 @@ class Filter : public Node
 public:
     virtual const char* GetFilterName() const = 0;
 
-    void WriteDescriptor(IniWriter& iniWriter) override
+    void WriteDescriptor(IniWriter& iniWriter)
     {
         iniWriter.WriteSection("Filter:" + std::string(GetFilterName()));
 

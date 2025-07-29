@@ -18,7 +18,7 @@ public:
 
     void WriteKeyValue(const std::string& key, const std::string& value)
     {
-        m_stream << key << " = " << value << "\n";
+        m_stream << key << "=" << value << "\n";
     }
 
     void WriteComment(const std::string& comment)

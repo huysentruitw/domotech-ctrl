@@ -2,7 +2,7 @@
 
 struct DigitalValue
 {
-public:    
+public:
     explicit DigitalValue(bool value = false) : m_value(value) {}
 
     bool operator==(const DigitalValue& other) const = default;

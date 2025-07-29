@@ -98,6 +98,13 @@ esp_err_t hello_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
+esp_err_t known_filters_handler(httpd_req_t *req)
+{
+    const auto ini = config.GetKnownFiltersIni();
+    httpd_resp_send(req, ini.c_str(), HTTPD_RESP_USE_STRLEN);
+    return ESP_OK;
+}
+
 httpd_handle_t start_webserver(void)
 {
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
@@ -110,8 +117,15 @@ httpd_handle_t start_webserver(void)
             .handler   = hello_handler,
             .user_ctx  = NULL,
         };
-
         httpd_register_uri_handler(server, &hello_uri);
+
+        httpd_uri_t known_filters_uri = {
+            .uri       = "/known-filters.ini",
+            .method    = HTTP_GET,
+            .handler   = known_filters_handler,
+            .user_ctx  = NULL,
+        };
+        httpd_register_uri_handler(server, &known_filters_uri);
     }
 
     return server;

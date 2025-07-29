@@ -19,6 +19,11 @@ enum class PinDirection
 
 typedef std::variant<DigitalValue, DimmerControlValue> PinState;
 
+const std::vector<std::string> PinStateTypes = {
+    "DigitalValue",
+    "DimmerControlValue"
+};
+
 class Pin final
 {
 public:
@@ -29,6 +34,8 @@ public:
         const std::string name = "");
 
     ~Pin();
+
+    const std::string& GetName() const;
 
     PinDirection GetDirection() const;
     const PinState& GetState() const;

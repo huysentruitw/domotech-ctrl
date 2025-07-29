@@ -23,6 +23,11 @@ Pin::~Pin()
     }
 }
 
+const std::string& Pin::GetName() const
+{
+    return m_name;
+}
+
 PinDirection Pin::GetDirection() const
 {
     return m_direction;

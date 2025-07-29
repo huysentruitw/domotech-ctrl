@@ -10,6 +10,8 @@
 class Configuration final
 {
 public:
+    std::string GetKnownFiltersIni() const;
+
     void Clear();
 
     void AddFilter(std::shared_ptr<Filter> filter);

@@ -1,12 +1,34 @@
 #include "Configuration.h"
 #include "KnownModuleIdentifiers.h"
 
+#include <IniWriter.h>
+#include <DimmerFilter.h>
+#include <ShutterFilter.h>
+#include <ToggleFilter.h>
+
 #include <sstream>
 
 void Configuration::Clear()
 {
     m_filters.clear();
     m_modules.clear();
+}
+
+std::string Configuration::GetKnownFiltersIni() const
+{
+    const std::vector<std::shared_ptr<Filter>> filters = {
+        std::make_shared<DimmerFilter>(),
+        std::make_shared<ShutterFilter>(),
+        std::make_shared<ToggleFilter>(),
+    };
+
+    auto iniWriter = IniWriter();
+
+    for (const auto& filter : filters) {
+        filter->WriteDescriptor(iniWriter);
+    }
+
+    return iniWriter.getContent();
 }
 
 void Configuration::AddFilter(std::shared_ptr<Filter> filter)

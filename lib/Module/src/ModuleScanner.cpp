@@ -1,4 +1,5 @@
 #include "ModuleScanner.h"
+#include "ModuleFactory.h"
 
 #include <memory>
 
@@ -6,16 +7,14 @@
 #include "freertos/FreeRTOS.h"
 #endif
 
-#include "ModuleFactory.h"
-
-ModuleScanner::ModuleScanner(Bus& bus)
+ModuleScanner::ModuleScanner(const Bus& bus)
     : m_bus(bus)
 {
 }
 
-std::vector<std::unique_ptr<Module>> ModuleScanner::DetectModules()
+const std::vector<std::shared_ptr<Module>> ModuleScanner::DetectModules() const
 {
-    std::vector<std::unique_ptr<Module>> foundModules;
+    std::vector<std::shared_ptr<Module>> foundModules;
 
     for (uint8_t address = 1; address < 128; address++) {
         auto response = m_bus.Exchange(address, 0);

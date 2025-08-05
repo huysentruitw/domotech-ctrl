@@ -1,12 +1,7 @@
 #include <string>
 #include <format>
-#include <BusDriver.h>
-#include <ModuleScanner.h>
-#include <Modules/DimmerModule.h>
-#include <Modules/PushButtonModule.h>
-#include <Modules/TeleruptorModule.h>
-#include <Pin.h>
-#include <Configuration.h>
+
+#include <Manager.h>
 
 #include "esp_wifi.h"
 #include "esp_event.h"
@@ -18,16 +13,7 @@
 
 #define LED_GPIO GPIO_NUM_2
 
-BusDriver driver;
-Bus bus(driver);
-ModuleScanner scanner(bus);
-
-Configuration config;
-
-const auto inputPin = std::make_shared<Pin>(PinDirection::Input, DigitalValue(false), [](const Pin& pin) { gpio_set_level(LED_GPIO, pin.GetStateAs<DigitalValue>() ? 0 : 1); });
-PushButtonModule pushButtonModule(bus, 0x03, 8);
-DimmerModule dimmerModule(bus, 0x04, 12);
-TeleruptorModule teleruptorModule(bus, 0x05, 8);
+Manager manager;
 
 static EventGroupHandle_t wifi_event_group;
 #define WIFI_CONNECTED_BIT BIT0
@@ -71,37 +57,30 @@ void wifi_init_sta(void)
     xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_BIT, false, true, portMAX_DELAY);
 }
 
-esp_err_t hello_handler(httpd_req_t *req)
+esp_err_t index_handler(httpd_req_t *req)
 {
-    // auto modules = scanner.DetectModules();
-    // std::string response = std::format("Found {} module(s)", modules.size());
-
-    // for (int i = 0; i < modules.size(); i++) {
-    //     response += std::format("\nAddr: {} - Type: {}", (int)modules[i]->GetAddress(), (int)modules[i]->GetType());
-    // }
-
-    // httpd_resp_send(req, response.c_str(), response.length());
-
-    // std::string response = pushButtonModule.ToString() + "\n" + teleruptorModule.ToString();
-
-    httpd_resp_send(req, config.ToString().c_str(), HTTPD_RESP_USE_STRLEN);
-
-    // auto response = bus.Exchange(0x04, 0);
-
-    // if (response.Success) {
-    //     std::string responseStr = std::format("Module at address 0x03 responded with type {} and data {}", response.ModuleType, response.Data);
-    //     httpd_resp_send(req, responseStr.c_str(), responseStr.length());
-    // } else {
-    //     httpd_resp_send(req, "Module not found or communication failed", HTTPD_RESP_USE_STRLEN);
-    // }
-
+    httpd_resp_send(req, "Hello, World!", HTTPD_RESP_USE_STRLEN);
     return ESP_OK;
 }
 
 esp_err_t known_filters_handler(httpd_req_t *req)
 {
-    const auto ini = config.GetKnownFiltersIni();
+    const auto ini = manager.GetKnownFiltersIni();
     httpd_resp_send(req, ini.c_str(), HTTPD_RESP_USE_STRLEN);
+    return ESP_OK;
+}
+
+esp_err_t configuration_clear_handler(httpd_req_t *req)
+{
+    manager.Clear();
+    httpd_resp_send(req, "Configuration cleared!", HTTPD_RESP_USE_STRLEN);
+    return ESP_OK;
+}
+
+esp_err_t configuration_rescan_handler(httpd_req_t *req)
+{
+    manager.RescanModules();
+    httpd_resp_send(req, "Configuration cleared!", HTTPD_RESP_USE_STRLEN);
     return ESP_OK;
 }
 
@@ -114,7 +93,7 @@ httpd_handle_t start_webserver(void)
         httpd_uri_t hello_uri = {
             .uri       = "/",
             .method    = HTTP_GET,
-            .handler   = hello_handler,
+            .handler   = index_handler,
             .user_ctx  = NULL,
         };
         httpd_register_uri_handler(server, &hello_uri);
@@ -126,19 +105,30 @@ httpd_handle_t start_webserver(void)
             .user_ctx  = NULL,
         };
         httpd_register_uri_handler(server, &known_filters_uri);
+
+        httpd_uri_t configuration_clear_uri = {
+            .uri       = "/configuration/clear",
+            .method    = HTTP_POST,
+            .handler   = configuration_clear_handler,
+            .user_ctx  = NULL,
+        };
+        httpd_register_uri_handler(server, &configuration_clear_uri);
+
+        httpd_uri_t configuration_rescan_uri = {
+            .uri       = "/configuration/rescan",
+            .method    = HTTP_POST,
+            .handler   = configuration_rescan_handler,
+            .user_ctx  = NULL,
+        };
+        httpd_register_uri_handler(server, &configuration_rescan_uri);
     }
 
     return server;
 }
 
-void ScanTask(void *arg)
+void ProcessTask(void *arg)
 {
     while (true) {
-        pushButtonModule.Process();
-        vTaskDelay(1);
-        dimmerModule.Process();
-        vTaskDelay(1);
-        teleruptorModule.Process();
         vTaskDelay(1);
     }
 
@@ -147,52 +137,24 @@ void ScanTask(void *arg)
 
 extern "C" void app_main()
 {
-    driver.Init();
     nvs_flash_init();       // Required for Wi-Fi
     wifi_init_sta();        // Connect to Wi-Fi
 
     gpio_reset_pin(LED_GPIO);
     gpio_set_direction(LED_GPIO, GPIO_MODE_OUTPUT);
 
-    Pin::Connect(inputPin, teleruptorModule.GetOutputPins()[2]);
-
-    auto pbPins = pushButtonModule.GetOutputPins();
-    auto dimmerPins = dimmerModule.GetInputPins();
-    auto telPins = teleruptorModule.GetInputPins();
-
-    std::vector<std::shared_ptr<Pin>> inputPins;
-
-    for (uint8_t i = 0; i < pbPins.size(); ++i) {
-        inputPins.push_back(std::make_shared<Pin>(PinDirection::Input, DigitalValue(false), [dimmerPins, i](const Pin& pin) {
-            dimmerPins[i].lock()->SetState(DimmerControlValue(pin.GetStateAs<DigitalValue>() ? 100 : 0, i + 1));
-        }));
-
-        auto pbPin = pbPins[i].lock();
-        auto telPin = telPins[i].lock();
-
-        Pin::Connect(telPin, pbPin);
-        Pin::Connect(inputPins[i], pbPin);
-    }
-
-    // xTaskCreate(
-    //     LedTask,     // Task function
-    //     "Led task",  // Name (for debugging)
-    //     4096,        // Stack size in bytes
-    //     NULL,        // Task parameter
-    //     5,           // Task priority (higher = more important)
-    //     NULL         // Optional handle
-    // );
+    manager.Start();
 
     xTaskCreate(
-        ScanTask,    // Task function
-        "Scan task", // Name (for debugging)
-        4096,        // Stack size in bytes
-        NULL,        // Task parameter
-        5,           // Task priority (higher = more important)
-        NULL         // Optional handle
+        ProcessTask,    // Task function
+        "Process task", // Name (for debugging)
+        4096,           // Stack size in bytes
+        NULL,           // Task parameter
+        5,              // Task priority (higher = more important)
+        NULL            // Optional handle
     );
 
-    start_webserver();      // Launch HTTP server
+    start_webserver();
 
     while (true) {
         vTaskDelay(pdMS_TO_TICKS(1000)); // Sleep for 1 second

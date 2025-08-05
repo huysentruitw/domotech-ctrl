@@ -2,7 +2,7 @@
 
 #include <unity.h>
 
-#include <Configuration.h>
+#include <Manager.h>
 
 void setUp(void)
 {
@@ -12,10 +12,10 @@ void tearDown(void)
 {
 }
 
-void Configuration_GetKnownFiltersIni()
+void Manager_GetKnownFiltersIni()
 {
     // Arrange
-    Configuration config;
+    Manager manager;
     std::string expectedIniContent=
         "[Filter:DimmerFilter]\n"
         "Input:0=Toggle,DigitalValue\n"
@@ -34,7 +34,7 @@ void Configuration_GetKnownFiltersIni()
         "Output:0=Control,DigitalValue\n";
 
     // Act
-    std::string iniContent=config.GetKnownFiltersIni();
+    std::string iniContent = manager.GetKnownFiltersIni();
 
     // Assert
     TEST_ASSERT_EQUAL_STRING(expectedIniContent.c_str(), iniContent.c_str());
@@ -44,7 +44,7 @@ int main()
 {
     UNITY_BEGIN();
     
-    RUN_TEST(Configuration_GetKnownFiltersIni);
+    RUN_TEST(Manager_GetKnownFiltersIni);
     
     return UNITY_END();
 }

@@ -13,7 +13,7 @@ public:
         iniWriter.WriteSection("Filter:" + std::string(GetFilterName()));
 
         const auto inputPins = GetInputPins();
-        for (int i = 0; i < inputPins.size(); ++i) {
+        for (std::size_t i = 0; i < inputPins.size(); ++i) {
             if (auto sharedPin = inputPins[i].lock()) {
                 const std::string stateTypeName = PinStateTypes[sharedPin->GetState().index()];
                 iniWriter.WriteKeyValue("Input:" + std::to_string(i), sharedPin->GetName() + "," + stateTypeName);
@@ -21,7 +21,7 @@ public:
         }
 
         const auto outputPins = GetOutputPins();
-        for (int i = 0; i < outputPins.size(); ++i) {
+        for (std::size_t i = 0; i < outputPins.size(); ++i) {
             if (auto sharedPin = outputPins[i].lock()) {
                 const std::string stateTypeName = PinStateTypes[sharedPin->GetState().index()];
                 iniWriter.WriteKeyValue("Output:" + std::to_string(i), sharedPin->GetName() + "," + stateTypeName);

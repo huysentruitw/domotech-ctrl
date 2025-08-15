@@ -79,8 +79,16 @@ esp_err_t configuration_clear_handler(httpd_req_t *req)
 
 esp_err_t configuration_rescan_handler(httpd_req_t *req)
 {
-    manager.RescanModules();
-    httpd_resp_send(req, "Configuration cleared!", HTTPD_RESP_USE_STRLEN);
+    const auto result = manager.RescanModules();
+    std::string response = "Found " + std::to_string(result.NumberOfDetectedModules) + " module(s).";
+    httpd_resp_send(req, response.c_str(), HTTPD_RESP_USE_STRLEN);
+    return ESP_OK;
+}
+
+esp_err_t configuration_handler(httpd_req_t *req)
+{
+    const auto ini = manager.GetConfigurationIni();
+    httpd_resp_send(req, ini.c_str(), HTTPD_RESP_USE_STRLEN);
     return ESP_OK;
 }
 
@@ -99,7 +107,7 @@ httpd_handle_t start_webserver(void)
         httpd_register_uri_handler(server, &hello_uri);
 
         httpd_uri_t known_filters_uri = {
-            .uri       = "/known-filters.ini",
+            .uri       = "/known-filters",
             .method    = HTTP_GET,
             .handler   = known_filters_handler,
             .user_ctx  = NULL,
@@ -121,6 +129,14 @@ httpd_handle_t start_webserver(void)
             .user_ctx  = NULL,
         };
         httpd_register_uri_handler(server, &configuration_rescan_uri);
+
+        httpd_uri_t configuration_uri = {
+            .uri       = "/configuration",
+            .method    = HTTP_GET,
+            .handler   = configuration_handler,
+            .user_ctx  = NULL,
+        };
+        httpd_register_uri_handler(server, &configuration_uri);
     }
 
     return server;

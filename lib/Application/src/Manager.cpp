@@ -4,6 +4,7 @@
 #include <LockGuard.h>
 #include <ModuleScanner.h>
 
+#include <FilterFactory.h>
 #include <Filters/DimmerFilter.h>
 #include <Filters/ShutterFilter.h>
 #include <Filters/ToggleFilter.h>
@@ -72,11 +73,16 @@ RescanModulesResult Manager::RescanModules()
     };
 }
 
-void Manager::AddFilter(std::unique_ptr<Filter> filter)
+void Manager::CreateFilter(const std::string typeName, const std::string name)
 {
     LockGuard guard(m_syncRoot);
 
-    m_filters.push_back(std::move(filter));
+    auto filter = FilterFactory::TryCreateFilterByTypeName(typeName);
+
+    if (filter != nullptr) {
+        filter->SetName(name);
+        m_filters.push_back(std::move(filter));
+    }
 }
 
 std::string Manager::GetKnownFiltersIni() const

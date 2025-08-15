@@ -22,7 +22,7 @@ public:
     void Clear();
     RescanModulesResult RescanModules();
 
-    void AddFilter(std::unique_ptr<Filter> filter);
+    void CreateFilter(const std::string typeName, const std::string name);
 
     std::string GetKnownFiltersIni() const;
     std::string GetConfigurationIni() const;

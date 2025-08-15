@@ -2,6 +2,7 @@
 #include <format>
 
 #include <Manager.h>
+#include <IniReader.h>
 
 #include "esp_wifi.h"
 #include "esp_event.h"
@@ -59,36 +60,77 @@ void wifi_init_sta(void)
 
 esp_err_t index_handler(httpd_req_t *req)
 {
-    httpd_resp_send(req, "Hello, World!", HTTPD_RESP_USE_STRLEN);
+    httpd_resp_sendstr(req, "Hello, World!");
     return ESP_OK;
 }
 
 esp_err_t known_filters_handler(httpd_req_t *req)
 {
     const auto ini = manager.GetKnownFiltersIni();
-    httpd_resp_send(req, ini.c_str(), HTTPD_RESP_USE_STRLEN);
-    return ESP_OK;
-}
-
-esp_err_t configuration_clear_handler(httpd_req_t *req)
-{
-    manager.Clear();
-    httpd_resp_send(req, "Configuration cleared!", HTTPD_RESP_USE_STRLEN);
-    return ESP_OK;
-}
-
-esp_err_t configuration_rescan_handler(httpd_req_t *req)
-{
-    const auto result = manager.RescanModules();
-    std::string response = "Found " + std::to_string(result.NumberOfDetectedModules) + " module(s).";
-    httpd_resp_send(req, response.c_str(), HTTPD_RESP_USE_STRLEN);
+    httpd_resp_sendstr(req, ini.c_str());
     return ESP_OK;
 }
 
 esp_err_t configuration_handler(httpd_req_t *req)
 {
     const auto ini = manager.GetConfigurationIni();
-    httpd_resp_send(req, ini.c_str(), HTTPD_RESP_USE_STRLEN);
+    httpd_resp_sendstr(req, ini.c_str());
+    return ESP_OK;
+}
+
+esp_err_t configuration_clear_handler(httpd_req_t *req)
+{
+    manager.Clear();
+    httpd_resp_sendstr(req, "Configuration cleared");
+    return ESP_OK;
+}
+
+esp_err_t configuration_rescan_handler(httpd_req_t *req)
+{
+    const auto result = manager.RescanModules();
+    std::string response = "Found " + std::to_string(result.NumberOfDetectedModules) + " module(s)";
+    httpd_resp_sendstr(req, response.c_str());
+    return ESP_OK;
+}
+
+esp_err_t configuration_create_filter_handler(httpd_req_t *req)
+{
+    char body[256];
+    int received = httpd_req_recv(req, body, sizeof(body));
+    if (received <= 0) {
+        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to receive body");
+        return ESP_FAIL;
+    }
+
+    body[received] = '\0'; // Terminate
+
+    IniReader reader(body);
+
+    std::string filterType;
+    std::string filterName;
+    size_t numberOfFiltersCreated = 0;
+
+    reader.Process(
+        [&filterType, &filterName](const std::string& section) {
+            filterType.clear();
+            filterName.clear();
+        },
+        [&filterType, &filterName, &numberOfFiltersCreated](const std::string& section, const std::string& key, const std::string& value) {
+            if (section != "Filter") return;
+            if (key == "Type") filterType = value;
+            if (key == "Name") filterName = value;
+
+            if (!filterType.empty() && !filterName.empty()) {
+                manager.CreateFilter(filterType, filterName);
+                numberOfFiltersCreated++;
+                filterType.clear();
+                filterName.clear();
+            }
+        }
+    );
+
+    std::string response = "Created " + std::to_string(numberOfFiltersCreated) + " filter(s)";
+    httpd_resp_sendstr(req, response.c_str());
     return ESP_OK;
 }
 
@@ -114,6 +156,14 @@ httpd_handle_t start_webserver(void)
         };
         httpd_register_uri_handler(server, &known_filters_uri);
 
+        httpd_uri_t configuration_uri = {
+            .uri       = "/configuration",
+            .method    = HTTP_GET,
+            .handler   = configuration_handler,
+            .user_ctx  = NULL,
+        };
+        httpd_register_uri_handler(server, &configuration_uri);
+
         httpd_uri_t configuration_clear_uri = {
             .uri       = "/configuration/clear",
             .method    = HTTP_POST,
@@ -130,13 +180,13 @@ httpd_handle_t start_webserver(void)
         };
         httpd_register_uri_handler(server, &configuration_rescan_uri);
 
-        httpd_uri_t configuration_uri = {
-            .uri       = "/configuration",
-            .method    = HTTP_GET,
-            .handler   = configuration_handler,
+        httpd_uri_t configuration_create_filter_uri = {
+            .uri       = "/configuration/filter",
+            .method    = HTTP_POST,
+            .handler   = configuration_create_filter_handler,
             .user_ctx  = NULL,
         };
-        httpd_register_uri_handler(server, &configuration_uri);
+        httpd_register_uri_handler(server, &configuration_create_filter_uri);
     }
 
     return server;

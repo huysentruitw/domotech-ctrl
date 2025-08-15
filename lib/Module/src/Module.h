@@ -4,6 +4,7 @@
 #include <string>
 
 #include <Bus.h>
+#include <IniWriter.h>
 #include <Node.h>
 
 #include "ModuleType.h"
@@ -23,6 +24,8 @@ public:
 
     uint8_t GetAddress() const;
     ModuleType GetType() const;
+
+    void WriteConfig(IniWriter& iniWriter) const;
 
 protected:
     ScanResponse Poll() const;

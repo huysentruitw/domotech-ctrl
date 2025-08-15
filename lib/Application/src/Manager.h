@@ -22,14 +22,13 @@ public:
     void Start();
     void ProcessNext();
 
-    std::string GetKnownFiltersIni() const;
-
     void Clear();
     RescanModulesResult RescanModules();
 
     void AddFilter(const std::shared_ptr<Filter> filter);
 
-    std::string ToString() const;
+    std::string GetKnownFiltersIni() const;
+    std::string GetConfigurationIni() const;
 
 private:
     const BusDriver m_busDriver;

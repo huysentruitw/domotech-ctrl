@@ -26,3 +26,26 @@ ModuleType Module::GetType() const
 {
     return m_type;
 }
+
+void Module::WriteConfig(IniWriter& iniWriter) const
+{
+    iniWriter.WriteSection("Module");
+    iniWriter.WriteKeyValue("Type", GetModuleTypeName(GetType()));
+    iniWriter.WriteKeyValue("Address", std::to_string(GetAddress()));
+
+    const auto inputPins = GetInputPins();
+    for (std::size_t i = 0; i < inputPins.size(); ++i) {
+        if (auto sharedPin = inputPins[i].lock()) {
+            const std::string stateTypeName = PinStateTypes[sharedPin->GetState().index()];
+            iniWriter.WriteKeyValue("Input." + std::to_string(i), "," + stateTypeName);
+        }
+    }
+
+    const auto outputPins = GetOutputPins();
+    for (std::size_t i = 0; i < outputPins.size(); ++i) {
+        if (auto sharedPin = outputPins[i].lock()) {
+            const std::string stateTypeName = PinStateTypes[sharedPin->GetState().index()];
+            iniWriter.WriteKeyValue("Output." + std::to_string(i), "," + stateTypeName);
+        }
+    }
+}

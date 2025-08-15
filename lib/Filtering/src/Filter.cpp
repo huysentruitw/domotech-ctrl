@@ -31,3 +31,9 @@ void Filter::WriteDescriptor(IniWriter& iniWriter) const
         }
     }
 }
+
+void Filter::WriteConfig(IniWriter& iniWriter) const
+{
+    iniWriter.WriteSection("Filter");
+    iniWriter.WriteKeyValue("Type", GetFilterTypeName(GetType()));
+}

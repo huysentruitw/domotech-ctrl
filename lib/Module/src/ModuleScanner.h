@@ -9,7 +9,7 @@ class ModuleScanner final
 {
 public:
     ModuleScanner(const Bus& bus);
-    const std::vector<std::shared_ptr<Module>> DetectModules() const;
+    std::vector<std::unique_ptr<Module>> DetectModules() const;
 
 private:
     const Bus& m_bus;

@@ -1,9 +1,9 @@
 #pragma once
 
-#include "FilterType.h"
-
 #include <IniWriter.h>
 #include <Node.h>
+
+#include "FilterType.h"
 
 class Filter : public Node
 {
@@ -13,7 +13,8 @@ public:
     FilterType GetType() const;
 
     void WriteDescriptor(IniWriter& iniWriter) const;
+    void WriteConfig(IniWriter& iniWriter) const;
 
 private:
-    const FilterType m_type;    
+    const FilterType m_type;
 };

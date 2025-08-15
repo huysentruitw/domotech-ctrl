@@ -1,7 +1,7 @@
 #include "Manager.h"
 
 #include <IniWriter.h>
-
+#include <LockGuard.h>
 #include <ModuleScanner.h>
 
 #include <Filters/DimmerFilter.h>
@@ -10,20 +10,10 @@
 
 #include <sstream>
 
-#ifndef NATIVE_BUILD
- #define TAKE(mutex) xSemaphoreTakeRecursive(mutex, portMAX_DELAY);
- #define RELEASE(mutex) xSemaphoreGiveRecursive(mutex);
-#else
- #define TAKE(mutex)
- #define RELEASE(mutex)
-#endif
-
 Manager::Manager()
     : m_busDriver()
     , m_bus(m_busDriver)
-#ifndef NATIVE_BUILD
-    , m_syncRoot(xSemaphoreCreateRecursiveMutex())
-#endif
+    , m_syncRoot()
 {
 }
 
@@ -34,68 +24,68 @@ void Manager::Start()
 
 void Manager::ProcessNext()
 {
-    TAKE(m_syncRoot);
+    std::shared_ptr<Module> moduleToProcess;
 
-    if (m_modules.size() <= 0) {
-        RELEASE(m_syncRoot);
-        return;
+    {
+        LockGuard guard(m_syncRoot);
+
+        if (m_modules.empty()) {
+            return;
+        }
+
+        if (m_nextModuleIndexToProcess >= m_modules.size())
+            m_nextModuleIndexToProcess = 0;
+        
+        moduleToProcess = m_modules[m_nextModuleIndexToProcess++];
     }
 
-    if (m_nextModuleIndexToProcess >= m_modules.size())
-        m_nextModuleIndexToProcess = 0;
-
-    const auto& moduleToProcess = m_modules[m_nextModuleIndexToProcess++];
-    
-    const auto& _ = moduleToProcess->Process();
-
-    RELEASE(m_syncRoot);
+    moduleToProcess->Process();
 }
 
 void Manager::Clear()
 {
-    TAKE(m_syncRoot);
+    LockGuard guard(m_syncRoot);
+
     m_filters.clear();
     m_modules.clear();
     m_nextModuleIndexToProcess = 0;
-    RELEASE(m_syncRoot);
 }
 
 RescanModulesResult Manager::RescanModules()
 {
-    TAKE(m_syncRoot);
-
-    Clear();
+    LockGuard guard(m_syncRoot);
 
     const ModuleScanner scanner(m_bus);
-    
-    const auto detectedModules = scanner.DetectModules();
-    m_modules.insert(m_modules.end(), std::make_move_iterator(detectedModules.begin()), std::make_move_iterator(detectedModules.end()));
+    auto detectedModules = scanner.DetectModules();
 
-    RELEASE(m_syncRoot);
+    m_filters.clear();
+    m_modules.clear();
+    m_nextModuleIndexToProcess = 0;
+
+    m_modules.reserve(detectedModules.size());
+    for (auto& module : detectedModules) {
+        m_modules.push_back(std::move(module));
+    }
 
     return {
-        .NumberOfDetectedModules = (uint8_t)detectedModules.size(),
+        .NumberOfDetectedModules = m_modules.size(),
     };
 }
 
-void Manager::AddFilter(const std::shared_ptr<Filter> filter)
+void Manager::AddFilter(std::unique_ptr<Filter> filter)
 {
-    m_filters.push_back(filter);
+    LockGuard guard(m_syncRoot);
+
+    m_filters.push_back(std::move(filter));
 }
 
 std::string Manager::GetKnownFiltersIni() const
 {
-    const std::vector<std::shared_ptr<Filter>> filters = {
-        std::make_shared<DimmerFilter>(),
-        std::make_shared<ShutterFilter>(),
-        std::make_shared<ToggleFilter>(),
-    };
-
     auto iniWriter = IniWriter();
 
-    for (const auto& filter : filters) {
-        filter->WriteDescriptor(iniWriter);
-    }
+    DimmerFilter().WriteDescriptor(iniWriter);
+    ShutterFilter().WriteDescriptor(iniWriter);
+    ToggleFilter().WriteDescriptor(iniWriter);
 
     return iniWriter.GetContent();
 }
@@ -104,13 +94,17 @@ std::string Manager::GetConfigurationIni() const
 {
     auto iniWriter = IniWriter();
 
-    for (const auto& module : m_modules) {
-        module->WriteConfig(iniWriter);
-    }
+    {
+        LockGuard guard(m_syncRoot);
 
-    // for (auto& _ : m_filters) {
-    //     iniWriter.WriteKeyValue("FLT", "");
-    // }
+        for (const auto& module : m_modules) {
+            module->WriteConfig(iniWriter);
+        }
+
+        for (const auto& filter : m_filters) {
+            filter->WriteConfig(iniWriter);
+        }
+    }
 
     return iniWriter.GetContent();
 }

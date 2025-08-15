@@ -1,5 +1,7 @@
 #include "Bus.h"
 
+#include <LockGuard.h>
+
 #ifndef NATIVE_BUILD
 #include "esp_rom_sys.h"
 #endif
@@ -8,11 +10,14 @@
 
 Bus::Bus(const BusDriver& driver)
     : m_driver(driver)
+    , m_syncRoot()
 {
 }
 
 ScanResponse Bus::Poll(const uint8_t address, const uint8_t retries) const
 {
+    LockGuard guard(m_syncRoot);
+
     for (uint8_t i = 0; i <= retries; i++) {
         auto response = ExchangeInternal(address, 0, false);
 
@@ -26,6 +31,8 @@ ScanResponse Bus::Poll(const uint8_t address, const uint8_t retries) const
 
 ScanResponse Bus::Exchange(const uint8_t address, const uint16_t data, const uint8_t retries) const
 {
+    LockGuard guard(m_syncRoot);
+
     for (uint8_t i = 0; i <= retries; i++) {
         auto response = ExchangeInternal(address, data, true);
 

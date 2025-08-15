@@ -1,20 +1,14 @@
 {
-  "name": "Application",
+  "name": "Locking",
   "version": "1.0.0",
-  "description": "Application module",
-  "keywords": "application, esp32, esp-idf",
+  "description": "Locking library",
+  "keywords": "locking, esp32, esp-idf",
   "frameworks": "espidf",
   "platforms": [
     "espressif32",
     "native"
   ],
   "dependencies": {
-    "ApplicationAbstractions": "*",
-    "Bus": "*",
-    "Filtering": "*",
-    "Ini": "*",
-    "Locking": "*",
-    "Module": "*"
   },
   "srcDir": "src",
   "build": {

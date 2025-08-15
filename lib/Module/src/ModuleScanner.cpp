@@ -12,9 +12,9 @@ ModuleScanner::ModuleScanner(const Bus& bus)
 {
 }
 
-const std::vector<std::shared_ptr<Module>> ModuleScanner::DetectModules() const
+std::vector<std::unique_ptr<Module>> ModuleScanner::DetectModules() const
 {
-    std::vector<std::shared_ptr<Module>> foundModules;
+    std::vector<std::unique_ptr<Module>> foundModules;
 
     for (uint8_t address = 1; address < 128; address++) {
         auto response = m_bus.Exchange(address, 0);
@@ -23,7 +23,7 @@ const std::vector<std::shared_ptr<Module>> ModuleScanner::DetectModules() const
             continue;
         }
 
-        auto module = ModuleFactory::CreateModule(m_bus, (ModuleType)response.ModuleType, address, response.Data);
+        auto module = ModuleFactory::CreateModule(m_bus, static_cast<ModuleType>(response.ModuleType), address, response.Data);
 
         if (module == nullptr) {
             // Module type not recognized, skip this address

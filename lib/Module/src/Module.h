@@ -1,13 +1,13 @@
 #pragma once
 
-#include <cstdint>
-#include <string>
-
 #include <Bus.h>
 #include <IniWriter.h>
 #include <Node.h>
 
 #include "ModuleType.h"
+
+#include <cstdint>
+#include <string>
 
 struct ProcessResponse
 {

@@ -9,6 +9,7 @@
     "native"
   ],
   "dependencies": {
+    "Locking": "*"
   },
   "srcDir": "src",
   "build": {

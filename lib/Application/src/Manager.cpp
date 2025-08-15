@@ -10,6 +10,14 @@
 
 #include <sstream>
 
+#ifndef NATIVE_BUILD
+ #define TAKE(mutex) xSemaphoreTakeRecursive(mutex, portMAX_DELAY);
+ #define RELEASE(mutex) xSemaphoreGiveRecursive(mutex);
+#else
+ #define TAKE(mutex)
+ #define RELEASE(mutex)
+#endif
+
 Manager::Manager()
     : m_busDriver()
     , m_bus(m_busDriver)
@@ -26,14 +34,10 @@ void Manager::Start()
 
 void Manager::ProcessNext()
 {
-#ifndef NATIVE_BUILD
-    xSemaphoreTakeRecursive(m_syncRoot, portMAX_DELAY);
-#endif
+    TAKE(m_syncRoot);
 
     if (m_modules.size() <= 0) {
-#ifndef NATIVE_BUILD        
-        xSemaphoreGiveRecursive(m_syncRoot);
-#endif
+        RELEASE(m_syncRoot);
         return;
     }
 
@@ -44,29 +48,21 @@ void Manager::ProcessNext()
     
     const auto& _ = moduleToProcess->Process();
 
-#ifndef NATIVE_BUILD
-    xSemaphoreGiveRecursive(m_syncRoot);
-#endif
+    RELEASE(m_syncRoot);
 }
 
 void Manager::Clear()
 {
-#ifndef NATIVE_BUILD    
-    xSemaphoreTakeRecursive(m_syncRoot, portMAX_DELAY);
-#endif
+    TAKE(m_syncRoot);
     m_filters.clear();
     m_modules.clear();
     m_nextModuleIndexToProcess = 0;
-#ifndef NATIVE_BUILD    
-    xSemaphoreGiveRecursive(m_syncRoot);
-#endif
+    RELEASE(m_syncRoot);
 }
 
 RescanModulesResult Manager::RescanModules()
 {
-#ifndef NATIVE_BUILD
-    xSemaphoreTakeRecursive(m_syncRoot, portMAX_DELAY);
-#endif
+    TAKE(m_syncRoot);
 
     Clear();
 
@@ -75,9 +71,7 @@ RescanModulesResult Manager::RescanModules()
     const auto detectedModules = scanner.DetectModules();
     m_modules.insert(m_modules.end(), std::make_move_iterator(detectedModules.begin()), std::make_move_iterator(detectedModules.end()));
 
-#ifndef NATIVE_BUILD
-    xSemaphoreGiveRecursive(m_syncRoot);
-#endif
+    RELEASE(m_syncRoot);
 
     return {
         .NumberOfDetectedModules = (uint8_t)detectedModules.size(),

@@ -1,5 +1,3 @@
-#include <memory>
-
 #include <unity.h>
 
 #include <Manager.h>
@@ -16,22 +14,25 @@ void Manager_GetKnownFiltersIni()
 {
     // Arrange
     Manager manager;
-    std::string expectedIniContent=
-        "[Filter:DimmerFilter]\n"
-        "Input:0=Toggle,DigitalValue\n"
-        "Output:0=Control,DimmerControlValue\n"
+    std::string expectedIniContent =
+        "[Filter]\n"
+        "Type=Dimmer\n"
+        "Input.0=Toggle,DigitalValue\n"
+        "Output.0=Control,DimmerControlValue\n"
         "\n"
-        "[Filter:ShutterFilter]\n"
-        "Input:0=Open,DigitalValue\n"
-        "Input:1=Close,DigitalValue\n"
-        "Input:2=OpenFeedback,DigitalValue\n"
-        "Input:3=CloseFeedback,DigitalValue\n"
-        "Output:0=Open,DigitalValue\n"
-        "Output:1=Close,DigitalValue\n"
+        "[Filter]\n"
+        "Type=Shutter\n"
+        "Input.0=Open,DigitalValue\n"
+        "Input.1=Close,DigitalValue\n"
+        "Input.2=OpenFeedback,DigitalValue\n"
+        "Input.3=CloseFeedback,DigitalValue\n"
+        "Output.0=Open,DigitalValue\n"
+        "Output.1=Close,DigitalValue\n"
         "\n"
-        "[Filter:ToggleFilter]\n"
-        "Input:0=Toggle,DigitalValue\n"
-        "Output:0=Control,DigitalValue\n";
+        "[Filter]\n"
+        "Type=Toggle\n"
+        "Input.0=Toggle,DigitalValue\n"
+        "Output.0=Control,DigitalValue\n";
 
     // Act
     std::string iniContent = manager.GetKnownFiltersIni();

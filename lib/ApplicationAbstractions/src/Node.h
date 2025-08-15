@@ -3,6 +3,7 @@
 #include "Pin.h"
 
 #include <memory>
+#include <string>
 #include <vector>
 
 class Node

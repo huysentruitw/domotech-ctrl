@@ -3,13 +3,12 @@
 #include <sstream>
 #include <string>
 
-#include <KnownModuleIdentifiers.h>
 #include <PinFactory.h>
 
 static const uint8_t ButtonMasks8[8] = { 0x10, 0x20, 0x40, 0x80, 0x08, 0x04, 0x02, 0x01 };
 
 PushButtonModule::PushButtonModule(const Bus& bus, const uint8_t address, const uint8_t numberOfButtons)
-    : Module(bus, address, ModuleType::PushButtons)
+    : Module(bus, address, ModuleType::PushButton)
     , m_numberOfButtons(numberOfButtons)
 {
     for (uint8_t i = 0; i < m_numberOfButtons; ++i) {

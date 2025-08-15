@@ -46,7 +46,7 @@ void ModuleScanner_DetectModules_OneModuleFound()
     ScanResponse response = {
         .Success = true,
         .RespondedWithTypeAndData = true,
-        .ModuleType = static_cast<uint8_t>(ModuleType::PushButtons),
+        .ModuleType = static_cast<uint8_t>(ModuleType::PushButton),
         .Data = 0x2000  // 2 buttons
     };
     
@@ -89,7 +89,7 @@ void ModuleScanner_DetectModules_MultipleModulesFound()
     ScanResponse pushButtonResponse = {
         .Success = true,
         .RespondedWithTypeAndData = true,
-        .ModuleType = static_cast<uint8_t>(ModuleType::PushButtons),
+        .ModuleType = static_cast<uint8_t>(ModuleType::PushButton),
         .Data = 0x4000  // 4 buttons
     };
     
@@ -161,7 +161,7 @@ void ModuleScanner_DetectModules_UnknownModuleTypeSkipped()
     ScanResponse validResponse = {
         .Success = true,
         .RespondedWithTypeAndData = true,
-        .ModuleType = static_cast<uint8_t>(ModuleType::PushButtons),
+        .ModuleType = static_cast<uint8_t>(ModuleType::PushButton),
         .Data = 0x2000
     };
     bus.QueueResponse(validResponse);

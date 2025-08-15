@@ -4,7 +4,6 @@
 #include <Modules/DimmerModule.h>
 #include <DimmerControlValue.h>
 #include "../../Mocks/MockBus.h"
-#include <KnownModuleIdentifiers.h>
 
 void setUp(void)
 {

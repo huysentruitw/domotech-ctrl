@@ -1,5 +1,4 @@
 #include "Manager.h"
-#include "KnownModuleIdentifiers.h"
 
 #include <IniWriter.h>
 

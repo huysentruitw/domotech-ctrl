@@ -3,7 +3,6 @@
 #include <sstream>
 #include <string>
 
-#include <KnownModuleIdentifiers.h>
 #include <PinFactory.h>
 
 DimmerModule::DimmerModule(const Bus& bus, const uint8_t address, const uint8_t numberOfChannels)

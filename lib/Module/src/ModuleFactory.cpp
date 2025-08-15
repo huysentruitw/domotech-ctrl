@@ -9,7 +9,7 @@ std::unique_ptr<Module> ModuleFactory::CreateModule(const Bus& bus, const Module
     switch (type) {
         case ModuleType::Dimmer:
             return DimmerModule::CreateFromInitialData(bus, address, initialData);
-        case ModuleType::PushButtons:
+        case ModuleType::PushButton:
             return PushButtonModule::CreateFromInitialData(bus, address, initialData);
         case ModuleType::Teleruptor:
             return TeleruptorModule::CreateFromInitialData(bus, address, initialData);

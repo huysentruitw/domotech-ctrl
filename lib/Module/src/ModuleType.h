@@ -1,20 +1,23 @@
 #pragma once
 
+#include <string>
+#include <unordered_map>
+
 enum class ModuleType
 {
-    Unknown = 0,
-    
     Dimmer = 3,
     Temperature = 4,
     Audio = 9,
 
-    PushButtons = 7,
-    PushButtonsWithIr = 6,
-    PushButtonsWithTemperature = 11,
-    PushButtonsWithLeds = 12,
+    PushButton = 7,
+    PushButtonWithIr = 6,
+    PushButtonWithTemperature = 11,
+    PushButtonWithLed = 12,
 
     Relais = 10,
     Teleruptor = 8,
 
-    Inputs = 13,
+    Input = 13,
 };
+
+const std::string GetModuleTypeName(ModuleType moduleType);

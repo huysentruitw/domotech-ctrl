@@ -145,6 +145,7 @@ httpd_handle_t start_webserver(void)
 void ProcessTask(void *arg)
 {
     while (true) {
+        manager.ProcessNext();
         vTaskDelay(1);
     }
 

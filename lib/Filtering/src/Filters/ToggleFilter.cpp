@@ -3,6 +3,7 @@
 #include <PinFactory.h>
 
 ToggleFilter::ToggleFilter()
+    : Filter(FilterType::Toggle)
 {
     m_toggleInputPin = PinFactory::CreateInputPin<DigitalValue>(
         "Toggle",

@@ -3,6 +3,7 @@
 #include <PinFactory.h>
 
 ShutterFilter::ShutterFilter()
+    : Filter(FilterType::Shutter)
 {
     m_openInputPin = PinFactory::CreateInputPin<DigitalValue>(
         "Open",

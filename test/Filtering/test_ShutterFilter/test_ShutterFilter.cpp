@@ -1,7 +1,7 @@
 #include <unity.h>
 #include <memory>
 
-#include <ShutterFilter.h>
+#include <Filters/ShutterFilter.h>
 
 void setUp(void)
 {

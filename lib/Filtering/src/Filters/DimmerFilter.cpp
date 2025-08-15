@@ -3,6 +3,7 @@
 #include <PinFactory.h>
 
 DimmerFilter::DimmerFilter()
+    : Filter(FilterType::Dimmer)
 {
     m_toggleInputPin = PinFactory::CreateInputPin<DigitalValue>(
         "Toggle",

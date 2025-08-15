@@ -1,7 +1,7 @@
 #include <unity.h>
 #include <memory>
 
-#include <DimmerFilter.h>
+#include <Filters/DimmerFilter.h>
 
 void setUp(void)
 {

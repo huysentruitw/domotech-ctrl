@@ -1,7 +1,7 @@
 #include <unity.h>
 #include <memory>
 
-#include <ToggleFilter.h>
+#include <Filters/ToggleFilter.h>
 
 void setUp(void)
 {

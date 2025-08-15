@@ -17,8 +17,6 @@ class ShutterFilter : public Filter
 public:
     ShutterFilter();
 
-    const char* GetFilterName() const override { return "ShutterFilter"; }
-
     std::vector<std::weak_ptr<Pin>> GetInputPins() const override;
     std::vector<std::weak_ptr<Pin>> GetOutputPins() const override;
 

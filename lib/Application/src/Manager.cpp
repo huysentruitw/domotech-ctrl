@@ -4,9 +4,9 @@
 
 #include <ModuleScanner.h>
 
-#include <DimmerFilter.h>
-#include <ShutterFilter.h>
-#include <ToggleFilter.h>
+#include <Filters/DimmerFilter.h>
+#include <Filters/ShutterFilter.h>
+#include <Filters/ToggleFilter.h>
 
 #include <sstream>
 

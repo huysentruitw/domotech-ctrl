@@ -16,4 +16,6 @@ public:
 private:
     bool m_isFirstSection = true;
     std::istringstream m_stream;
+
+    static void TrimInPlace(std::string& str);
 };

@@ -19,6 +19,7 @@ void Manager_GetKnownFiltersIni()
         "Type=Dimmer\n"
         "Input.0=Toggle,DigitalValue\n"
         "Output.0=Control,DimmerControlValue\n"
+        "Output.1=Feedback,DigitalValue\n"
         "\n"
         "[Filter]\n"
         "Type=Shutter\n"
@@ -32,7 +33,8 @@ void Manager_GetKnownFiltersIni()
         "[Filter]\n"
         "Type=Toggle\n"
         "Input.0=Toggle,DigitalValue\n"
-        "Output.0=Control,DigitalValue\n";
+        "Output.0=Control,DigitalValue\n"
+        "Output.1=Feedback,DigitalValue\n";
 
     // Act
     std::string iniContent = manager.GetKnownFiltersIni();

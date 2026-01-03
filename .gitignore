@@ -5,3 +5,4 @@
 .vscode/ipch
 
 src/secrets.h
+sdkconfig.esp32dev.old

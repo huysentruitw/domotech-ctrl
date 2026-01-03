@@ -1,8 +1,5 @@
 #include "PushButtonModule.h"
 
-#include <sstream>
-#include <string>
-
 #include <PinFactory.h>
 
 static const uint8_t ButtonMasks8[8] = { 0x10, 0x20, 0x40, 0x80, 0x08, 0x04, 0x02, 0x01 };
@@ -11,8 +8,14 @@ PushButtonModule::PushButtonModule(const Bus& bus, const uint8_t address, const 
     : Module(bus, address, ModuleType::PushButton)
     , m_numberOfButtons(numberOfButtons)
 {
+    m_buttonPins.reserve(m_numberOfButtons);
     for (uint8_t i = 0; i < m_numberOfButtons; ++i) {
-        m_buttonPins.push_back(PinFactory::CreateOutputPin<DigitalValue>());
+        m_buttonPins.emplace_back(PinFactory::CreateOutputPin<DigitalValue>());
+    }
+
+    m_outputPins.reserve(m_buttonPins.size());
+    for (const auto& pin : m_buttonPins) {
+        m_outputPins.emplace_back(pin);
     }
 }
 
@@ -48,16 +51,6 @@ ProcessResponse PushButtonModule::Process()
     }
 
     return { .Success = true };
-}
-
-std::vector<std::weak_ptr<Pin>> PushButtonModule::GetOutputPins() const
-{
-    std::vector<std::weak_ptr<Pin>> outputPins;
-    for (const auto& pin : m_buttonPins) {
-        outputPins.push_back(pin);
-    }
-
-    return outputPins;
 }
 
 DigitalValue PushButtonModule::MapButtonState(const uint8_t buttonIndex, const uint16_t data) const

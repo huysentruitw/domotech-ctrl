@@ -17,9 +17,6 @@ class ShutterFilter : public Filter
 public:
     ShutterFilter();
 
-    std::vector<std::weak_ptr<Pin>> GetInputPins() const override;
-    std::vector<std::weak_ptr<Pin>> GetOutputPins() const override;
-
 private:
     ShutterCommand m_currentShutterCommand = ShutterCommand::Stop;
     std::shared_ptr<Pin> m_openInputPin;

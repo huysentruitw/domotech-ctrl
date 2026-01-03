@@ -15,14 +15,7 @@ ToggleFilter::ToggleFilter()
         });
 
     m_controlOutputPin = PinFactory::CreateOutputPin<DigitalValue>("Control");
-}
 
-std::vector<std::weak_ptr<Pin>> ToggleFilter::GetInputPins() const
-{
-    return { m_toggleInputPin };
-}
-
-std::vector<std::weak_ptr<Pin>> ToggleFilter::GetOutputPins() const
-{
-    return { m_controlOutputPin };
+    m_inputPins = { m_toggleInputPin };
+    m_outputPins = { m_controlOutputPin };
 }

@@ -18,14 +18,7 @@ DimmerFilter::DimmerFilter()
         });
 
     m_controlOutputPin = PinFactory::CreateOutputPin<DimmerControlValue>("Control");
-}
 
-std::vector<std::weak_ptr<Pin>> DimmerFilter::GetInputPins() const
-{
-    return { m_toggleInputPin };
-}
-
-std::vector<std::weak_ptr<Pin>> DimmerFilter::GetOutputPins() const
-{
-    return { m_controlOutputPin };
+    m_inputPins = { m_toggleInputPin };
+    m_outputPins = { m_controlOutputPin };
 }

@@ -1,21 +1,30 @@
 #include "TeleruptorModule.h"
 
-#include <sstream>
-#include <string>
-
 #include <PinFactory.h>
 
 TeleruptorModule::TeleruptorModule(const Bus& bus, const uint8_t address, const uint8_t numberOfTeleruptors)
     : Module(bus, address, ModuleType::Teleruptor)
     , m_numberOfTeleruptors(numberOfTeleruptors)
 {
+    m_teleruptorPins.reserve(m_numberOfTeleruptors);
+    m_teleruptorFeedbackPins.reserve(m_numberOfTeleruptors);
     for (uint8_t i = 0; i < m_numberOfTeleruptors; ++i) {
         const auto onStateChange = [this, i](const Pin& pin) {
             UpdateTeleruptor(i, pin.GetStateAs<DigitalValue>());
         };
 
-        m_teleruptorPins.push_back(PinFactory::CreateInputPin<DigitalValue>(onStateChange));
-        m_teleruptorFeedbackPins.push_back(PinFactory::CreateOutputPin<DigitalValue>());
+        m_teleruptorPins.emplace_back(PinFactory::CreateInputPin<DigitalValue>(onStateChange));
+        m_teleruptorFeedbackPins.emplace_back(PinFactory::CreateOutputPin<DigitalValue>());
+    }
+
+    m_inputPins.reserve(m_teleruptorPins.size());
+    for (const auto& pin : m_teleruptorPins) {
+        m_inputPins.emplace_back(pin);
+    }
+
+    m_outputPins.reserve(m_teleruptorFeedbackPins.size());
+    for (const auto& pin : m_teleruptorFeedbackPins) {
+        m_outputPins.emplace_back(pin);
     }
 }
 
@@ -49,26 +58,6 @@ ProcessResponse TeleruptorModule::Process()
     }
 
     return { .Success = true };
-}
-
-std::vector<std::weak_ptr<Pin>> TeleruptorModule::GetInputPins() const
-{
-    std::vector<std::weak_ptr<Pin>> inputPins;
-    for (const auto& pin : m_teleruptorPins) {
-        inputPins.push_back(pin);
-    }
-
-    return inputPins;
-}
-
-std::vector<std::weak_ptr<Pin>> TeleruptorModule::GetOutputPins() const
-{
-    std::vector<std::weak_ptr<Pin>> outputPins;
-    for (const auto& pin : m_teleruptorFeedbackPins) {
-        outputPins.push_back(pin);
-    }
-
-    return outputPins;
 }
 
 void TeleruptorModule::UpdateTeleruptor(const uint8_t teleruptorIndex, const DigitalValue newValue)

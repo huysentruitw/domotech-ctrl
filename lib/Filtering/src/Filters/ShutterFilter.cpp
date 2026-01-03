@@ -77,14 +77,7 @@ ShutterFilter::ShutterFilter()
 
     m_openOutputPin = PinFactory::CreateOutputPin<DigitalValue>("Open");
     m_closeOutputPin = PinFactory::CreateOutputPin<DigitalValue>("Close");
-}
 
-std::vector<std::weak_ptr<Pin>> ShutterFilter::GetInputPins() const
-{
-    return {m_openInputPin, m_closeInputPin, m_openFeedbackInputPin, m_closeFeedbackInputPin};
-}
-
-std::vector<std::weak_ptr<Pin>> ShutterFilter::GetOutputPins() const
-{
-    return {m_openOutputPin, m_closeOutputPin};
+    m_inputPins = { m_openInputPin, m_closeInputPin, m_openFeedbackInputPin, m_closeFeedbackInputPin };
+    m_outputPins = { m_openOutputPin, m_closeOutputPin };
 }

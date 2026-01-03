@@ -14,9 +14,6 @@ public:
 
     ProcessResponse Process() override;
 
-    std::vector<std::weak_ptr<Pin>> GetInputPins() const override;
-    std::vector<std::weak_ptr<Pin>> GetOutputPins() const override;
-
 private:
     const uint8_t m_numberOfTeleruptors;
     bool m_feedbackStateInSync = false;

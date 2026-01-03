@@ -1,20 +1,23 @@
 #include "DimmerModule.h"
 
-#include <sstream>
-#include <string>
-
 #include <PinFactory.h>
 
 DimmerModule::DimmerModule(const Bus& bus, const uint8_t address, const uint8_t numberOfChannels)
     : Module(bus, address, ModuleType::Dimmer)
     , m_numberOfChannels(numberOfChannels)
 {
+    m_dimmerControlPins.reserve(m_numberOfChannels);
     for (uint8_t i = 0; i < m_numberOfChannels; ++i) {
         const auto onStateChange = [this, i](const Pin& pin) {
             UpdateChannel(i, pin.GetStateAs<DimmerControlValue>());
         };
 
-        m_dimmerControlPins.push_back(PinFactory::CreateInputPin<DimmerControlValue>(onStateChange));
+        m_dimmerControlPins.emplace_back(PinFactory::CreateInputPin<DimmerControlValue>(onStateChange));
+    }
+
+    m_inputPins.reserve(m_dimmerControlPins.size());
+    for (const auto& pin : m_dimmerControlPins) {
+        m_inputPins.emplace_back(pin);
     }
 }
 
@@ -27,16 +30,6 @@ ProcessResponse DimmerModule::Process()
 {
     auto response = Poll();
     return { .Success = response.Success };
-}
-
-std::vector<std::weak_ptr<Pin>> DimmerModule::GetInputPins() const
-{
-    std::vector<std::weak_ptr<Pin>> inputPins;
-    for (const auto& pin : m_dimmerControlPins) {
-        inputPins.push_back(pin);
-    }
-
-    return inputPins;
 }
 
 void DimmerModule::UpdateChannel(const uint8_t channelIndex, const DimmerControlValue newValue)

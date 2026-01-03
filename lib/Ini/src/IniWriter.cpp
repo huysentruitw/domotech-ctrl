@@ -1,26 +1,39 @@
 #include "IniWriter.h"
 
-void IniWriter::WriteSection(const std::string& section)
+IniWriter::IniWriter()
+{
+    // Reserve some space to avoid reallocations
+    m_content.reserve(1024);
+}
+
+void IniWriter::WriteSection(const std::string_view section)
 {
     if (!m_isFirstSection) {
-        m_stream << "\n";
+        m_content.append("\n");
     }
 
-    m_stream << "[" << section << "]\n";
+    m_content.append("[");
+    m_content.append(section);
+    m_content.append("]\n");
     m_isFirstSection = false;
 }
 
-void IniWriter::WriteKeyValue(const std::string& key, const std::string& value)
+void IniWriter::WriteKeyValue(const std::string_view key, const std::string_view value)
 {
-    m_stream << key << "=" << value << "\n";
+    m_content.append(key);
+    m_content.append("=");
+    m_content.append(value);
+    m_content.append("\n");
 }
 
-void IniWriter::WriteComment(const std::string& comment)
+void IniWriter::WriteComment(const std::string_view comment)
 {
-    m_stream << "; " << comment << "\n";
+    m_content.append("; ");
+    m_content.append(comment);
+    m_content.append("\n");
 }
 
-const std::string IniWriter::GetContent() const
+const std::string& IniWriter::GetContent() const
 {
-    return m_stream.str();
+    return m_content;
 }

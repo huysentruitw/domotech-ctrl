@@ -1,18 +1,19 @@
 #pragma once
 
-#include <sstream>
 #include <string>
 
 class IniWriter final
 {
 public:
-    void WriteSection(const std::string& section);
-    void WriteKeyValue(const std::string& key, const std::string& value);
-    void WriteComment(const std::string& comment);
+    IniWriter();
 
-    const std::string GetContent() const;
+    void WriteSection(const std::string_view section);
+    void WriteKeyValue(const std::string_view key, const std::string_view value);
+    void WriteComment(const std::string_view comment);
+
+    const std::string& GetContent() const;
 
 private:
     bool m_isFirstSection = true;
-    std::ostringstream m_stream;
+    std::string m_content;
 };

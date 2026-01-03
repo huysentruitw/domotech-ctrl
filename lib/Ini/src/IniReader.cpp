@@ -1,50 +1,59 @@
 #include "IniReader.h"
 
-IniReader::IniReader(const std::string& content)
+void IniReader::Feed(const char* data, size_t len)
 {
-    m_stream.str(content);
-}
+    for (size_t i = 0; i < len; i++) {
+        char c = data[i];
 
-void IniReader::Process(
-    const std::function<void(const std::string& /*sectionName*/)>& sectionHandler,
-    const std::function<void(const std::string& /*sectionName*/, const std::string& /*key*/, const std::string& /*value*/)>& keyValueHandler)
-{
-    std::string line;
-    std::string currentSection;
-
-    while (std::getline(m_stream, line)) {
-        TrimInPlace(line);
-
-        if (line.empty() || line[0] == ';') {
-            continue; // Skip empty lines and comments
-        }
-
-        if (line[0] == '[' && line.back() == ']') {
-            currentSection = line.substr(1, line.size() - 2);
-            TrimInPlace(currentSection);
-            sectionHandler(currentSection);
-        } else {
-            auto pos = line.find('=');
-            if (pos != std::string::npos) {
-                std::string key = line.substr(0, pos);
-                std::string value = line.substr(pos + 1);
-                TrimInPlace(key);
-                TrimInPlace(value);
-                keyValueHandler(currentSection, key, value);
-            }
+        if (c == '\n') {
+            ProcessLine(m_buffer);
+            m_buffer.clear();
+        } else if (c != '\r') {
+            m_buffer.push_back(c);
         }
     }
 }
 
-void IniReader::TrimInPlace(std::string& str)
+void IniReader::Finalize()
 {
-    auto start = str.find_first_not_of(" \t");
-    auto end = str.find_last_not_of(" \t");
-    
-    if (start == std::string::npos) {
-        str.clear();
+    if (!m_buffer.empty()) {
+        ProcessLine(m_buffer);
+        m_buffer.clear();
+    }
+}
+
+void IniReader::ProcessLine(std::string_view line)
+{
+    line = Trim(line);
+    if (line.empty() || line[0] == ';')
+        return; // Skip empty lines and comments
+
+    if (line.front() == '[' && line.back() == ']') {
+        auto section = Trim(line.substr(1, line.size() - 2));
+        m_currentSection.assign(section);
+        if (m_sectionHandler)
+            m_sectionHandler(section);
         return;
     }
 
-    str = str.substr(start, end - start + 1);
+    size_t pos = line.find('=');
+    if (pos != std::string_view::npos) {
+        std::string_view key = Trim(line.substr(0, pos));
+        std::string_view value = Trim(line.substr(pos + 1));
+        if (m_keyValueHandler)
+            m_keyValueHandler(m_currentSection, key, value);
+    }
+}
+
+std::string_view IniReader::Trim(std::string_view s)
+{
+    size_t start = 0;
+    while (start < s.size() && (s[start] == ' ' || s[start] == '\t'))
+        start++;
+
+    size_t end = s.size();
+    while (end > start && (s[end - 1] == ' ' || s[end - 1] == '\t'))
+        end--;
+        
+    return s.substr(start, end - start);
 }

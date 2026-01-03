@@ -17,14 +17,17 @@ void tearDown(void)
 void test_IniReader_EmptyContent()
 {
     // Arrange
-    IniReader reader("");
+    std::string content = "";
+    IniReader reader;
     int sectionCallCount = 0;
     int keyValueCallCount = 0;
 
+    reader.OnSection([&](const std::string_view) { sectionCallCount++; });
+    reader.OnKeyValue([&](const std::string_view, const std::string_view, const std::string_view) { keyValueCallCount++; });
+
     // Act
-    reader.Process(
-        [&](const std::string&) { sectionCallCount++; },
-        [&](const std::string&, const std::string&, const std::string&) { keyValueCallCount++; });
+    reader.Feed(content.c_str(), content.size());
+    reader.Finalize();
 
     // Assert
     TEST_ASSERT_EQUAL(0, sectionCallCount);
@@ -34,16 +37,17 @@ void test_IniReader_EmptyContent()
 void test_IniReader_SingleSection()
 {
     // Arrange
-    IniReader reader("[Section1]\nKey1=Value1");
+    std::string content = "[Section1]\nKey1=Value1";
+    IniReader reader;
     std::string lastSection;
     std::vector<std::pair<std::string, std::string>> keyValues;
 
+    reader.OnSection([&](const std::string_view section) { lastSection = section; });
+    reader.OnKeyValue([&](const std::string_view, const std::string_view key, const std::string_view value) { keyValues.push_back({std::string(key), std::string(value)}); });
+
     // Act
-    reader.Process(
-        [&](const std::string& section) { lastSection = section; },
-        [&](const std::string&, const std::string& key, const std::string& value) {
-            keyValues.push_back({key, value});
-        });
+    reader.Feed(content.c_str(), content.size());
+    reader.Finalize();
 
     // Assert
     TEST_ASSERT_EQUAL_STRING("Section1", lastSection.c_str());
@@ -55,7 +59,7 @@ void test_IniReader_SingleSection()
 void test_IniReader_MultipleSections()
 {
     // Arrange
-    const char* content = R"(
+    std::string content = R"(
 [Section1]
 Key1=Value1
 Key2=Value2
@@ -64,16 +68,16 @@ Key2=Value2
 Key3=Value3
     )";
     
-    IniReader reader(content);
+    IniReader reader;
     std::vector<std::string> sections;
     std::vector<std::tuple<std::string, std::string, std::string>> keyValues;
 
+    reader.OnSection([&](const std::string_view section) { sections.push_back(std::string(section)); });
+    reader.OnKeyValue([&](const std::string_view section, const std::string_view key, const std::string_view value) { keyValues.push_back({std::string(section), std::string(key), std::string(value)}); });
+
     // Act
-    reader.Process(
-        [&](const std::string& section) { sections.push_back(section); },
-        [&](const std::string& section, const std::string& key, const std::string& value) {
-            keyValues.push_back({section, key, value});
-        });
+    reader.Feed(content.c_str(), content.size());
+    reader.Finalize();
 
     // Assert
     TEST_ASSERT_EQUAL(2, sections.size());
@@ -94,7 +98,7 @@ Key3=Value3
 void test_IniReader_IgnoresComments()
 {
     // Arrange
-    const char* content = R"(
+    std::string content = R"(
 ; Comment at start
 [Section1]
 Key1=Value1
@@ -102,16 +106,16 @@ Key1=Value1
 Key2=Value2
     )";
     
-    IniReader reader(content);
+    IniReader reader;
     int sectionCallCount = 0;
     std::vector<std::pair<std::string, std::string>> keyValues;
 
+    reader.OnSection([&](const std::string_view section) { sectionCallCount++; });
+    reader.OnKeyValue([&](const std::string_view, const std::string_view key, const std::string_view value) { keyValues.push_back({std::string(key), std::string(value)}); });
+
     // Act
-    reader.Process(
-        [&](const std::string&) { sectionCallCount++; },
-        [&](const std::string&, const std::string& key, const std::string& value) {
-            keyValues.push_back({key, value});
-        });
+    reader.Feed(content.c_str(), content.size());
+    reader.Finalize();
 
     // Assert
     TEST_ASSERT_EQUAL(1, sectionCallCount);
@@ -121,7 +125,7 @@ Key2=Value2
 void test_IniReader_IgnoresEmptyLines()
 {
     // Arrange
-    const char* content = R"(
+    std::string content = R"(
 
 [Section1]
 
@@ -131,16 +135,16 @@ Key2=Value2
 
     )";
     
-    IniReader reader(content);
+    IniReader reader;
     int sectionCallCount = 0;
     std::vector<std::pair<std::string, std::string>> keyValues;
 
+    reader.OnSection([&](const std::string_view section) { sectionCallCount++; });
+    reader.OnKeyValue([&](const std::string_view, const std::string_view key, const std::string_view value) { keyValues.push_back({std::string(key), std::string(value)}); });
+
     // Act
-    reader.Process(
-        [&](const std::string&) { sectionCallCount++; },
-        [&](const std::string&, const std::string& key, const std::string& value) {
-            keyValues.push_back({key, value});
-        });
+    reader.Feed(content.c_str(), content.size());
+    reader.Finalize();
 
     // Assert
     TEST_ASSERT_EQUAL(1, sectionCallCount);
@@ -150,22 +154,22 @@ Key2=Value2
 void test_IniReader_HandlesWhitespace()
 {
     // Arrange
-    const char* content = R"(
+    std::string content = R"(
    [  Section1  ]
   Key1  =  Value1  
     Key2=Value2    
     )";
     
-    IniReader reader(content);
+    IniReader reader;
     std::string lastSection;
     std::vector<std::pair<std::string, std::string>> keyValues;
 
+    reader.OnSection([&](const std::string_view section) { lastSection = section; });
+    reader.OnKeyValue([&](const std::string_view, const std::string_view key, const std::string_view value) { keyValues.push_back({std::string(key), std::string(value)}); });
+
     // Act
-    reader.Process(
-        [&](const std::string& section) { lastSection = section; },
-        [&](const std::string&, const std::string& key, const std::string& value) {
-            keyValues.push_back({key, value});
-        });
+    reader.Feed(content.c_str(), content.size());
+    reader.Finalize();
 
     // Assert
     TEST_ASSERT_EQUAL_STRING("Section1", lastSection.c_str());

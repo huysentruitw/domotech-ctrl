@@ -104,30 +104,29 @@ esp_err_t configuration_create_filter_handler(httpd_req_t *req)
 
     body[received] = '\0'; // Terminate
 
-    IniReader reader(body);
-
     std::string filterType;
     std::string filterName;
     size_t numberOfFiltersCreated = 0;
 
-    reader.Process(
-        [&filterType, &filterName](const std::string& section) {
+    IniReader reader;
+    reader.OnSection([&filterType, &filterName](const std::string_view section) {
+        filterType.clear();
+        filterName.clear();
+    });
+    reader.OnKeyValue([&filterType, &filterName, &numberOfFiltersCreated](const std::string_view section, const std::string_view key, const std::string_view value) {
+        if (section != "Filter") return;
+        if (key == "Type") filterType = value;
+        if (key == "Name") filterName = value;
+
+        if (!filterType.empty() && !filterName.empty()) {
+            manager.CreateFilter(filterType, filterName);
+            numberOfFiltersCreated++;
             filterType.clear();
             filterName.clear();
-        },
-        [&filterType, &filterName, &numberOfFiltersCreated](const std::string& section, const std::string& key, const std::string& value) {
-            if (section != "Filter") return;
-            if (key == "Type") filterType = value;
-            if (key == "Name") filterName = value;
-
-            if (!filterType.empty() && !filterName.empty()) {
-                manager.CreateFilter(filterType, filterName);
-                numberOfFiltersCreated++;
-                filterType.clear();
-                filterName.clear();
-            }
         }
-    );
+    });
+    reader.Feed(body, received);
+    reader.Finalize();
 
     std::string response = "Created " + std::to_string(numberOfFiltersCreated) + " filter(s)";
     httpd_resp_sendstr(req, response.c_str());

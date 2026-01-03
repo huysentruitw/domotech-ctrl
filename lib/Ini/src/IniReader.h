@@ -1,21 +1,32 @@
 #pragma once
 
 #include <functional>
-#include <sstream>
 #include <string>
 
 class IniReader final
 {
 public:
-    IniReader(const std::string& content);
+    IniReader() = default;
 
-    void Process(
-        const std::function<void(const std::string& /*sectionName*/)>& sectionHandler,
-        const std::function<void(const std::string& /*sectionName*/, const std::string& /*key*/, const std::string& /*value*/)>& keyValueHandler);
+    void Feed(const char* data, size_t len);
+
+    void Finalize();
+
+    void OnSection(const std::function<void(const std::string_view /*section*/)>& handler) {
+        m_sectionHandler = handler;
+    }
+
+    void OnKeyValue(const std::function<void(const std::string_view /*section*/, const std::string_view /*key*/, const std::string_view /*value*/)>& handler) {
+        m_keyValueHandler = handler;
+    }
 
 private:
-    bool m_isFirstSection = true;
-    std::istringstream m_stream;
+    void ProcessLine(std::string_view line);
+    static std::string_view Trim(std::string_view s);
 
-    static void TrimInPlace(std::string& str);
+    std::string m_buffer;
+    std::string m_currentSection;
+
+    std::function<void(std::string_view)> m_sectionHandler;
+    std::function<void(std::string_view, std::string_view, std::string_view)> m_keyValueHandler;
 };

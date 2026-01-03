@@ -32,6 +32,7 @@ void Module::WriteConfig(IniWriter& iniWriter) const
     iniWriter.WriteSection("Module");
     iniWriter.WriteKeyValue("Type", GetModuleTypeName(GetType()));
     iniWriter.WriteKeyValue("Address", std::to_string(GetAddress()));
+    iniWriter.WriteKeyValue("Name", GetName());
 
     const auto inputPins = GetInputPins();
     for (std::size_t i = 0; i < inputPins.size(); ++i) {

@@ -12,6 +12,7 @@
 #include "esp_http_server.h"
 #include "secrets.h"
 
+#define VERSION "1.0"
 #define LED_GPIO GPIO_NUM_2
 
 Manager manager;
@@ -60,7 +61,8 @@ void wifi_init_sta(void)
 
 esp_err_t index_handler(httpd_req_t *req)
 {
-    httpd_resp_sendstr(req, "Hello, World!");
+    std::string response = "Domotech CTRL v" + std::string(VERSION);
+    httpd_resp_sendstr(req, response.c_str());
     return ESP_OK;
 }
 

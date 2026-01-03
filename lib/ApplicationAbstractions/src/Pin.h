@@ -31,7 +31,7 @@ public:
         const PinDirection direction,
         const PinState defaultState,
         const std::optional<std::function<void(const Pin&)>> onStateChange = std::nullopt,
-        const std::string name = "");
+        const std::string_view name = {});
 
     ~Pin();
 

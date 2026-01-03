@@ -34,7 +34,8 @@ void ModuleType_GetModuleTypeNames()
     // Act
     std::string moduleTypeNames;
     for (auto i = 0; i < 16; i++) {
-        moduleTypeNames += GetModuleTypeName((ModuleType)i) + "\n";
+        moduleTypeNames.append(GetModuleTypeName((ModuleType)i));
+        moduleTypeNames.append("\n");
     }
 
     // Assert

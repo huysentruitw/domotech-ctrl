@@ -1,7 +1,6 @@
 #pragma once
 
 #include <string>
-#include <unordered_map>
 
 enum class ModuleType
 {
@@ -20,4 +19,4 @@ enum class ModuleType
     Input = 13,
 };
 
-const std::string GetModuleTypeName(ModuleType moduleType);
+const std::string_view GetModuleTypeName(ModuleType moduleType);

@@ -1,8 +1,10 @@
 #include "ModuleType.h"
 
-const std::string GetModuleTypeName(ModuleType moduleType)
+const std::string_view GetModuleTypeName(ModuleType moduleType)
 {
-    static const std::unordered_map<ModuleType, std::string> identifiers = {
+    using enum ModuleType;
+
+    constexpr std::pair<ModuleType, std::string_view> identifiers[] = {
         { ModuleType::Dimmer, "Dimmer" },
         { ModuleType::Temperature, "Temperature" },
         { ModuleType::Audio, "Audio" },
@@ -18,7 +20,9 @@ const std::string GetModuleTypeName(ModuleType moduleType)
         { ModuleType::Input, "Input" },
     };
 
-    return identifiers.contains(moduleType)
-        ? identifiers.at(moduleType)
-        : "Unknown";
+    for (auto&& [key, value] : identifiers)
+        if (key == moduleType)
+            return value;
+
+    return "Unknown";
 }

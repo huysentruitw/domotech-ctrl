@@ -1,7 +1,6 @@
 #pragma once
 
 #include <string>
-#include <unordered_map>
 
 enum class FilterType
 {
@@ -10,4 +9,4 @@ enum class FilterType
     Dimmer = 3,
 };
 
-const std::string GetFilterTypeName(FilterType filterType);
+const std::string_view GetFilterTypeName(FilterType filterType);

@@ -73,7 +73,7 @@ RescanModulesResult Manager::RescanModules()
     };
 }
 
-void Manager::CreateFilter(const std::string typeName, const std::string name)
+void Manager::CreateFilter(const std::string_view typeName, const std::string_view name)
 {
     LockGuard guard(m_syncRoot);
 
@@ -87,7 +87,7 @@ void Manager::CreateFilter(const std::string typeName, const std::string name)
 
 std::string Manager::GetKnownFiltersIni() const
 {
-    auto iniWriter = IniWriter();
+    IniWriter iniWriter;
 
     DimmerFilter().WriteDescriptor(iniWriter);
     ShutterFilter().WriteDescriptor(iniWriter);
@@ -98,7 +98,7 @@ std::string Manager::GetKnownFiltersIni() const
 
 std::string Manager::GetConfigurationIni() const
 {
-    auto iniWriter = IniWriter();
+    IniWriter iniWriter;
 
     {
         LockGuard guard(m_syncRoot);

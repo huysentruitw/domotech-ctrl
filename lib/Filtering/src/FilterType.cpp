@@ -1,14 +1,19 @@
 #include "FilterType.h"
 
-const std::string GetFilterTypeName(FilterType filterType)
+const std::string_view GetFilterTypeName(FilterType filterType)
 {
-    static const std::unordered_map<FilterType, std::string> identifiers = {
+    using enum FilterType;
+
+    constexpr std::pair<FilterType, std::string_view> identifiers[] = {
         { FilterType::Toggle, "Toggle" },
         { FilterType::Shutter, "Shutter" },
         { FilterType::Dimmer, "Dimmer" },
     };
 
-    return identifiers.contains(filterType)
-        ? identifiers.at(filterType)
-        : "Unknown";
+    for (auto&& [key, value] : identifiers) {
+        if (key == filterType)
+            return value;
+    }
+
+    return "Unknown";
 }

@@ -4,7 +4,7 @@
 #include "Filters/ShutterFilter.h"
 #include "Filters/ToggleFilter.h"
 
-std::unique_ptr<Filter> FilterFactory::TryCreateFilterByTypeName(const std::string filterName)
+std::unique_ptr<Filter> FilterFactory::TryCreateFilterByTypeName(const std::string_view filterName)
 {
     if (filterName == GetFilterTypeName(FilterType::Dimmer)) return std::make_unique<DimmerFilter>();
     if (filterName == GetFilterTypeName(FilterType::Shutter)) return std::make_unique<ShutterFilter>();

@@ -4,7 +4,7 @@ Pin::Pin(
     const PinDirection direction,
     const PinState defaultState,
     const std::optional<std::function<void(const Pin&)>> onStateChange,
-    const std::string name)
+    const std::string_view name)
     : m_direction(direction)
     , m_defaultState(defaultState)
     , m_state(defaultState)

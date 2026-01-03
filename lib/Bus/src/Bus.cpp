@@ -3,10 +3,11 @@
 #include <LockGuard.h>
 
 #ifndef NATIVE_BUILD
-#include "esp_rom_sys.h"
+ #include "esp_rom_sys.h"
+ #define REPLY_BACKOFF() esp_rom_delay_us(500)
+#else
+ #define REPLY_BACKOFF()
 #endif
-
-#define REPLY_BACKOFF_DELAY_US     500
 
 Bus::Bus(const BusDriver& driver)
     : m_driver(driver)
@@ -79,9 +80,7 @@ ScanResponse Bus::ExchangeInternal(const uint8_t address, const uint16_t data, c
         parity1 ^= responseByte;
         uint8_t moduleType = responseByte & 0x0F;
 
-#ifndef NATIVE_BUILD
-        esp_rom_delay_us(REPLY_BACKOFF_DELAY_US);
-#endif
+        REPLY_BACKOFF();
 
         uint8_t sendBuffer[4] = { 0x90, 0x90, 0x90, 0x90 };
         for (int i = 0; i < 4; i++) {
@@ -130,9 +129,7 @@ ScanResponse Bus::ExchangeInternal(const uint8_t address, const uint16_t data, c
         parity2 &= 0x0F;
         parity2 |= 0xB0; 
 
-#ifndef NATIVE_BUILD
-        esp_rom_delay_us(REPLY_BACKOFF_DELAY_US);
-#endif
+        REPLY_BACKOFF();
 
         if (success) {
             m_driver.WriteBytes(&parity2, 1);

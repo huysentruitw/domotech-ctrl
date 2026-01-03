@@ -1,0 +1,14 @@
+type: workspace
+model: workspace
+id: wk_u8HifqEVo2
+createdAt: 2026-01-03T14:44:35.160804500
+updatedAt: 2026-01-03T14:44:35.160805300
+authentication: {}
+authenticationType: null
+description: ''
+headers: []
+name: domotech-ctrl
+encryptionKeyChallenge: null
+settingValidateCertificates: true
+settingFollowRedirects: true
+settingRequestTimeout: 0

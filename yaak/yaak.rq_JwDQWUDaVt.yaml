@@ -1,0 +1,18 @@
+type: http_request
+model: http_request
+id: rq_JwDQWUDaVt
+createdAt: 2026-01-03T14:59:16.597099500
+updatedAt: 2026-01-03T14:59:31.315133600
+workspaceId: wk_u8HifqEVo2
+folderId: null
+authentication: {}
+authenticationType: null
+body: {}
+bodyType: null
+description: ''
+headers: []
+method: POST
+name: Clear Configuration
+sortPriority: -1767451503047.996
+url: ${[ api_uri ]}/configuration/clear
+urlParameters: []

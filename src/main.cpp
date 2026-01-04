@@ -55,6 +55,9 @@ void wifi_init_sta(void)
     esp_wifi_set_config(WIFI_IF_STA, &wifi_config);
     esp_wifi_start();
 
+    esp_wifi_set_ps(WIFI_PS_NONE);
+    esp_wifi_set_max_tx_power(78);
+
     // Wait for connection
     xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_BIT, false, true, portMAX_DELAY);
 }
@@ -62,6 +65,7 @@ void wifi_init_sta(void)
 esp_err_t index_handler(httpd_req_t *req)
 {
     std::string response = "Domotech CTRL v" + std::string(VERSION);
+    httpd_resp_set_hdr(req, "Connection", "close");
     httpd_resp_set_type(req, "text/plain");
     httpd_resp_sendstr(req, response.c_str());
     return ESP_OK;
@@ -70,6 +74,7 @@ esp_err_t index_handler(httpd_req_t *req)
 esp_err_t known_filters_handler(httpd_req_t *req)
 {
     const auto ini = manager.GetKnownFiltersIni();
+    httpd_resp_set_hdr(req, "Connection", "close");
     httpd_resp_set_type(req, "text/plain");
     httpd_resp_sendstr(req, ini.c_str());
     return ESP_OK;
@@ -78,6 +83,7 @@ esp_err_t known_filters_handler(httpd_req_t *req)
 esp_err_t configuration_handler(httpd_req_t *req)
 {
     const auto ini = manager.GetConfigurationIni();
+    httpd_resp_set_hdr(req, "Connection", "close");
     httpd_resp_set_type(req, "text/plain");
     httpd_resp_sendstr(req, ini.c_str());
     return ESP_OK;
@@ -86,6 +92,7 @@ esp_err_t configuration_handler(httpd_req_t *req)
 esp_err_t configuration_clear_handler(httpd_req_t *req)
 {
     manager.Clear();
+    httpd_resp_set_hdr(req, "Connection", "close");
     httpd_resp_set_type(req, "text/plain");
     httpd_resp_sendstr(req, "Configuration cleared");
     return ESP_OK;
@@ -95,6 +102,7 @@ esp_err_t configuration_rescan_handler(httpd_req_t *req)
 {
     const auto result = manager.RescanModules();
     std::string response = "Found " + std::to_string(result.NumberOfDetectedModules) + " module(s)";
+    httpd_resp_set_hdr(req, "Connection", "close");
     httpd_resp_set_type(req, "text/plain");
     httpd_resp_sendstr(req, response.c_str());
     return ESP_OK;
@@ -105,6 +113,7 @@ esp_err_t configuration_create_filter_handler(httpd_req_t *req)
     char body[256];
     int received = httpd_req_recv(req, body, sizeof(body) - 1);
     if (received <= 0) {
+        httpd_resp_set_hdr(req, "Connection", "close");
         httpd_resp_set_type(req, "text/plain");
         httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to receive body");
         return ESP_FAIL;
@@ -138,6 +147,7 @@ esp_err_t configuration_create_filter_handler(httpd_req_t *req)
     reader.Finalize();
 
     std::string response = "Created " + std::to_string(numberOfFiltersCreated) + " filter(s)";
+    httpd_resp_set_hdr(req, "Connection", "close");
     httpd_resp_set_type(req, "text/plain");
     httpd_resp_sendstr(req, response.c_str());
     return ESP_OK;

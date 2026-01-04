@@ -35,7 +35,10 @@ void Manager::ProcessNext()
         }
 
         if (m_nextModuleIndexToProcess >= m_modules.size())
+        {
             m_nextModuleIndexToProcess = 0;
+            m_scanLed.Toggle();
+        }
         
         moduleToProcess = m_modules[m_nextModuleIndexToProcess++];
     }

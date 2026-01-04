@@ -1,6 +1,7 @@
 #pragma once
 
 #include "RescanModulesResult.h"
+#include "ScanLed.h"
 
 #include <Filter.h>
 #include <Lock.h>
@@ -31,6 +32,7 @@ public:
 
 private:
     const BusDriver m_busDriver;
+    const ScanLed m_scanLed;
     const Bus m_bus;
     const Lock m_syncRoot;
 

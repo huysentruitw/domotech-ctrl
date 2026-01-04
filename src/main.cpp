@@ -1,15 +1,15 @@
-#include <string>
 #include <format>
+#include <string>
 
-#include <Manager.h>
 #include <IniReader.h>
+#include <Manager.h>
 
-#include "esp_wifi.h"
 #include "esp_event.h"
+#include "esp_http_server.h"
 #include "esp_log.h"
 #include "esp_sntp.h"
+#include "esp_wifi.h"
 #include "nvs_flash.h"
-#include "esp_http_server.h"
 #include "secrets.h"
 
 #define VERSION "1.0"

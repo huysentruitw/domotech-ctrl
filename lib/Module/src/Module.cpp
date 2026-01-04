@@ -37,16 +37,20 @@ void Module::WriteConfig(IniWriter& iniWriter) const
     const auto inputPins = GetInputPins();
     for (std::size_t i = 0; i < inputPins.size(); ++i) {
         if (auto sharedPin = inputPins[i].lock()) {
-            const std::string stateTypeName = PinStateTypes[sharedPin->GetState().index()];
-            iniWriter.WriteKeyValue("Input." + std::to_string(i), "," + stateTypeName);
+            std::string value = sharedPin->GetName();
+            value.append(",");
+            value.append(PinStateTypes[sharedPin->GetState().index()]);
+            iniWriter.WriteKeyValue("Input." + std::to_string(i), value);
         }
     }
 
     const auto outputPins = GetOutputPins();
     for (std::size_t i = 0; i < outputPins.size(); ++i) {
         if (auto sharedPin = outputPins[i].lock()) {
-            const std::string stateTypeName = PinStateTypes[sharedPin->GetState().index()];
-            iniWriter.WriteKeyValue("Output." + std::to_string(i), "," + stateTypeName);
+            std::string value = sharedPin->GetName();
+            value.append(",");
+            value.append(PinStateTypes[sharedPin->GetState().index()]);
+            iniWriter.WriteKeyValue("Output." + std::to_string(i), value);
         }
     }
 }

@@ -65,7 +65,7 @@ RescanModulesResult Manager::RescanModules()
 
     m_modules.reserve(detectedModules.size());
     for (auto& module : detectedModules) {
-        m_modules.push_back(std::move(module));
+        m_modules.emplace_back(std::shared_ptr(std::move(module)));
     }
 
     return {
@@ -73,16 +73,22 @@ RescanModulesResult Manager::RescanModules()
     };
 }
 
-void Manager::CreateFilter(const std::string_view typeName, const std::string_view name)
+bool Manager::TryCreateFilter(const std::string_view typeName, const std::string_view name)
 {
     LockGuard guard(m_syncRoot);
 
+    if (m_filters.contains(name)) {
+        return false;
+    }
+
     auto filter = FilterFactory::TryCreateFilterByTypeName(typeName);
 
-    if (filter != nullptr) {
-        filter->SetName(name);
-        m_filters.push_back(std::move(filter));
-    }
+    if (filter == nullptr)
+        return false;
+
+    filter->SetName(name);
+    m_filters.emplace(name, std::shared_ptr(std::move(filter)));
+    return true;
 }
 
 std::string Manager::GetKnownFiltersIni() const
@@ -108,7 +114,7 @@ std::string Manager::GetConfigurationIni() const
         }
 
         for (const auto& filter : m_filters) {
-            filter->WriteConfig(iniWriter);
+            filter.second->WriteConfig(iniWriter);
         }
     }
 

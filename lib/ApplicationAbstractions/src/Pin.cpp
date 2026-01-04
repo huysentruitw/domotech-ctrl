@@ -3,13 +3,11 @@
 Pin::Pin(
     const PinDirection direction,
     const PinState defaultState,
-    const std::optional<std::function<void(const Pin&)>> onStateChange,
-    const std::string_view name)
+    const std::optional<std::function<void(const Pin&)>> onStateChange)
     : m_direction(direction)
     , m_defaultState(defaultState)
     , m_state(defaultState)
     , m_onStateChange(onStateChange)
-    , m_name(name)
 {
 }
 
@@ -26,6 +24,11 @@ Pin::~Pin()
 const std::string& Pin::GetName() const
 {
     return m_name;
+}
+
+void Pin::SetName(std::string_view name)
+{
+    m_name = name;
 }
 
 PinDirection Pin::GetDirection() const

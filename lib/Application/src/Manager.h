@@ -5,10 +5,12 @@
 #include <Filter.h>
 #include <Lock.h>
 #include <Module.h>
+#include <StringHash.h>
 
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 class Manager final
@@ -22,7 +24,7 @@ public:
     void Clear();
     RescanModulesResult RescanModules();
 
-    void CreateFilter(const std::string_view typeName, const std::string_view name);
+    bool TryCreateFilter(const std::string_view typeName, const std::string_view name);
 
     std::string GetKnownFiltersIni() const;
     std::string GetConfigurationIni() const;
@@ -34,6 +36,6 @@ private:
 
     std::size_t m_nextModuleIndexToProcess = 0;
 
-    std::vector<std::shared_ptr<Filter>> m_filters;
+    std::unordered_map<std::string, std::shared_ptr<Filter>, StringHash, std::equal_to<>> m_filters;
     std::vector<std::shared_ptr<Module>> m_modules;
 };

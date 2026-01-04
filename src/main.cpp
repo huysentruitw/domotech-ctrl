@@ -103,7 +103,7 @@ esp_err_t configuration_rescan_handler(httpd_req_t *req)
 esp_err_t configuration_create_filter_handler(httpd_req_t *req)
 {
     char body[256];
-    int received = httpd_req_recv(req, body, sizeof(body));
+    int received = httpd_req_recv(req, body, sizeof(body) - 1);
     if (received <= 0) {
         httpd_resp_set_type(req, "text/plain");
         httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to receive body");
@@ -127,8 +127,9 @@ esp_err_t configuration_create_filter_handler(httpd_req_t *req)
         if (key == "Name") filterName = value;
 
         if (!filterType.empty() && !filterName.empty()) {
-            manager.CreateFilter(filterType, filterName);
-            numberOfFiltersCreated++;
+            if (manager.TryCreateFilter(filterType, filterName))
+                numberOfFiltersCreated++;
+
             filterType.clear();
             filterName.clear();
         }

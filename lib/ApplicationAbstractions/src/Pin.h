@@ -19,7 +19,7 @@ enum class PinDirection
 
 typedef std::variant<DigitalValue, DimmerControlValue> PinState;
 
-const std::vector<std::string> PinStateTypes = {
+constexpr std::string_view PinStateTypes[] = {
     "DigitalValue",
     "DimmerControlValue"
 };
@@ -30,12 +30,12 @@ public:
     Pin(
         const PinDirection direction,
         const PinState defaultState,
-        const std::optional<std::function<void(const Pin&)>> onStateChange = std::nullopt,
-        const std::string_view name = {});
+        const std::optional<std::function<void(const Pin&)>> onStateChange = std::nullopt);
 
     ~Pin();
 
     const std::string& GetName() const;
+    void SetName(std::string_view name);
 
     PinDirection GetDirection() const;
     const PinState& GetState() const;
@@ -50,7 +50,7 @@ private:
     const PinState m_defaultState;
     PinState m_state;
     const std::optional<std::function<void(const Pin&)>> m_onStateChange;
-    const std::string m_name;
+    std::string m_name;
 
     std::weak_ptr<Pin> m_connectedOutputPin;
     std::vector<std::weak_ptr<Pin>> m_connectedInputPins;

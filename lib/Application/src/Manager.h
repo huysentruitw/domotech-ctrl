@@ -25,7 +25,7 @@ public:
     void Clear();
     RescanModulesResult RescanModules();
 
-    bool TryCreateFilter(std::string_view typeName, std::string_view name);
+    bool TryCreateFilter(std::string_view typeName, std::string_view id, std::string_view name);
 
     std::string GetKnownFiltersIni() const;
     std::string GetConfigurationIni() const;
@@ -38,6 +38,8 @@ private:
 
     std::size_t m_nextModuleIndexToProcess = 0;
 
-    std::unordered_map<std::string, std::shared_ptr<Filter>, StringHash, std::equal_to<>> m_filters;
+    std::unordered_map<std::string, std::shared_ptr<Filter>, StringHash, std::equal_to<>> m_filtersById;
     std::vector<std::shared_ptr<Module>> m_modules;
+
+    std::shared_ptr<Filter> TryGetFilterById(std::string_view id) const;
 };

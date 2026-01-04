@@ -50,7 +50,7 @@ void Manager::Clear()
 {
     LockGuard guard(m_syncRoot);
 
-    m_filters.clear();
+    m_filtersById.clear();
     m_modules.clear();
     m_nextModuleIndexToProcess = 0;
 }
@@ -62,7 +62,7 @@ RescanModulesResult Manager::RescanModules()
     const ModuleScanner scanner(m_bus);
     auto detectedModules = scanner.DetectModules();
 
-    m_filters.clear();
+    m_filtersById.clear();
     m_modules.clear();
     m_nextModuleIndexToProcess = 0;
 
@@ -76,21 +76,19 @@ RescanModulesResult Manager::RescanModules()
     };
 }
 
-bool Manager::TryCreateFilter(std::string_view typeName, std::string_view name)
+bool Manager::TryCreateFilter(std::string_view typeName, std::string_view id, std::string_view name)
 {
     LockGuard guard(m_syncRoot);
 
-    if (m_filters.contains(name)) {
+    if (TryGetFilterById(id) != nullptr)
         return false;
-    }
 
     auto filter = FilterFactory::TryCreateFilterByTypeName(typeName);
-
     if (filter == nullptr)
         return false;
 
     filter->SetName(name);
-    m_filters.emplace(name, std::shared_ptr(std::move(filter)));
+    m_filtersById.emplace(id, std::shared_ptr(std::move(filter)));
     return true;
 }
 
@@ -116,10 +114,19 @@ std::string Manager::GetConfigurationIni() const
             module->WriteConfig(iniWriter);
         }
 
-        for (const auto& filter : m_filters) {
-            filter.second->WriteConfig(iniWriter);
+        for (const auto& [id, filter] : m_filtersById) {
+            filter->WriteConfig(iniWriter, id);
         }
     }
 
     return iniWriter.GetContent();
+}
+
+std::shared_ptr<Filter> Manager::TryGetFilterById(std::string_view id) const
+{
+    auto it = m_filtersById.find(id);
+    if (it == m_filtersById.end())
+        return nullptr;
+
+    return it->second;
 }

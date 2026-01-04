@@ -36,9 +36,10 @@ void Filter::WriteDescriptor(IniWriter& iniWriter) const
     }
 }
 
-void Filter::WriteConfig(IniWriter& iniWriter) const
+void Filter::WriteConfig(IniWriter& iniWriter, std::string_view id) const
 {
     iniWriter.WriteSection("Filter");
+    iniWriter.WriteKeyValue("Id", id);
     iniWriter.WriteKeyValue("Type", GetFilterTypeName(GetType()));
     iniWriter.WriteKeyValue("Name", GetName());
 }

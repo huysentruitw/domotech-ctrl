@@ -1,6 +1,6 @@
 #include "FilterType.h"
 
-const std::string_view GetFilterTypeName(FilterType filterType)
+std::string_view GetFilterTypeName(FilterType filterType)
 {
     using enum FilterType;
 

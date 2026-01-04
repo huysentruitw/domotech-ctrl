@@ -12,11 +12,11 @@ public:
 
     void Finalize();
 
-    void OnSection(const std::function<void(const std::string_view /*section*/)>& handler) {
+    void OnSection(const std::function<void(std::string_view /*section*/)>& handler) {
         m_sectionHandler = handler;
     }
 
-    void OnKeyValue(const std::function<void(const std::string_view /*section*/, const std::string_view /*key*/, const std::string_view /*value*/)>& handler) {
+    void OnKeyValue(const std::function<void(std::string_view /*section*/, std::string_view /*key*/, std::string_view /*value*/)>& handler) {
         m_keyValueHandler = handler;
     }
 

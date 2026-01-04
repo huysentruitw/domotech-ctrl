@@ -1,6 +1,6 @@
 #include "ModuleType.h"
 
-const std::string_view GetModuleTypeName(ModuleType moduleType)
+std::string_view GetModuleTypeName(ModuleType moduleType)
 {
     using enum ModuleType;
 

@@ -25,7 +25,7 @@ public:
     void Clear();
     RescanModulesResult RescanModules();
 
-    bool TryCreateFilter(const std::string_view typeName, const std::string_view name);
+    bool TryCreateFilter(std::string_view typeName, std::string_view name);
 
     std::string GetKnownFiltersIni() const;
     std::string GetConfigurationIni() const;

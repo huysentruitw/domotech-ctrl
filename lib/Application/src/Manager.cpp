@@ -76,7 +76,7 @@ RescanModulesResult Manager::RescanModules()
     };
 }
 
-bool Manager::TryCreateFilter(const std::string_view typeName, const std::string_view name)
+bool Manager::TryCreateFilter(std::string_view typeName, std::string_view name)
 {
     LockGuard guard(m_syncRoot);
 

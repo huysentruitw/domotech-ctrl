@@ -22,8 +22,8 @@ void test_IniReader_EmptyContent()
     int sectionCallCount = 0;
     int keyValueCallCount = 0;
 
-    reader.OnSection([&](const std::string_view) { sectionCallCount++; });
-    reader.OnKeyValue([&](const std::string_view, const std::string_view, const std::string_view) { keyValueCallCount++; });
+    reader.OnSection([&](std::string_view) { sectionCallCount++; });
+    reader.OnKeyValue([&](std::string_view, std::string_view, std::string_view) { keyValueCallCount++; });
 
     // Act
     reader.Feed(content.c_str(), content.size());
@@ -42,8 +42,8 @@ void test_IniReader_SingleSection()
     std::string lastSection;
     std::vector<std::pair<std::string, std::string>> keyValues;
 
-    reader.OnSection([&](const std::string_view section) { lastSection = section; });
-    reader.OnKeyValue([&](const std::string_view, const std::string_view key, const std::string_view value) { keyValues.push_back({std::string(key), std::string(value)}); });
+    reader.OnSection([&](std::string_view section) { lastSection = section; });
+    reader.OnKeyValue([&](std::string_view, std::string_view key, std::string_view value) { keyValues.push_back({std::string(key), std::string(value)}); });
 
     // Act
     reader.Feed(content.c_str(), content.size());
@@ -72,8 +72,8 @@ Key3=Value3
     std::vector<std::string> sections;
     std::vector<std::tuple<std::string, std::string, std::string>> keyValues;
 
-    reader.OnSection([&](const std::string_view section) { sections.push_back(std::string(section)); });
-    reader.OnKeyValue([&](const std::string_view section, const std::string_view key, const std::string_view value) { keyValues.push_back({std::string(section), std::string(key), std::string(value)}); });
+    reader.OnSection([&](std::string_view section) { sections.push_back(std::string(section)); });
+    reader.OnKeyValue([&](std::string_view section, std::string_view key, std::string_view value) { keyValues.push_back({std::string(section), std::string(key), std::string(value)}); });
 
     // Act
     reader.Feed(content.c_str(), content.size());
@@ -110,8 +110,8 @@ Key2=Value2
     int sectionCallCount = 0;
     std::vector<std::pair<std::string, std::string>> keyValues;
 
-    reader.OnSection([&](const std::string_view section) { sectionCallCount++; });
-    reader.OnKeyValue([&](const std::string_view, const std::string_view key, const std::string_view value) { keyValues.push_back({std::string(key), std::string(value)}); });
+    reader.OnSection([&](std::string_view section) { sectionCallCount++; });
+    reader.OnKeyValue([&](std::string_view, std::string_view key, std::string_view value) { keyValues.push_back({std::string(key), std::string(value)}); });
 
     // Act
     reader.Feed(content.c_str(), content.size());
@@ -139,8 +139,8 @@ Key2=Value2
     int sectionCallCount = 0;
     std::vector<std::pair<std::string, std::string>> keyValues;
 
-    reader.OnSection([&](const std::string_view section) { sectionCallCount++; });
-    reader.OnKeyValue([&](const std::string_view, const std::string_view key, const std::string_view value) { keyValues.push_back({std::string(key), std::string(value)}); });
+    reader.OnSection([&](std::string_view section) { sectionCallCount++; });
+    reader.OnKeyValue([&](std::string_view, std::string_view key, std::string_view value) { keyValues.push_back({std::string(key), std::string(value)}); });
 
     // Act
     reader.Feed(content.c_str(), content.size());
@@ -164,8 +164,8 @@ void test_IniReader_HandlesWhitespace()
     std::string lastSection;
     std::vector<std::pair<std::string, std::string>> keyValues;
 
-    reader.OnSection([&](const std::string_view section) { lastSection = section; });
-    reader.OnKeyValue([&](const std::string_view, const std::string_view key, const std::string_view value) { keyValues.push_back({std::string(key), std::string(value)}); });
+    reader.OnSection([&](std::string_view section) { lastSection = section; });
+    reader.OnKeyValue([&](std::string_view, std::string_view key, std::string_view value) { keyValues.push_back({std::string(key), std::string(value)}); });
 
     // Act
     reader.Feed(content.c_str(), content.size());

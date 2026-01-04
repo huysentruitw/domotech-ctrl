@@ -9,4 +9,4 @@ enum class FilterType
     Dimmer = 3,
 };
 
-const std::string_view GetFilterTypeName(FilterType filterType);
+std::string_view GetFilterTypeName(FilterType filterType);

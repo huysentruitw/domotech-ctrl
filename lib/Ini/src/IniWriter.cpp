@@ -6,7 +6,7 @@ IniWriter::IniWriter()
     m_content.reserve(1024);
 }
 
-void IniWriter::WriteSection(const std::string_view section)
+void IniWriter::WriteSection(std::string_view section)
 {
     if (!m_isFirstSection) {
         m_content.append("\n");
@@ -18,7 +18,7 @@ void IniWriter::WriteSection(const std::string_view section)
     m_isFirstSection = false;
 }
 
-void IniWriter::WriteKeyValue(const std::string_view key, const std::string_view value)
+void IniWriter::WriteKeyValue(std::string_view key, std::string_view value)
 {
     m_content.append(key);
     m_content.append("=");
@@ -26,7 +26,7 @@ void IniWriter::WriteKeyValue(const std::string_view key, const std::string_view
     m_content.append("\n");
 }
 
-void IniWriter::WriteComment(const std::string_view comment)
+void IniWriter::WriteComment(std::string_view comment)
 {
     m_content.append("; ");
     m_content.append(comment);

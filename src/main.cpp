@@ -64,7 +64,26 @@ void wifi_init_sta(void)
 
 esp_err_t index_handler(httpd_req_t *req)
 {
-    std::string response = "Domotech CTRL v" + std::string(VERSION);
+    std::string response = "Domotech CTRL\n\n";
+
+    response.append("Version: ");
+    response.append(std::string(VERSION));
+    response.append("\n");
+
+    response.append("Free memory: ");
+    response.append(std::to_string(esp_get_free_heap_size()));
+    response.append("bytes\n");
+
+    wifi_ap_record_t apInfo;
+    if (esp_wifi_sta_get_ap_info(&apInfo) == ESP_OK) {
+        response.append("Wifi RSSI: ");
+        response.append(std::to_string(apInfo.rssi));
+        response.append("dBm, quality: ");
+        const auto quality = apInfo.rssi <= -100 ? 0 : apInfo.rssi >= -50 ? 100 : 2 * (apInfo.rssi + 100);
+        response.append(std::to_string(quality));
+        response.append("%\n");
+    }
+
     httpd_resp_set_hdr(req, "Connection", "close");
     httpd_resp_set_type(req, "text/plain");
     httpd_resp_sendstr(req, response.c_str());

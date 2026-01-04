@@ -42,4 +42,5 @@ private:
     std::vector<std::shared_ptr<Module>> m_modules;
 
     std::shared_ptr<Filter> TryGetFilterById(std::string_view id) const;
+    std::shared_ptr<Module> TryGetModuleByAddress(uint8_t address) const;
 };

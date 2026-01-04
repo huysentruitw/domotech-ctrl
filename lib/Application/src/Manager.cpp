@@ -130,3 +130,13 @@ std::shared_ptr<Filter> Manager::TryGetFilterById(std::string_view id) const
 
     return it->second;
 }
+
+std::shared_ptr<Module> Manager::TryGetModuleByAddress(uint8_t address) const
+{
+    for (const auto& module : m_modules) {
+        if (module->GetAddress() == address)
+            return module;
+    }
+
+    return nullptr;
+}

@@ -7,13 +7,13 @@
 #include "esp_wifi.h"
 #include "esp_event.h"
 #include "esp_log.h"
-#include "driver/gpio.h"
+#include "esp_sntp.h"
 #include "nvs_flash.h"
 #include "esp_http_server.h"
 #include "secrets.h"
 
 #define VERSION "1.0"
-#define LED_GPIO GPIO_NUM_2
+#define POSIX_TIMEZONE "CET-1CEST,M3.5.0/2,M10.5.0/3" // Belgium
 
 Manager manager;
 
@@ -57,9 +57,20 @@ void wifi_init_sta(void)
 
     esp_wifi_set_ps(WIFI_PS_NONE);
     esp_wifi_set_max_tx_power(78);
+}
 
-    // Wait for connection
-    xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_BIT, false, true, portMAX_DELAY);
+std::string GetFormattedTime()
+{
+    time_t now;
+    time(&now);
+
+    struct tm timeInfo;
+    localtime_r(&now, &timeInfo);
+
+    char buffer[32];
+    strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", &timeInfo);
+
+    return std::string(buffer);
 }
 
 esp_err_t index_handler(httpd_req_t *req)
@@ -83,6 +94,9 @@ esp_err_t index_handler(httpd_req_t *req)
         response.append(std::to_string(quality));
         response.append("%\n");
     }
+
+    response.append("Current time: ");
+    response.append(GetFormattedTime());
 
     httpd_resp_set_hdr(req, "Connection", "close");
     httpd_resp_set_type(req, "text/plain");
@@ -243,19 +257,39 @@ void ProcessTask(void *arg)
     vTaskDelete(NULL);
 }
 
+void TimeSyncTask(void *arg)
+{
+    setenv("TZ", POSIX_TIMEZONE, 1);
+    tzset();
+    
+    xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_BIT, false, true, portMAX_DELAY);
+
+    esp_sntp_setoperatingmode(ESP_SNTP_OPMODE_POLL);
+    esp_sntp_setservername(0, "pool.ntp.org");
+    esp_sntp_init();
+
+    vTaskDelete(NULL);
+}
+
 extern "C" void app_main()
 {
-    nvs_flash_init();       // Required for Wi-Fi
-    wifi_init_sta();        // Connect to Wi-Fi
-
-    gpio_reset_pin(LED_GPIO);
-    gpio_set_direction(LED_GPIO, GPIO_MODE_OUTPUT);
+    nvs_flash_init();   // Required for Wi-Fi
+    wifi_init_sta();    // Connect to Wi-Fi
 
     manager.Start();
 
     xTaskCreate(
         ProcessTask,    // Task function
-        "Process task", // Name (for debugging)
+        "Process",      // Name (for debugging)
+        4096,           // Stack size in bytes
+        NULL,           // Task parameter
+        5,              // Task priority (higher = more important)
+        NULL            // Optional handle
+    );
+
+    xTaskCreate(
+        TimeSyncTask,   // Task function
+        "TimeSync",     // Name (for debugging)
         4096,           // Stack size in bytes
         NULL,           // Task parameter
         5,              // Task priority (higher = more important)
@@ -265,6 +299,6 @@ extern "C" void app_main()
     start_webserver();
 
     while (true) {
-        vTaskDelay(pdMS_TO_TICKS(1000)); // Sleep for 1 second
+        vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }

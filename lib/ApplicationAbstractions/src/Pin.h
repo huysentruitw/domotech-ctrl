@@ -40,7 +40,7 @@ public:
     PinDirection GetDirection() const;
     const PinState& GetState() const;
     template<typename TState> TState GetStateAs() const { return std::get<TState>(m_state); }
-    void SetState(const PinState& newState);
+    bool SetState(const PinState& newState);
 
     static bool Connect(std::weak_ptr<Pin> inputPin, std::weak_ptr<Pin> outputPin);
     static bool Disconnect(std::weak_ptr<Pin> inputPin, std::weak_ptr<Pin> outputPin);

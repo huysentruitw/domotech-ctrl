@@ -10,5 +10,5 @@ class FilterFactory final
 public:
     FilterFactory() = delete; // Prevent instantiation of static class
     
-    static std::unique_ptr<Filter> TryCreateFilterByTypeName(std::string_view filterName);
+    static std::unique_ptr<Filter> TryCreateFilterByTypeName(std::string_view typeName);
 };

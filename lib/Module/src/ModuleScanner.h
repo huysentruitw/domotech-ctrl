@@ -1,9 +1,11 @@
 #pragma once
 
+#include <Bus.h>
+
+#include "Module.h"
+
 #include <memory>
 #include <vector>
-#include <Bus.h>
-#include "Module.h"
 
 class ModuleScanner final
 {

@@ -5,7 +5,7 @@
 #include <memory>
 #include <vector>
 
-class DimmerFilter : public Filter
+class DimmerFilter final : public Filter
 {
 public:
     DimmerFilter();

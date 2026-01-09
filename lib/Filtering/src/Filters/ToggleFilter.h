@@ -5,7 +5,7 @@
 #include <memory>
 #include <vector>
 
-class ToggleFilter : public Filter
+class ToggleFilter final : public Filter
 {
 public:
     ToggleFilter();

@@ -12,7 +12,7 @@ enum ShutterCommand
     Stop
 };
 
-class ShutterFilter : public Filter
+class ShutterFilter final : public Filter
 {
 public:
     ShutterFilter();

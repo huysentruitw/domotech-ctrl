@@ -59,6 +59,16 @@ void wifi_init_sta(void)
     esp_wifi_set_max_tx_power(78);
 }
 
+void time_init(void)
+{
+    setenv("TZ", POSIX_TIMEZONE, 1);
+    tzset();
+    
+    esp_sntp_setoperatingmode(ESP_SNTP_OPMODE_POLL);
+    esp_sntp_setservername(0, "pool.ntp.org");
+    esp_sntp_init();
+}
+
 std::string GetFormattedTime()
 {
     time_t now;
@@ -257,20 +267,6 @@ void ProcessTask(void *arg)
     vTaskDelete(NULL);
 }
 
-void TimeSyncTask(void *arg)
-{
-    setenv("TZ", POSIX_TIMEZONE, 1);
-    tzset();
-    
-    xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_BIT, false, true, portMAX_DELAY);
-
-    esp_sntp_setoperatingmode(ESP_SNTP_OPMODE_POLL);
-    esp_sntp_setservername(0, "pool.ntp.org");
-    esp_sntp_init();
-
-    vTaskDelete(NULL);
-}
-
 extern "C" void app_main()
 {
     nvs_flash_init();   // Required for Wi-Fi
@@ -287,14 +283,9 @@ extern "C" void app_main()
         NULL            // Optional handle
     );
 
-    xTaskCreate(
-        TimeSyncTask,   // Task function
-        "TimeSync",     // Name (for debugging)
-        4096,           // Stack size in bytes
-        NULL,           // Task parameter
-        5,              // Task priority (higher = more important)
-        NULL            // Optional handle
-    );
+    xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_BIT, false, true, portMAX_DELAY);
+
+    time_init();
 
     start_webserver();
 

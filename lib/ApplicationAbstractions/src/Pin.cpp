@@ -41,10 +41,10 @@ const PinState& Pin::GetState() const
     return m_state;
 }
 
-void Pin::SetState(const PinState& newState)
+bool Pin::SetState(const PinState& newState)
 {
     if (newState == m_state) {
-        return;
+        return false;
     }
 
     m_state = newState;
@@ -56,6 +56,8 @@ void Pin::SetState(const PinState& newState)
     if (m_onStateChange.has_value()) {
         m_onStateChange.value()(*this);
     }
+
+    return true;
 }
 
 bool Pin::Connect(std::weak_ptr<Pin> inputPin, std::weak_ptr<Pin> outputPin)

@@ -1,6 +1,7 @@
 #include <format>
 #include <string>
 
+#include <HomeAssistantBridge.h>
 #include <IniReader.h>
 #include <Manager.h>
 
@@ -15,7 +16,8 @@
 #define VERSION "1.0"
 #define POSIX_TIMEZONE "CET-1CEST,M3.5.0/2,M10.5.0/3" // Belgium
 
-Manager manager;
+HomeAssistantBridge homeAssistantBridge;
+Manager manager(homeAssistantBridge);
 
 static EventGroupHandle_t wifi_event_group;
 #define WIFI_CONNECTED_BIT BIT0
@@ -286,6 +288,7 @@ extern "C" void app_main()
     xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_BIT, false, true, portMAX_DELAY);
 
     time_init();
+    homeAssistantBridge.Init(HA_MQTT_URI, HA_MQTT_USER, HA_MQTT_PASS);
 
     start_webserver();
 

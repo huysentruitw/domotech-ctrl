@@ -4,6 +4,7 @@
 #include "ScanLed.h"
 
 #include <Filter.h>
+#include <HomeAssistantBridge.h>
 #include <Lock.h>
 #include <Module.h>
 #include <StringHash.h>
@@ -17,7 +18,7 @@
 class Manager final
 {
 public:
-    Manager();
+    Manager(HomeAssistantBridge& haBridge);
 
     void Start();
     void ProcessNext();
@@ -31,6 +32,8 @@ public:
     std::string GetConfigurationIni() const;
 
 private:
+    HomeAssistantBridge& m_haBridge;
+
     const BusDriver m_busDriver;
     const ScanLed m_scanLed;
     const Bus m_bus;

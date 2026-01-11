@@ -1,8 +1,8 @@
 {
-  "name": "Application",
+  "name": "HomeAssistant",
   "version": "1.0.0",
-  "description": "Application module",
-  "keywords": "application, esp32, esp-idf",
+  "description": "HA integration library",
+  "keywords": "home-assistant,bridge",
   "frameworks": "espidf",
   "platforms": [
     "espressif32",
@@ -10,12 +10,7 @@
   ],
   "dependencies": {
     "ApplicationAbstractions": "*",
-    "Bus": "*",
-    "Filtering": "*",
-    "HomeAssistant": "*",
-    "Ini": "*",
-    "Locking": "*",
-    "Module": "*"
+    "Filtering": "*"
   },
   "srcDir": "src",
   "build": {

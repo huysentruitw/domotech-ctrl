@@ -1,0 +1,29 @@
+#pragma once
+
+#ifndef NATIVE_BUILD
+
+#include <Filter.h>
+#include <Filters/ToggleFilter.h>
+
+#include "mqtt_client.h"
+
+#include <memory>
+#include <string>
+
+class HomeAssistantBridge final
+{
+public:
+    void Init(const char* uri, const char* username, const char* password);
+    void RegisterFilter(std::weak_ptr<Filter> filter);
+
+private:
+    esp_mqtt_client_handle_t m_client = nullptr;
+
+    void PublishSwitch(const ToggleFilter& filter) const;
+    void PublishState(std::string_view id, DigitalValue state) const;
+
+    // static void EventHandler(void* args, esp_event_base_t base, int32_t eventId, void* data);
+    // void HandleEvent(esp_mqtt_event_handle_t event);
+};
+
+#endif

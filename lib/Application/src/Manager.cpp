@@ -1,4 +1,5 @@
 #include "Manager.h"
+#include "ConnectionsParser.h"
 
 #include <IniWriter.h>
 #include <LockGuard.h>
@@ -83,12 +84,42 @@ bool Manager::TryCreateFilter(std::string_view typeName, std::string_view id, st
     if (TryGetFilterById(id) != nullptr)
         return false;
 
-    auto filter = FilterFactory::TryCreateFilterByTypeName(typeName);
+    const auto connectionsResult = ParseConnections<8>(connections);
+    if (!connectionsResult.ok)
+        return false;
+
+    auto filter = std::shared_ptr<Filter>(FilterFactory::TryCreateFilterByTypeName(typeName));
     if (filter == nullptr)
         return false;
 
-    filter->SetName(name);
-    m_filtersById.emplace(id, std::shared_ptr(std::move(filter)));
+    filter->SetName(id);
+    m_filtersById.emplace(std::string(id), filter);
+
+    // Apply connections
+    for (size_t i = 0; i < connectionsResult.count; i++)
+    {
+        const auto& mapping = connectionsResult.mappings[i];
+
+        if (mapping.LocalPin.Direction == mapping.RemotePin.Direction)
+            continue;
+
+        const auto& filterPins = mapping.LocalPin.Direction == PinDirection::Input ? filter->GetInputPins() : filter->GetOutputPins();
+        if (mapping.LocalPin.Index >= filterPins.size())
+            continue;
+
+        const auto remoteModule = TryGetModuleByAddress(mapping.RemoteModule.Address);
+        if (remoteModule == nullptr)
+            continue;
+
+        const auto& remotePins = mapping.RemotePin.Direction == PinDirection::Input ? remoteModule->GetInputPins() : remoteModule->GetOutputPins();
+        if (mapping.RemotePin.Index >= remotePins.size())
+            continue;
+
+        const auto& inputPin = mapping.LocalPin.Direction == PinDirection::Input ? filterPins[mapping.LocalPin.Index] : remotePins[mapping.RemotePin.Index];
+        const auto& outputPin = mapping.LocalPin.Direction == PinDirection::Input ? remotePins[mapping.RemotePin.Index] : filterPins[mapping.LocalPin.Index];
+        Pin::Connect(inputPin, outputPin);
+    }
+
     return true;
 }
 

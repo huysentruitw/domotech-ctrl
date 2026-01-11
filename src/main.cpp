@@ -164,29 +164,29 @@ esp_err_t configuration_create_filter_handler(httpd_req_t *req)
 
     body[received] = '\0'; // Terminate
 
-    std::string filterId;
-    std::string filterType;
-    std::string filterName;
+    std::string id;
+    std::string type;
+    std::string connections;
     size_t numberOfFiltersCreated = 0;
 
     IniReader reader;
     reader.OnSection([&](std::string_view section) {
-        filterId.clear();
-        filterType.clear();
-        filterName.clear();
+        id.clear();
+        type.clear();
+        connections.clear();
     });
     reader.OnKeyValue([&](std::string_view section, std::string_view key, std::string_view value) {
         if (section != "Filter") return;
-        if (key == "Id") filterId = value;
-        if (key == "Type") filterType = value;
-        if (key == "Name") filterName = value;
+        if (key == "Id") id = value;
+        if (key == "Type") type = value;
+        if (key == "Connections") connections = value;
 
-        if (!filterId.empty() && !filterType.empty() && !filterName.empty()) {
-            if (manager.TryCreateFilter(filterType, filterId, filterName))
+        if (!id.empty() && !type.empty() && !connections.empty()) {
+            if (manager.TryCreateFilter(type, id, connections))
                 numberOfFiltersCreated++;
 
-            filterType.clear();
-            filterName.clear();
+            type.clear();
+            connections.clear();
         }
     });
     reader.Feed(body, received);

@@ -1,8 +1,9 @@
 #include "Filter.h"
 
-Filter::Filter(const FilterType type)
+Filter::Filter(const FilterType type, std::string_view id)
     : m_type(type)
 {
+    SetId(id);
 }
 
 FilterType Filter::GetType() const
@@ -36,10 +37,9 @@ void Filter::WriteDescriptor(IniWriter& iniWriter) const
     }
 }
 
-void Filter::WriteConfig(IniWriter& iniWriter, std::string_view id) const
+void Filter::WriteConfig(IniWriter& iniWriter) const
 {
     iniWriter.WriteSection("Filter");
-    iniWriter.WriteKeyValue("Id", id);
+    iniWriter.WriteKeyValue("Id", GetId());
     iniWriter.WriteKeyValue("Type", GetFilterTypeName(GetType()));
-    iniWriter.WriteKeyValue("Name", GetName());
 }

@@ -2,8 +2,8 @@
 
 #include <PinFactory.h>
 
-LightFilter::LightFilter()
-    : Filter(FilterType::Light)
+LightFilter::LightFilter(std::string_view id)
+    : Filter(FilterType::Light, id)
 {
     m_toggleInputPin = PinFactory::CreateInputPin<DigitalValue>(
         "Toggle",

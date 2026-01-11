@@ -8,7 +8,7 @@
 class LightFilter final : public Filter
 {
 public:
-    LightFilter();
+    LightFilter(std::string_view id = {});
 
 private:
     std::shared_ptr<Pin> m_toggleInputPin;

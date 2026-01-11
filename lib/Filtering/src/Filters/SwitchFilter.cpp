@@ -2,8 +2,8 @@
 
 #include <PinFactory.h>
 
-SwitchFilter::SwitchFilter()
-    : Filter(FilterType::Switch)
+SwitchFilter::SwitchFilter(std::string_view id)
+    : Filter(FilterType::Switch, id)
 {
     m_toggleInputPin = PinFactory::CreateInputPin<DigitalValue>(
         "Toggle",

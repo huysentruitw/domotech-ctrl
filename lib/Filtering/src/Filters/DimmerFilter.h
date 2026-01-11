@@ -8,7 +8,7 @@
 class DimmerFilter final : public Filter
 {
 public:
-    DimmerFilter();
+    DimmerFilter(std::string_view id = {});
 
 private:
     std::shared_ptr<Pin> m_toggleInputPin;

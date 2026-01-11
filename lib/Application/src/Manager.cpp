@@ -90,12 +90,11 @@ bool Manager::TryCreateFilter(std::string_view typeName, std::string_view id, st
     if (!connectionsResult.ok)
         return false;
 
-    auto filter = std::shared_ptr<Filter>(FilterFactory::TryCreateFilterByTypeName(typeName));
+    auto filter = std::shared_ptr<Filter>(FilterFactory::TryCreateFilterByTypeName(typeName, id));
     if (filter == nullptr)
         return false;
 
-    filter->SetName(id);
-    m_filtersById.emplace(std::string(id), filter);
+    m_filtersById.emplace(filter->GetId(), filter);
 
     if (m_bridge != nullptr)
         m_bridge->RegisterFilter(filter);
@@ -152,7 +151,7 @@ std::string Manager::GetConfigurationIni() const
         }
 
         for (const auto& [id, filter] : m_filtersById) {
-            filter->WriteConfig(iniWriter, id);
+            filter->WriteConfig(iniWriter);
         }
     }
 

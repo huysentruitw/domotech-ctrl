@@ -28,7 +28,7 @@ void HomeAssistantBridge::RegisterFilter(std::weak_ptr<Filter> filter)
 
         const auto statePin = PinFactory::CreateInputPin<DigitalValue>([this, switchFilter](const Pin& pin)
         {
-            std::string id = CreateId(switchFilter.GetName());
+            std::string id = SanitizeId(switchFilter.GetId());
             PublishState(id, pin.GetStateAs<DigitalValue>());
         });
         m_pins.emplace_back(statePin);
@@ -42,8 +42,8 @@ void HomeAssistantBridge::PublishSwitch(const SwitchFilter& filter) const
     if (m_client == nullptr)
         return;
 
-    std::string name = filter.GetName();
-    std::string id = CreateId(name);
+    std::string originalId = filter.GetId();
+    std::string id = SanitizeId(originalId);
 
     char topic[64];
     snprintf(topic, sizeof(topic), "homeassistant/switch/%s/config", id.c_str());
@@ -61,7 +61,7 @@ void HomeAssistantBridge::PublishSwitch(const SwitchFilter& filter) const
         "\"optimistic\": false,"
         "\"qos\": 0,"
         "\"retain\": true"
-        "}", id.c_str(), name.c_str(), id.c_str(), id.c_str());
+        "}", id.c_str(), originalId.c_str(), id.c_str(), id.c_str());
 
     esp_mqtt_client_publish(m_client, topic, payload, 0, 1, true);
 }
@@ -108,12 +108,12 @@ void HomeAssistantBridge::HandleEvent(esp_mqtt_event_handle_t event)
     }
 }
 
-std::string HomeAssistantBridge::CreateId(std::string_view input)
+std::string HomeAssistantBridge::SanitizeId(std::string_view id)
 {
     std::string result;
-    result.reserve(input.size());
+    result.reserve(id.size());
 
-    for (char c : input) {
+    for (char c : id) {
         if (c == ' ')
         {
             result.push_back('-');

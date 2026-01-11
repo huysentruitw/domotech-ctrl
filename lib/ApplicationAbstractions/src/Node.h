@@ -10,8 +10,7 @@
 class Node
 {
 public:
-    void SetName(std::string_view name) noexcept { m_name = name; }
-    const std::string& GetName() const noexcept { return m_name; }
+    const std::string& GetId() const noexcept { return m_id; }
 
     std::span<const std::weak_ptr<Pin>> GetInputPins() const noexcept {
         return m_inputPins;
@@ -23,7 +22,8 @@ public:
 protected:
     std::vector<std::weak_ptr<Pin>> m_inputPins;
     std::vector<std::weak_ptr<Pin>> m_outputPins;
+    void SetId(std::string_view id) noexcept { m_id = std::string(id); }
 
 private:
-    std::string m_name;
+    std::string m_id;
 };

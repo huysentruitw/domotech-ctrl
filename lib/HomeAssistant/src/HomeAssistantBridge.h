@@ -28,7 +28,7 @@ private:
     static void EventHandler(void* args, esp_event_base_t base, int32_t eventId, void* data);
     void HandleEvent(esp_mqtt_event_handle_t event);
 
-    static std::string CreateId(std::string_view input);
+    static std::string SanitizeId(std::string_view id);
 };
 
 #endif

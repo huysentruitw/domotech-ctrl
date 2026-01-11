@@ -2,8 +2,8 @@
 
 #include <PinFactory.h>
 
-DimmerFilter::DimmerFilter()
-    : Filter(FilterType::Dimmer)
+DimmerFilter::DimmerFilter(std::string_view id)
+    : Filter(FilterType::Dimmer, id)
 {
     m_toggleInputPin = PinFactory::CreateInputPin<DigitalValue>(
         "Toggle",

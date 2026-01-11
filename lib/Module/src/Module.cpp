@@ -5,6 +5,9 @@ Module::Module(const Bus& bus, const uint8_t address, const ModuleType type)
     , m_address(address)
     , m_type(type)
 {
+    char id[8];
+    int len = snprintf(id, sizeof(id), "A%u", m_address);
+    SetId(std::string_view(id, len));
 }
 
 ScanResponse Module::Poll() const
@@ -30,9 +33,9 @@ ModuleType Module::GetType() const
 void Module::WriteConfig(IniWriter& iniWriter) const
 {
     iniWriter.WriteSection("Module");
+    iniWriter.WriteKeyValue("Id", GetId());
     iniWriter.WriteKeyValue("Type", GetModuleTypeName(GetType()));
     iniWriter.WriteKeyValue("Address", std::to_string(GetAddress()));
-    iniWriter.WriteKeyValue("Name", GetName());
 
     const auto inputPins = GetInputPins();
     for (std::size_t i = 0; i < inputPins.size(); ++i) {

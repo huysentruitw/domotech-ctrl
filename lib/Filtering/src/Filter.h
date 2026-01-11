@@ -10,13 +10,13 @@
 class Filter : public Node
 {
 public:
-    Filter(const FilterType type);
+    Filter(const FilterType type, std::string_view id);
     virtual ~Filter() = default;
 
     FilterType GetType() const;
 
     void WriteDescriptor(IniWriter& iniWriter) const;
-    void WriteConfig(IniWriter& iniWriter, std::string_view id) const;
+    void WriteConfig(IniWriter& iniWriter) const;
 
 private:
     const FilterType m_type;

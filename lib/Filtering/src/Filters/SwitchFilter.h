@@ -8,7 +8,7 @@
 class SwitchFilter final : public Filter
 {
 public:
-    SwitchFilter();
+    SwitchFilter(std::string_view id = {});
 
 private:
     std::shared_ptr<Pin> m_toggleInputPin;

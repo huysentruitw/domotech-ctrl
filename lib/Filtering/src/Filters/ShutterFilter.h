@@ -15,7 +15,7 @@ enum ShutterCommand
 class ShutterFilter final : public Filter
 {
 public:
-    ShutterFilter();
+    ShutterFilter(std::string_view id = {});
 
 private:
     ShutterCommand m_currentShutterCommand = ShutterCommand::Stop;

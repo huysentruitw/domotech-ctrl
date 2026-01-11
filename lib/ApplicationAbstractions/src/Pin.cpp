@@ -121,6 +121,18 @@ bool Pin::Disconnect(std::weak_ptr<Pin> inputPin, std::weak_ptr<Pin> outputPin)
     return true;
 }
 
+bool Pin::IsConnected() const noexcept
+{
+    if (!m_connectedOutputPin.expired())
+        return true;
+
+    for (const auto& pin : m_connectedInputPins)
+        if (!pin.expired())
+            return true;
+
+    return false;
+}
+
 void Pin::NotifyConnectedInputPins(const PinState& newState)
 {
     for (auto it = m_connectedInputPins.begin(); it != m_connectedInputPins.end();) {

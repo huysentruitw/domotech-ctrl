@@ -44,6 +44,7 @@ public:
 
     static bool Connect(std::weak_ptr<Pin> inputPin, std::weak_ptr<Pin> outputPin);
     static bool Disconnect(std::weak_ptr<Pin> inputPin, std::weak_ptr<Pin> outputPin);
+    bool IsConnected() const noexcept;
 
 private:
     const PinDirection m_direction;

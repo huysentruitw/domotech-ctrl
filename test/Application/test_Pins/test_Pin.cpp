@@ -36,6 +36,7 @@ void InputPin_InitialState()
     // Assert
     TEST_ASSERT_EQUAL(DigitalValue(true), pin->GetStateAs<DigitalValue>());
     TEST_ASSERT_EQUAL(0, g_callbackCounter); // Constructor shouldn't trigger callback
+    TEST_ASSERT_FALSE(pin->IsConnected());
 }
 
 void InputPin_StateChange_TriggersCallback()
@@ -65,6 +66,7 @@ void OutputPin_InitialState()
     
     // Assert
     TEST_ASSERT_EQUAL(DigitalValue(true), pin->GetStateAs<DigitalValue>());
+    TEST_ASSERT_FALSE(pin->IsConnected());
 }
 
 void OutputPin_StateChange()
@@ -212,6 +214,50 @@ void PinConnection_AlreadyConnected_ConnectFails()
     TEST_ASSERT_EQUAL(DigitalValue(false), inputPin->GetStateAs<DigitalValue>()); // State should be from first pin
 }
 
+void PinConnection_IsConnectedTrue()
+{
+    // Arrange
+    auto inputPin = PinFactory::CreateInputPin<DigitalValue>();
+    auto outputPin = PinFactory::CreateOutputPin<DigitalValue>();
+
+    // Act
+    Pin::Connect(inputPin, outputPin);
+
+    // Assert
+    TEST_ASSERT_TRUE(inputPin->IsConnected());
+    TEST_ASSERT_TRUE(outputPin->IsConnected());
+}
+
+void PinConnection_Disconnect_IsConnectedFalse()
+{
+    // Arrange
+    auto inputPin = PinFactory::CreateInputPin<DigitalValue>();
+    auto outputPin = PinFactory::CreateOutputPin<DigitalValue>();
+    Pin::Connect(inputPin, outputPin);
+
+    // Act
+    Pin::Disconnect(inputPin, outputPin);    
+
+    // Assert
+    TEST_ASSERT_FALSE(inputPin->IsConnected());
+    TEST_ASSERT_FALSE(outputPin->IsConnected());
+}
+
+void PinConnection_ExpiredConnection_IsConnectedFalse()
+{
+    // Arrange
+    auto inputPin = PinFactory::CreateInputPin<DigitalValue>();
+
+    // Act
+    {
+        auto tempOutputPin = PinFactory::CreateOutputPin<DigitalValue>();
+        Pin::Connect(inputPin, tempOutputPin);
+    } // tempOutputPin goes out of scope here
+
+    // Assert
+    TEST_ASSERT_FALSE(inputPin->IsConnected());
+}
+
 int main()
 {
     UNITY_BEGIN();
@@ -227,6 +273,9 @@ int main()
     RUN_TEST(PinConnection_ExpiredOutputPin);
     RUN_TEST(PinConnection_ExpiredInputPin);
     RUN_TEST(PinConnection_AlreadyConnected_ConnectFails);
+    RUN_TEST(PinConnection_IsConnectedTrue);
+    RUN_TEST(PinConnection_Disconnect_IsConnectedFalse);
+    RUN_TEST(PinConnection_ExpiredConnection_IsConnectedFalse);
     
     return UNITY_END();
 }

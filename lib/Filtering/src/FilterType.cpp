@@ -6,6 +6,7 @@ std::string_view GetFilterTypeName(FilterType filterType)
 
     constexpr std::pair<FilterType, std::string_view> identifiers[] = {
         { FilterType::Switch, "Switch" },
+        { FilterType::Light, "Light" },
         { FilterType::Dimmer, "Dimmer" },
         { FilterType::Shutter, "Shutter" },
     };

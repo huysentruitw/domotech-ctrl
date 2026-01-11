@@ -7,6 +7,7 @@
 
 #include <FilterFactory.h>
 #include <Filters/DimmerFilter.h>
+#include <Filters/LightFilter.h>
 #include <Filters/ShutterFilter.h>
 #include <Filters/SwitchFilter.h>
 
@@ -132,6 +133,7 @@ std::string Manager::GetKnownFiltersIni() const
     IniWriter iniWriter;
 
     SwitchFilter().WriteDescriptor(iniWriter);
+    LightFilter().WriteDescriptor(iniWriter);
     DimmerFilter().WriteDescriptor(iniWriter);
     ShutterFilter().WriteDescriptor(iniWriter);
 

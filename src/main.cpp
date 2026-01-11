@@ -17,7 +17,7 @@
 #define POSIX_TIMEZONE "CET-1CEST,M3.5.0/2,M10.5.0/3" // Belgium
 
 HomeAssistantBridge homeAssistantBridge;
-Manager manager(homeAssistantBridge);
+Manager manager(&homeAssistantBridge);
 
 static EventGroupHandle_t wifi_event_group;
 #define WIFI_CONNECTED_BIT BIT0

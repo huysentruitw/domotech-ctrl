@@ -12,7 +12,6 @@
     "ApplicationAbstractions": "*",
     "Bus": "*",
     "Filtering": "*",
-    "HomeAssistant": "*",
     "Ini": "*",
     "Locking": "*",
     "Module": "*"

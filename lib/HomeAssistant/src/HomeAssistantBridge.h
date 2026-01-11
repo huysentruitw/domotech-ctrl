@@ -2,7 +2,8 @@
 
 #ifndef NATIVE_BUILD
 
-#include <Filter.h>
+#include <Bridge.h>
+
 #include <Filters/ToggleFilter.h>
 #include <Pin.h>
 
@@ -11,11 +12,11 @@
 #include <memory>
 #include <string>
 
-class HomeAssistantBridge final
+class HomeAssistantBridge final : public Bridge
 {
 public:
     void Init(const char* uri, const char* username, const char* password);
-    void RegisterFilter(std::weak_ptr<Filter> filter);
+    void RegisterFilter(std::weak_ptr<Filter> filter) override;
 
 private:
     esp_mqtt_client_handle_t m_client = nullptr;

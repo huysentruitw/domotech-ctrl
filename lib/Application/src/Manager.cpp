@@ -12,8 +12,8 @@
 
 #include <sstream>
 
-Manager::Manager(HomeAssistantBridge& haBridge)
-    : m_haBridge(haBridge)
+Manager::Manager(Bridge* bridge)
+    : m_bridge(bridge)
     , m_busDriver()
     , m_bus(m_busDriver)
     , m_syncRoot()
@@ -96,7 +96,8 @@ bool Manager::TryCreateFilter(std::string_view typeName, std::string_view id, st
     filter->SetName(id);
     m_filtersById.emplace(std::string(id), filter);
 
-    m_haBridge.RegisterFilter(filter);
+    if (m_bridge != nullptr)
+        m_bridge->RegisterFilter(filter);
 
     // Apply connections
     for (size_t i = 0; i < connectionsResult.count; i++)

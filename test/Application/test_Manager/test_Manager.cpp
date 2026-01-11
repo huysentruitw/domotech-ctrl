@@ -18,6 +18,7 @@ void Manager_GetKnownFiltersIni()
         "[Filter]\n"
         "Type=Switch\n"
         "Input.0=Toggle,DigitalValue\n"
+        "Input.1=Feedback,DigitalValue\n"
         "Output.0=Control,DigitalValue\n"
         "Output.1=Feedback,DigitalValue\n"
         "\n"

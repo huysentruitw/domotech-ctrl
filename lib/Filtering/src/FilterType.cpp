@@ -5,9 +5,9 @@ std::string_view GetFilterTypeName(FilterType filterType)
     using enum FilterType;
 
     constexpr std::pair<FilterType, std::string_view> identifiers[] = {
-        { FilterType::Toggle, "Toggle" },
-        { FilterType::Shutter, "Shutter" },
+        { FilterType::Switch, "Switch" },
         { FilterType::Dimmer, "Dimmer" },
+        { FilterType::Shutter, "Shutter" },
     };
 
     for (auto&& [key, value] : identifiers) {

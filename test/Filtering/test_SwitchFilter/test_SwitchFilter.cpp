@@ -1,7 +1,7 @@
 #include <unity.h>
 #include <memory>
 
-#include <Filters/ToggleFilter.h>
+#include <Filters/SwitchFilter.h>
 
 void setUp(void)
 {
@@ -13,10 +13,10 @@ void tearDown(void)
     // Cleanup after each test
 }
 
-void ToggleFilter_Constructor_CreatesPins()
+void SwitchFilter_Constructor_CreatesPins()
 {
     // Arrange
-    ToggleFilter filter;
+    SwitchFilter filter;
 
     // Act
     auto inputPins = filter.GetInputPins();
@@ -39,10 +39,10 @@ void ToggleFilter_Constructor_CreatesPins()
     TEST_ASSERT_EQUAL(DigitalValue(false), feedbackPin->GetStateAs<DigitalValue>());
 }
 
-void ToggleFilter_ToggleInput_ChangesControlOutput()
+void SwitchFilter_SwitchInput_ChangesControlOutput()
 {
     // Arrange
-    ToggleFilter filter;
+    SwitchFilter filter;
     auto inputPins = filter.GetInputPins();
     auto outputPins = filter.GetOutputPins();
 
@@ -83,8 +83,8 @@ int main()
 {
     UNITY_BEGIN();
     
-    RUN_TEST(ToggleFilter_Constructor_CreatesPins);
-    RUN_TEST(ToggleFilter_ToggleInput_ChangesControlOutput);
+    RUN_TEST(SwitchFilter_Constructor_CreatesPins);
+    RUN_TEST(SwitchFilter_SwitchInput_ChangesControlOutput);
     
     return UNITY_END();
 }

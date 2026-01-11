@@ -15,9 +15,9 @@ void FilterType_GetFilterTypeNames()
     // Arrange
     std::string expectedFilterTypeNames =
         "Unknown\n"
-        "Toggle\n"
-        "Shutter\n"
+        "Switch\n"
         "Dimmer\n"
+        "Shutter\n"
         "Unknown\n"
         "Unknown\n"
         "Unknown\n"

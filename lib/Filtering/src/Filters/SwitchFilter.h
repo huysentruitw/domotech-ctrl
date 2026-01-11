@@ -5,10 +5,10 @@
 #include <memory>
 #include <vector>
 
-class ToggleFilter final : public Filter
+class SwitchFilter final : public Filter
 {
 public:
-    ToggleFilter();
+    SwitchFilter();
 
 private:
     std::shared_ptr<Pin> m_toggleInputPin;

@@ -1,9 +1,9 @@
-#include "ToggleFilter.h"
+#include "SwitchFilter.h"
 
 #include <PinFactory.h>
 
-ToggleFilter::ToggleFilter()
-    : Filter(FilterType::Toggle)
+SwitchFilter::SwitchFilter()
+    : Filter(FilterType::Switch)
 {
     m_toggleInputPin = PinFactory::CreateInputPin<DigitalValue>(
         "Toggle",

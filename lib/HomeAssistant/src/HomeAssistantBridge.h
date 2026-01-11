@@ -4,7 +4,7 @@
 
 #include <Bridge.h>
 
-#include <Filters/ToggleFilter.h>
+#include <Filters/SwitchFilter.h>
 #include <Pin.h>
 
 #include "mqtt_client.h"
@@ -22,7 +22,7 @@ private:
     esp_mqtt_client_handle_t m_client = nullptr;
     std::vector<std::shared_ptr<Pin>> m_pins;
 
-    void PublishSwitch(const ToggleFilter& filter) const;
+    void PublishSwitch(const SwitchFilter& filter) const;
     void PublishState(std::string_view id, DigitalValue state) const;
 
     static void EventHandler(void* args, esp_event_base_t base, int32_t eventId, void* data);

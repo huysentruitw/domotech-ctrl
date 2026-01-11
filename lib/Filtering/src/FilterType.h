@@ -4,9 +4,9 @@
 
 enum class FilterType
 {
-    Toggle = 1,
-    Shutter = 2,
-    Dimmer = 3,
+    Switch = 1,
+    Dimmer = 2,
+    Shutter = 3,
 };
 
 std::string_view GetFilterTypeName(FilterType filterType);

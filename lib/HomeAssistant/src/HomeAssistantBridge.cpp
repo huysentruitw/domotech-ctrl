@@ -22,22 +22,22 @@ void HomeAssistantBridge::RegisterFilter(std::weak_ptr<Filter> filter)
     if (!filterPtr)
         return;
 
-    if (filterPtr->GetType() == FilterType::Toggle) {
-        const auto toggleFilter = static_cast<const ToggleFilter&>(*filterPtr);
-        PublishSwitch(toggleFilter);
+    if (filterPtr->GetType() == FilterType::Switch) {
+        const auto switchFilter = static_cast<const SwitchFilter&>(*filterPtr);
+        PublishSwitch(switchFilter);
 
-        const auto statePin = PinFactory::CreateInputPin<DigitalValue>([this, toggleFilter](const Pin& pin)
+        const auto statePin = PinFactory::CreateInputPin<DigitalValue>([this, switchFilter](const Pin& pin)
         {
-            std::string id = CreateId(toggleFilter.GetName());
+            std::string id = CreateId(switchFilter.GetName());
             PublishState(id, pin.GetStateAs<DigitalValue>());
         });
         m_pins.emplace_back(statePin);
 
-        Pin::Connect(statePin, toggleFilter.GetOutputPins()[0]);
+        Pin::Connect(statePin, switchFilter.GetOutputPins()[0]);
     }
 }
 
-void HomeAssistantBridge::PublishSwitch(const ToggleFilter& filter) const
+void HomeAssistantBridge::PublishSwitch(const SwitchFilter& filter) const
 {
     if (m_client == nullptr)
         return;

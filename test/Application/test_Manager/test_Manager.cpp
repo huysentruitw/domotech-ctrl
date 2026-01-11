@@ -16,6 +16,12 @@ void Manager_GetKnownFiltersIni()
     Manager manager;
     std::string expectedIniContent =
         "[Filter]\n"
+        "Type=Switch\n"
+        "Input.0=Toggle,DigitalValue\n"
+        "Output.0=Control,DigitalValue\n"
+        "Output.1=Feedback,DigitalValue\n"
+        "\n"
+        "[Filter]\n"
         "Type=Dimmer\n"
         "Input.0=Toggle,DigitalValue\n"
         "Output.0=Control,DimmerControlValue\n"
@@ -29,13 +35,7 @@ void Manager_GetKnownFiltersIni()
         "Input.3=OpenFeedback,DigitalValue\n"
         "Input.4=CloseFeedback,DigitalValue\n"
         "Output.0=Open,DigitalValue\n"
-        "Output.1=Close,DigitalValue\n"
-        "\n"
-        "[Filter]\n"
-        "Type=Toggle\n"
-        "Input.0=Toggle,DigitalValue\n"
-        "Output.0=Control,DigitalValue\n"
-        "Output.1=Feedback,DigitalValue\n";
+        "Output.1=Close,DigitalValue\n";
 
     // Act
     std::string iniContent = manager.GetKnownFiltersIni();

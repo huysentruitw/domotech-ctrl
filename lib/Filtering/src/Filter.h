@@ -11,6 +11,7 @@ class Filter : public Node
 {
 public:
     Filter(const FilterType type);
+    virtual ~Filter() = default;
 
     FilterType GetType() const;
 

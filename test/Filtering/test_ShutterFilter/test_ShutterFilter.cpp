@@ -23,21 +23,24 @@ void ShutterFilter_Constructor_CreatesPins()
     auto outputPins = filter.GetOutputPins();
 
     // Assert
-    TEST_ASSERT_EQUAL(4, inputPins.size());
+    TEST_ASSERT_EQUAL(5, inputPins.size());
     TEST_ASSERT_EQUAL(2, outputPins.size());
 
     auto openPin = inputPins[0].lock();
     auto closePin = inputPins[1].lock();
-    auto openFeedbackPin = inputPins[2].lock();
-    auto closeFeedbackPin = inputPins[3].lock();
+    auto stopPin = inputPins[2].lock();
+    auto openFeedbackPin = inputPins[3].lock();
+    auto closeFeedbackPin = inputPins[4].lock();
 
     TEST_ASSERT_NOT_NULL(openPin.get());
     TEST_ASSERT_NOT_NULL(closePin.get());
+    TEST_ASSERT_NOT_NULL(stopPin.get());
     TEST_ASSERT_NOT_NULL(openFeedbackPin.get());
     TEST_ASSERT_NOT_NULL(closeFeedbackPin.get());
 
     TEST_ASSERT_EQUAL(DigitalValue(false), openPin->GetStateAs<DigitalValue>());
     TEST_ASSERT_EQUAL(DigitalValue(false), closePin->GetStateAs<DigitalValue>());
+    TEST_ASSERT_EQUAL(DigitalValue(false), stopPin->GetStateAs<DigitalValue>());
     TEST_ASSERT_EQUAL(DigitalValue(false), openFeedbackPin->GetStateAs<DigitalValue>());
     TEST_ASSERT_EQUAL(DigitalValue(false), closeFeedbackPin->GetStateAs<DigitalValue>());
 

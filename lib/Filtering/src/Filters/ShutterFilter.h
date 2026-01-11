@@ -21,8 +21,12 @@ private:
     ShutterCommand m_currentShutterCommand = ShutterCommand::Stop;
     std::shared_ptr<Pin> m_openInputPin;
     std::shared_ptr<Pin> m_closeInputPin;
+    std::shared_ptr<Pin> m_stopInputPin;
     std::shared_ptr<Pin> m_openFeedbackInputPin;
     std::shared_ptr<Pin> m_closeFeedbackInputPin;
     std::shared_ptr<Pin> m_openOutputPin;
     std::shared_ptr<Pin> m_closeOutputPin;
+
+    uint64_t m_signalStartMs = 0;
+    static uint64_t GetMsSinceBoot() noexcept;
 };

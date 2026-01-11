@@ -6,7 +6,6 @@
 #include <algorithm>
 #include <functional>
 #include <memory>
-#include <optional>
 #include <string>
 #include <variant>
 #include <vector>
@@ -30,7 +29,7 @@ public:
     Pin(
         const PinDirection direction,
         const PinState defaultState,
-        const std::optional<std::function<void(const Pin&)>> onStateChange = std::nullopt);
+        const std::function<void(const Pin&)> onStateChange = {});
 
     ~Pin();
 
@@ -50,7 +49,7 @@ private:
     const PinDirection m_direction;
     const PinState m_defaultState;
     PinState m_state;
-    const std::optional<std::function<void(const Pin&)>> m_onStateChange;
+    const std::function<void(const Pin&)> m_onStateChange;
     std::string m_name;
 
     std::weak_ptr<Pin> m_connectedOutputPin;

@@ -3,7 +3,7 @@
 Pin::Pin(
     const PinDirection direction,
     const PinState defaultState,
-    const std::optional<std::function<void(const Pin&)>> onStateChange)
+    const std::function<void(const Pin&)> onStateChange)
     : m_direction(direction)
     , m_defaultState(defaultState)
     , m_state(defaultState)
@@ -53,8 +53,8 @@ bool Pin::SetState(const PinState& newState)
         NotifyConnectedInputPins(newState);
     }
 
-    if (m_onStateChange.has_value()) {
-        m_onStateChange.value()(*this);
+    if (m_onStateChange) {
+        m_onStateChange(*this);
     }
 
     return true;

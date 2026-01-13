@@ -16,7 +16,7 @@
 #define VERSION "1.0"
 #define POSIX_TIMEZONE "CET-1CEST,M3.5.0/2,M10.5.0/3" // Belgium
 
-HomeAssistantBridge homeAssistantBridge;
+HomeAssistantBridge homeAssistantBridge(HA_MQTT_URI, HA_MQTT_USER, HA_MQTT_PASS);
 Manager manager(&homeAssistantBridge);
 
 static EventGroupHandle_t wifi_event_group;
@@ -290,7 +290,7 @@ extern "C" void app_main()
     ESP_LOGI("MAIN", "Started!");
 
     time_init();
-    homeAssistantBridge.Init(HA_MQTT_URI, HA_MQTT_USER, HA_MQTT_PASS);
+    homeAssistantBridge.Init();
 
     start_webserver();
 

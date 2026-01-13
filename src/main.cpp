@@ -278,7 +278,7 @@ extern "C" void app_main()
 
     xTaskCreate(
         ProcessTask,    // Task function
-        "Process",      // Name (for debugging)
+        "PROCESS",      // Name (for debugging)
         4096,           // Stack size in bytes
         NULL,           // Task parameter
         5,              // Task priority (higher = more important)
@@ -286,6 +286,8 @@ extern "C" void app_main()
     );
 
     xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_BIT, false, true, portMAX_DELAY);
+
+    ESP_LOGI("MAIN", "Started!");
 
     time_init();
     homeAssistantBridge.Init(HA_MQTT_URI, HA_MQTT_USER, HA_MQTT_PASS);

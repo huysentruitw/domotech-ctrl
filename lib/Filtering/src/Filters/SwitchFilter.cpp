@@ -10,18 +10,16 @@ SwitchFilter::SwitchFilter(std::string_view id)
         [this](const Pin& pin) {
             if (pin.GetStateAs<DigitalValue>() == DigitalValue(true)) {
                 const auto newState = m_controlOutputPin->GetStateAs<DigitalValue>() == DigitalValue(true) ? DigitalValue(false) : DigitalValue(true);
-                m_controlOutputPin->SetState(newState);
-
-                // If no feedback input is connected, use optimistic value
-                if (!m_feedbackInputPin->IsConnected())
-                    m_feedbackOutputPin->SetState(newState);
+                SetState(newState);
             }
         });
 
     m_feedbackInputPin = PinFactory::CreateInputPin<DigitalValue>(
         "Feedback",
         [this](const Pin& pin) {
-            m_feedbackOutputPin->SetState(pin.GetStateAs<DigitalValue>());
+            const auto state = pin.GetStateAs<DigitalValue>();
+            m_feedbackOutputPin->SetState(state);
+            SetState(state);
         });
 
     m_controlOutputPin = PinFactory::CreateOutputPin<DigitalValue>("Control");
@@ -29,4 +27,25 @@ SwitchFilter::SwitchFilter(std::string_view id)
 
     m_inputPins = { m_toggleInputPin, m_feedbackInputPin };
     m_outputPins = { m_controlOutputPin, m_feedbackOutputPin };
+}
+
+void SwitchFilter::SetState(DigitalValue state)
+{
+    bool stateHasChanged = m_controlOutputPin->SetState(state);
+
+    // If no feedback input is connected, use optimistic value
+    if (!m_feedbackInputPin->IsConnected())
+        m_feedbackOutputPin->SetState(state);
+
+    if (m_stateCallback && stateHasChanged)
+        m_stateCallback(*this, state);
+}
+
+bool SwitchFilter::SetStateCallback(const std::function<void(SwitchFilter&, DigitalValue)>& callback)
+{
+    if (m_stateCallback)
+        return false;
+
+    m_stateCallback = callback;
+    return true;
 }

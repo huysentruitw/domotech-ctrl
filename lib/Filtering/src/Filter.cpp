@@ -16,23 +16,24 @@ void Filter::WriteDescriptor(IniWriter& iniWriter) const
     iniWriter.WriteSection("Filter");
     iniWriter.WriteKeyValue("Type", GetFilterTypeName(GetType()));
 
+    char key[16];
+    char value[64];
+
     const auto inputPins = GetInputPins();
     for (std::size_t i = 0; i < inputPins.size(); ++i) {
         if (auto sharedPin = inputPins[i].lock()) {
-            std::string value = sharedPin->GetName();
-            value.append(",");
-            value.append(PinStateTypes[sharedPin->GetState().index()]);
-            iniWriter.WriteKeyValue("Input." + std::to_string(i), value);
+            const auto keyLen = snprintf(key, sizeof(key), "Input.%zu", i);
+            const auto valueLen = snprintf(value, sizeof(value), "%s,%s", sharedPin->GetName().c_str(), PinStateTypes[sharedPin->GetState().index()]);
+            iniWriter.WriteKeyValue(std::string_view(key, keyLen), std::string_view(value, valueLen));
         }
     }
 
     const auto outputPins = GetOutputPins();
     for (std::size_t i = 0; i < outputPins.size(); ++i) {
         if (auto sharedPin = outputPins[i].lock()) {
-            std::string value = sharedPin->GetName();
-            value.append(",");
-            value.append(PinStateTypes[sharedPin->GetState().index()]);
-            iniWriter.WriteKeyValue("Output." + std::to_string(i), value);
+            const auto keyLen = snprintf(key, sizeof(key), "Output.%zu", i);
+            const auto valueLen = snprintf(value, sizeof(value), "%s,%s", sharedPin->GetName().c_str(), PinStateTypes[sharedPin->GetState().index()]);
+            iniWriter.WriteKeyValue(std::string_view(key, keyLen), std::string_view(value, valueLen));
         }
     }
 }

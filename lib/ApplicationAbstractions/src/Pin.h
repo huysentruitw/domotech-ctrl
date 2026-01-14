@@ -18,9 +18,9 @@ enum class PinDirection
 
 typedef std::variant<DigitalValue, DimmerControlValue> PinState;
 
-constexpr std::string_view PinStateTypes[] = {
+constexpr const char* PinStateTypes[] = {
     "DigitalValue",
-    "DimmerControlValue"
+    "DimmerControlValue",
 };
 
 class Pin final

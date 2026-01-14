@@ -7,8 +7,6 @@
 #include <Bridge.h>
 #include <Filter.h>
 
-#include <string>
-
 class HomeAssistantBridge final : public Bridge
 {
 public:

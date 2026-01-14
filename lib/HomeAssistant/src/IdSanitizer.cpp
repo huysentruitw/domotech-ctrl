@@ -1,9 +1,10 @@
 #include "IdSanitizer.h"
 
-std::string IdSanitizer::Sanitize(std::string_view id, size_t maxLength) noexcept
+std::string IdSanitizer::Sanitize(std::string_view id) noexcept
 {
+    const size_t maxLength = 32;
     std::string result;
-    result.reserve(std::min((size_t)id.size(), maxLength));
+    result.reserve(maxLength);
 
     for (char c : id) {
         if (result.size() == maxLength)

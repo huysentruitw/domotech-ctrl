@@ -6,7 +6,11 @@
 
 #include <algorithm>
 
-#include "esp_log.h"
+#ifndef NATIVE_BUILD
+  #include "esp_log.h"
+#else
+  #define ESP_LOGI(...) {}
+#endif
 
 #define TAG "HA_BRIDGE"
 
@@ -20,7 +24,6 @@ HomeAssistantBridge::HomeAssistantBridge(const char* uri, const char* username, 
 void HomeAssistantBridge::Init()
 {
     ESP_LOGI(TAG, "Init");
-
     m_client.Connect();
     m_eventLoop.Start();
 }

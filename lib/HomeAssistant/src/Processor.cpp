@@ -8,11 +8,17 @@
 #include <Filters/LightFilter.h>
 #include <LockGuard.h>
 
-#include "esp_log.h"
+#include <cstring>
+
+#ifndef NATIVE_BUILD
+  #include "esp_log.h"
+#else
+  #define ESP_LOGI(...) {}
+#endif
 
 #define TAG "HA_PROC"
 
-Processor::Processor(Client& client, EventLoop& eventLoop)
+Processor::Processor(Client& client, EventLoop& eventLoop) noexcept
     : m_syncRoot()
     , m_client(client)
     , m_eventLoop(eventLoop)
@@ -82,8 +88,6 @@ void Processor::OnMqttConnected() noexcept
 
 void Processor::OnMqttData(const BridgeEvent& event) noexcept
 {
-    ESP_LOGI(TAG, "OnMqttData");
-
     std::string_view topic(event.Topic, event.TopicLength);
     std::string_view payload(event.Payload, event.PayloadLength);
     ESP_LOGI(TAG, "OnMqttData (Topic: %.*s, Payload: %.*s)", (int)topic.length(), topic.data(), (int)payload.length(), payload.data());

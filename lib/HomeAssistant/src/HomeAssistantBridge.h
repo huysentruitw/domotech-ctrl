@@ -12,10 +12,11 @@
 class HomeAssistantBridge final : public Bridge
 {
 public:
-    HomeAssistantBridge(const char* uri, const char* username, const char* password);
+    HomeAssistantBridge(const char* uri, const char* username, const char* password) noexcept;
 
-    void Init();
-    void RegisterFilter(std::weak_ptr<Filter> filter) override;
+    void Init() noexcept;
+    void RegisterFilter(std::weak_ptr<Filter> filter) noexcept override;
+    void UnregisterFilter(std::weak_ptr<Filter> filter) noexcept override;
 
 private:
     Processor m_processor;

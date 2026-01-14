@@ -11,9 +11,9 @@
 #include <cstring>
 
 #ifndef NATIVE_BUILD
-  #include "esp_log.h"
+    #include "esp_log.h"
 #else
-  #define ESP_LOGI(...) {}
+    #define ESP_LOGI(...) {}
 #endif
 
 #define TAG "HA_PROC"
@@ -34,6 +34,7 @@ void Processor::RegisterFilter(std::weak_ptr<Filter> filter) noexcept
     ESP_LOGI(TAG, "RegisterFilter");
     std::string id = IdSanitizer::Sanitize(filterPtr->GetId());
 
+    // Already add the filter to the map, so we don't have to pass the pointer over the FreeRTOS queue
     {
         LockGuard guard(m_syncRoot);
         m_filters.emplace(id, filter);
@@ -41,6 +42,22 @@ void Processor::RegisterFilter(std::weak_ptr<Filter> filter) noexcept
 
     BridgeEvent event{};
     event.Type = BridgeEvent::Type::CompleteFilterRegistration;
+    event.IdLength = std::min(id.length(), (size_t)sizeof(event.Id));
+    memcpy(event.Id, id.c_str(), event.IdLength);
+    m_eventLoop.EnqueueEvent(event);
+}
+
+void Processor::UnregisterFilter(std::weak_ptr<Filter> filter) noexcept
+{
+    const auto filterPtr = filter.lock();
+    if (!filterPtr)
+        return;
+
+    ESP_LOGI(TAG, "UnregisterFilter");
+    std::string id = IdSanitizer::Sanitize(filterPtr->GetId());
+
+    BridgeEvent event{};
+    event.Type = BridgeEvent::Type::UnregisterFilter;
     event.IdLength = std::min(id.length(), (size_t)sizeof(event.Id));
     memcpy(event.Id, id.c_str(), event.IdLength);
     m_eventLoop.EnqueueEvent(event);
@@ -57,6 +74,9 @@ void Processor::Process(const BridgeEvent& event) noexcept
             break;
         case BridgeEvent::Type::CompleteFilterRegistration:
             OnCompleteFilterRegistration(event);
+            break;
+        case BridgeEvent::Type::UnregisterFilter:
+            OnUnregisterFilter(event);
             break;
         case BridgeEvent::Type::PublishState:
             OnPublishState(event);
@@ -81,7 +101,6 @@ void Processor::OnMqttConnected() noexcept
         } else {
             std::string id = it->first;
             it = m_filters.erase(it);
-            PublishFilterRemoval(id);
         }
     }
 }
@@ -107,8 +126,6 @@ void Processor::OnMqttData(const BridgeEvent& event) noexcept
                     lightFilter->SetState(state);
                 }
             }
-        } else {
-            // TODO: Unpublish filter!
         }
     }
 }
@@ -120,6 +137,18 @@ void Processor::OnCompleteFilterRegistration(const BridgeEvent& event) noexcept
     if (auto filter = TryGetFilterById(id)) {
         PublishDeviceDiscovery(filter);
         SubscribeToStateChanges(filter);
+    }
+}
+
+void Processor::OnUnregisterFilter(const BridgeEvent& event) noexcept
+{
+    ESP_LOGI(TAG, "OnUnregisterFilter");
+    std::string_view id(event.Id, event.IdLength);
+    if (auto filter = TryGetFilterById(id)) {
+        PublishDeviceRemoval(filter);
+
+        LockGuard guard(m_syncRoot);
+        m_filters.erase(std::string(id));
     }
 }
 
@@ -168,7 +197,7 @@ void Processor::PublishDeviceDiscovery(std::shared_ptr<Filter> filter) noexcept
             id.c_str(),
             id.c_str());
 
-        m_client.Publish(topic, payload, true);
+        m_client.Publish(topic, payload, false);
         return;
     }
     
@@ -191,7 +220,27 @@ void Processor::PublishDeviceDiscovery(std::shared_ptr<Filter> filter) noexcept
             id.c_str(),
             id.c_str());
 
-        m_client.Publish(topic, payload, true);
+        m_client.Publish(topic, payload, false);
+        return;
+    }
+}
+
+void Processor::PublishDeviceRemoval(std::shared_ptr<Filter> filter) noexcept
+{
+    std::string id = IdSanitizer::Sanitize(filter->GetId());
+    ESP_LOGI(TAG, "PublishDeviceRemoval (Filter: %s)", id.c_str());
+
+    char topic[64];
+
+    if (filter->GetType() == FilterType::Switch) {
+        snprintf(topic, sizeof(topic), "homeassistant/switch/%s/config", id.c_str());
+        m_client.Publish(topic, "", true);
+        return;
+    }
+    
+    if (filter->GetType() == FilterType::Light) {
+        snprintf(topic, sizeof(topic), "homeassistant/light/%s/config", id.c_str());
+        m_client.Publish(topic, "", true);
         return;
     }
 }
@@ -230,11 +279,6 @@ void Processor::SubscribeToStateChanges(std::shared_ptr<Filter> filter) noexcept
         });
         return;
     }
-}
-
-void Processor::PublishFilterRemoval(std::string_view id) noexcept
-{
-    // TODO
 }
 
 std::shared_ptr<Filter> Processor::TryGetFilterById(std::string_view id) noexcept

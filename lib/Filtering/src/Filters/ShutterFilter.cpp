@@ -3,9 +3,9 @@
 #include <PinFactory.h>
 
 #ifndef NATIVE_BUILD
-  #include "esp_timer.h"
+    #include "esp_timer.h"
 #else
-  #define esp_timer_get_time() 0
+    #define esp_timer_get_time() 0
 #endif
 
 ShutterFilter::ShutterFilter(std::string_view id)

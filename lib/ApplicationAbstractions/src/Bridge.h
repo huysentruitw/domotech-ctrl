@@ -7,7 +7,8 @@
 class Bridge
 {
 public:
-    virtual ~Bridge() = default;
+    virtual ~Bridge() noexcept = default;
 
-    virtual void RegisterFilter(std::weak_ptr<Filter> filter) = 0;
+    virtual void RegisterFilter(std::weak_ptr<Filter> filter) noexcept = 0;
+    virtual void UnregisterFilter(std::weak_ptr<Filter> filter) noexcept = 0;
 };

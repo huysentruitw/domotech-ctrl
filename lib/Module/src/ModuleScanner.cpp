@@ -4,7 +4,7 @@
 #include <memory>
 
 #ifndef NATIVE_BUILD
-#include "freertos/FreeRTOS.h"
+    #include "freertos/FreeRTOS.h"
 #endif
 
 ModuleScanner::ModuleScanner(const Bus& bus)

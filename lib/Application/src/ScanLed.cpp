@@ -1,11 +1,11 @@
 #include "ScanLed.h"
 
 #ifndef NATIVE_BUILD
-  #include "driver/gpio.h"
+    #include "driver/gpio.h"
 #else
-  #define gpio_reset_pin(_)
-  #define gpio_set_direction(_, __)
-  #define gpio_set_level(_, __)
+    #define gpio_reset_pin(_)
+    #define gpio_set_direction(_, __)
+    #define gpio_set_level(_, __)
 #endif
 
 #define LED_GPIO GPIO_NUM_2

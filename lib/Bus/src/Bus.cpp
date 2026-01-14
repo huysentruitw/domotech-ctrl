@@ -3,10 +3,10 @@
 #include <LockGuard.h>
 
 #ifndef NATIVE_BUILD
- #include "esp_rom_sys.h"
- #define REPLY_BACKOFF() esp_rom_delay_us(500)
+    #include "esp_rom_sys.h"
+    #define REPLY_BACKOFF() esp_rom_delay_us(500)
 #else
- #define REPLY_BACKOFF()
+    #define REPLY_BACKOFF()
 #endif
 
 Bus::Bus(const BusDriver& driver)

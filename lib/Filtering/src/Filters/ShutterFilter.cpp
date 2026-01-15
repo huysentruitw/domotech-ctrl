@@ -21,13 +21,9 @@ ShutterFilter::ShutterFilter(std::string_view id) noexcept
                 m_signalStartMs = GetMsSinceBoot();
 
                 if (m_closeFeedbackInputPin->GetStateAs<DigitalValue>() == DigitalValue(true))
-                {
                     m_closeOutputPin->SetState(DigitalValue(false));
-                }
                 else
-                {
                     m_openOutputPin->SetState(DigitalValue(true));
-                }
             }
             else if (m_currentShutterCommand == ShutterCommand::Open && (GetMsSinceBoot() - m_signalStartMs) <= 1000)
             {
@@ -48,13 +44,9 @@ ShutterFilter::ShutterFilter(std::string_view id) noexcept
                 m_signalStartMs = GetMsSinceBoot();
 
                 if (m_openFeedbackInputPin->GetStateAs<DigitalValue>() == DigitalValue(true))
-                {
                     m_openOutputPin->SetState(DigitalValue(false));
-                }
                 else
-                {
                     m_closeOutputPin->SetState(DigitalValue(true));
-                }
             }
             else if (m_currentShutterCommand == ShutterCommand::Close && (GetMsSinceBoot() - m_signalStartMs) <= 1000)
             {
@@ -82,9 +74,7 @@ ShutterFilter::ShutterFilter(std::string_view id) noexcept
         [this](const Pin &pin)
         {
             if (pin.GetStateAs<DigitalValue>() == DigitalValue(false) && m_currentShutterCommand == ShutterCommand::Close)
-            {
                 m_closeOutputPin->SetState(DigitalValue(true));
-            }
         });
 
     m_closeFeedbackInputPin = PinFactory::CreateInputPin<DigitalValue>(
@@ -92,9 +82,7 @@ ShutterFilter::ShutterFilter(std::string_view id) noexcept
         [this](const Pin &pin)
         {
             if (pin.GetStateAs<DigitalValue>() == DigitalValue(false) && m_currentShutterCommand == ShutterCommand::Open)
-            {
                 m_openOutputPin->SetState(DigitalValue(true));
-            }
         });
 
     m_openOutputPin = PinFactory::CreateOutputPin<DigitalValue>("Open");

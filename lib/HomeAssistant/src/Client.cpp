@@ -22,7 +22,8 @@ Client::Client(const char* uri, const char* username, const char* password, Clie
 
 Client::~Client() noexcept
 {
-    if (m_client) {
+    if (m_client)
+    {
         esp_mqtt_client_stop(m_client);
         esp_mqtt_client_destroy(m_client);
         m_client = nullptr;
@@ -31,9 +32,12 @@ Client::~Client() noexcept
 
 void Client::Connect() const noexcept
 {
-    if (esp_mqtt_client_start(m_client) == ESP_OK) {
+    if (esp_mqtt_client_start(m_client) == ESP_OK)
+    {
         ESP_LOGI(TAG, "Connected");
-    } else {
+    }
+    else
+    {
         ESP_LOGE(TAG, "Failed to connect");
     }
 }
@@ -59,14 +63,16 @@ void Client::ForwardEvent(esp_mqtt_event_handle_t handle) noexcept
 {
     ESP_LOGI(TAG, "Event %s", ToString(handle->event_id));
 
-    if (!m_callback) {
+    if (!m_callback)
+    {
         ESP_LOGW(TAG, "No callback set, dropping MQTT event");
         return;
     }
 
     BridgeEvent event{};
 
-    switch (static_cast<int>(handle->event_id)) {
+    switch (static_cast<int>(handle->event_id))
+    {
         case MQTT_EVENT_CONNECTED:
             event.Type = BridgeEvent::Type::MqttConnected;
             m_callback(m_callbackContext, event);
@@ -85,7 +91,8 @@ void Client::ForwardEvent(esp_mqtt_event_handle_t handle) noexcept
 
 static const char* ToString(esp_mqtt_event_id_t id) noexcept
 {
-    switch (id) {
+    switch (id)
+    {
         case MQTT_EVENT_ANY:             return "MQTT_EVENT_ANY";
         case MQTT_EVENT_ERROR:           return "MQTT_EVENT_ERROR";
         case MQTT_EVENT_CONNECTED:       return "MQTT_EVENT_CONNECTED";

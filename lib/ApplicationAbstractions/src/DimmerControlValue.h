@@ -6,23 +6,26 @@
 struct DimmerControlValue
 {
 public:
-    DimmerControlValue(int percentage = 0, int fadeTimeInSeconds = 0)
+    DimmerControlValue(int percentage = 0, int fadeTimeInSeconds = 0) noexcept
     {
         m_percentage = std::clamp(percentage, 0, 100);
         m_fadeTimeInSeconds = std::clamp(fadeTimeInSeconds, 0, 99);
     }
 
-    bool operator==(const DimmerControlValue& other) const = default;
+    bool operator==(const DimmerControlValue& other) const noexcept = default;
 
-    int GetPercentage() const {
+    int GetPercentage() const noexcept
+    {
         return m_percentage;
     }
 
-    int GetFadeTimeInSeconds() const {
+    int GetFadeTimeInSeconds() const noexcept
+    {
         return m_fadeTimeInSeconds;
     }
 
-    operator int() const {
+    operator int() const noexcept
+    {
         return m_percentage;
     }
 

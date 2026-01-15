@@ -46,11 +46,13 @@ void EventLoop::Task() noexcept
     BridgeEvent event{};
 
     ESP_LOGI(TAG, "Started");
-    while (true) {
+    while (true)
+    {
         xQueueReceive(m_queue, &event, portMAX_DELAY);
         m_processor.Process(event);
 
-        if (event.Type == BridgeEvent::Type::Shutdown) {
+        if (event.Type == BridgeEvent::Type::Shutdown)
+        {
             ESP_LOGI(TAG, "Shutdown");
             break;
         }

@@ -1,17 +1,17 @@
 #include "Filter.h"
 
-Filter::Filter(const FilterType type, std::string_view id)
+Filter::Filter(const FilterType type, std::string_view id) noexcept
     : m_type(type)
 {
     SetId(id);
 }
 
-FilterType Filter::GetType() const
+FilterType Filter::GetType() const noexcept
 {
     return m_type;
 }
 
-void Filter::WriteDescriptor(IniWriter& iniWriter) const
+void Filter::WriteDescriptor(IniWriter& iniWriter) const noexcept
 {
     iniWriter.WriteSection("Filter");
     iniWriter.WriteKeyValue("Type", GetFilterTypeName(GetType()));
@@ -20,8 +20,10 @@ void Filter::WriteDescriptor(IniWriter& iniWriter) const
     char value[64];
 
     const auto inputPins = GetInputPins();
-    for (std::size_t i = 0; i < inputPins.size(); ++i) {
-        if (auto sharedPin = inputPins[i].lock()) {
+    for (std::size_t i = 0; i < inputPins.size(); ++i)
+    {
+        if (auto sharedPin = inputPins[i].lock())
+        {
             const auto keyLen = snprintf(key, sizeof(key), "Input.%zu", i);
             const auto valueLen = snprintf(value, sizeof(value), "%s,%s", sharedPin->GetName().c_str(), PinStateTypes[sharedPin->GetState().index()]);
             iniWriter.WriteKeyValue(std::string_view(key, keyLen), std::string_view(value, valueLen));
@@ -29,8 +31,10 @@ void Filter::WriteDescriptor(IniWriter& iniWriter) const
     }
 
     const auto outputPins = GetOutputPins();
-    for (std::size_t i = 0; i < outputPins.size(); ++i) {
-        if (auto sharedPin = outputPins[i].lock()) {
+    for (std::size_t i = 0; i < outputPins.size(); ++i)
+    {
+        if (auto sharedPin = outputPins[i].lock())
+        {
             const auto keyLen = snprintf(key, sizeof(key), "Output.%zu", i);
             const auto valueLen = snprintf(value, sizeof(value), "%s,%s", sharedPin->GetName().c_str(), PinStateTypes[sharedPin->GetState().index()]);
             iniWriter.WriteKeyValue(std::string_view(key, keyLen), std::string_view(value, valueLen));
@@ -38,7 +42,7 @@ void Filter::WriteDescriptor(IniWriter& iniWriter) const
     }
 }
 
-void Filter::WriteConfig(IniWriter& iniWriter) const
+void Filter::WriteConfig(IniWriter& iniWriter) const noexcept
 {
     iniWriter.WriteSection("Filter");
     iniWriter.WriteKeyValue("Id", GetId());

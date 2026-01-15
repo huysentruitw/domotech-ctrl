@@ -6,7 +6,8 @@ std::string IdSanitizer::Sanitize(std::string_view id) noexcept
     std::string result;
     result.reserve(maxLength);
 
-    for (char c : id) {
+    for (char c : id)
+    {
         if (result.size() == maxLength)
             break;
 
@@ -17,9 +18,8 @@ std::string IdSanitizer::Sanitize(std::string_view id) noexcept
         }
 
         char lower = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-        if ((lower >= 'a' && lower <= 'z') || (lower >= '0' && lower <= '9') || lower == '_' || lower == '-') {
+        if ((lower >= 'a' && lower <= 'z') || (lower >= '0' && lower <= '9') || lower == '_' || lower == '-')
             result.push_back(lower);
-        }
     }
 
     return result;

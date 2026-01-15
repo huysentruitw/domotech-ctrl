@@ -37,7 +37,8 @@ bool HomeAssistantBridge::RegisterAsDevice(std::weak_ptr<Filter> filter) noexcep
 
     const std::string id = IdSanitizer::Sanitize(filterPtr->GetId());
     ESP_LOGI(TAG, "RegisterAsDevice (Id: %.*s)", (int)id.length(), id.data());
-    if (filterPtr->GetType() == FilterType::Switch) {
+    if (filterPtr->GetType() == FilterType::Switch)
+    {
         auto switchFilter = std::static_pointer_cast<SwitchFilter>(filterPtr);
         m_processor.RegisterDevice(std::make_shared<SwitchDevice>(switchFilter));
         return true;

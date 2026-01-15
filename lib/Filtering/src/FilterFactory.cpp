@@ -5,7 +5,7 @@
 #include "Filters/ShutterFilter.h"
 #include "Filters/SwitchFilter.h"
 
-std::unique_ptr<Filter> FilterFactory::TryCreateFilterByTypeName(std::string_view typeName, std::string_view id)
+std::unique_ptr<Filter> FilterFactory::TryCreateFilterByTypeName(std::string_view typeName, std::string_view id) noexcept
 {
     if (typeName == GetFilterTypeName(FilterType::Switch)) return std::make_unique<SwitchFilter>(id);
     if (typeName == GetFilterTypeName(FilterType::Light)) return std::make_unique<LightFilter>(id);

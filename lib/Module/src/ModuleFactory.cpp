@@ -4,9 +4,10 @@
 #include "Modules/PushButtonModule.h"
 #include "Modules/TeleruptorModule.h"
 
-std::unique_ptr<Module> ModuleFactory::CreateModule(const Bus& bus, const ModuleType type, const uint8_t address, const uint16_t initialData)
+std::unique_ptr<Module> ModuleFactory::CreateModule(const Bus& bus, const ModuleType type, const uint8_t address, const uint16_t initialData) noexcept
 {
-    switch (type) {
+    switch (type)
+    {
         case ModuleType::Dimmer:
             return DimmerModule::CreateFromInitialData(bus, address, initialData);
         case ModuleType::PushButton:

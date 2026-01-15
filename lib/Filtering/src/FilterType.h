@@ -10,4 +10,4 @@ enum class FilterType
     Shutter = 4,
 };
 
-std::string_view GetFilterTypeName(FilterType filterType);
+std::string_view GetFilterTypeName(FilterType filterType) noexcept;

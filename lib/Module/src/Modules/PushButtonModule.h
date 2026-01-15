@@ -8,16 +8,16 @@
 class PushButtonModule final : public Module
 {
 public:
-    PushButtonModule(const Bus& bus, const uint8_t address, const uint8_t numberOfButtons);
+    PushButtonModule(const Bus& bus, const uint8_t address, const uint8_t numberOfButtons) noexcept;
 
-    static std::unique_ptr<PushButtonModule> CreateFromInitialData(const Bus& bus, const uint8_t address, const uint16_t initialData);
+    static std::unique_ptr<PushButtonModule> CreateFromInitialData(const Bus& bus, const uint8_t address, const uint16_t initialData) noexcept;
 
-    ProcessResponse Process() override;
+    ProcessResponse Process() noexcept override;
 
 private:
     const uint8_t m_numberOfButtons;
     std::vector<std::shared_ptr<Pin>> m_buttonPins;
     bool m_hasPressedButtons = false;
 
-    DigitalValue MapButtonState(const uint8_t buttonIndex, const uint16_t data) const;
+    DigitalValue MapButtonState(const uint8_t buttonIndex, const uint16_t data) const noexcept;
 };

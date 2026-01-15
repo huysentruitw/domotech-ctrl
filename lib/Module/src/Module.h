@@ -18,18 +18,18 @@ struct ProcessResponse
 class Module : public Node
 {
 public:
-    Module(const Bus& bus, const uint8_t address, const ModuleType moduleType);
+    Module(const Bus& bus, const uint8_t address, const ModuleType moduleType) noexcept;
 
-    virtual ProcessResponse Process() = 0;
+    virtual ProcessResponse Process() noexcept = 0;
 
-    uint8_t GetAddress() const;
-    ModuleType GetType() const;
+    uint8_t GetAddress() const noexcept;
+    ModuleType GetType() const noexcept;
 
-    void WriteConfig(IniWriter& iniWriter) const;
+    void WriteConfig(IniWriter& iniWriter) const noexcept;
 
 protected:
-    ScanResponse Poll() const;
-    ScanResponse Exchange(const uint16_t data) const;
+    ScanResponse Poll() const noexcept;
+    ScanResponse Exchange(const uint16_t data) const noexcept;
 
 private:
     const Bus& m_bus;

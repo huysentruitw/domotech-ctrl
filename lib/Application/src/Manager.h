@@ -18,18 +18,18 @@
 class Manager final
 {
 public:
-    Manager(IBridge* bridge = nullptr);
+    Manager(IBridge* bridge = nullptr) noexcept;
 
-    void Start();
-    void ProcessNext();
+    void Start() noexcept;
+    void ProcessNext() noexcept;
 
-    void Clear();
-    RescanModulesResult RescanModules();
+    void Clear() noexcept;
+    RescanModulesResult RescanModules() noexcept;
 
-    bool TryCreateFilter(std::string_view typeName, std::string_view id, std::string_view connections);
+    bool TryCreateFilter(std::string_view typeName, std::string_view id, std::string_view connections) noexcept;
 
-    std::string GetKnownFiltersIni() const;
-    std::string GetConfigurationIni() const;
+    std::string GetKnownFiltersIni() const noexcept;
+    std::string GetConfigurationIni() const noexcept;
 
 private:
     IBridge* m_bridge = nullptr;
@@ -44,6 +44,6 @@ private:
     std::unordered_map<std::string, std::shared_ptr<Filter>, StringHash, std::equal_to<>> m_filtersById;
     std::vector<std::shared_ptr<Module>> m_modules;
 
-    std::shared_ptr<Filter> TryGetFilterById(std::string_view id) const;
-    std::shared_ptr<Module> TryGetModuleByAddress(uint8_t address) const;
+    std::shared_ptr<Filter> TryGetFilterById(std::string_view id) const noexcept;
+    std::shared_ptr<Module> TryGetModuleByAddress(uint8_t address) const noexcept;
 };

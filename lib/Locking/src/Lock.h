@@ -7,20 +7,20 @@
 class Lock final
 {
 public:
-    Lock(bool recursive = false)
+    Lock(bool recursive = false) noexcept
         : m_recursive(recursive)
         , m_mutex(recursive ? xSemaphoreCreateRecursiveMutex() : xSemaphoreCreateMutex())
     {
     }
 
-    void Take() const
+    void Take() const noexcept
     {
         m_recursive
             ? xSemaphoreTakeRecursive(m_mutex, portMAX_DELAY)
             : xSemaphoreTake(m_mutex, portMAX_DELAY);
     }
 
-    void Release() const
+    void Release() const noexcept
     {
         m_recursive
             ? xSemaphoreGiveRecursive(m_mutex)
@@ -37,9 +37,9 @@ private:
 class Lock final
 {
 public:
-    Lock(bool recursive = false) { }
-    void Take() const { }
-    void Release() const { }
+    Lock(bool recursive = false) noexcept { }
+    void Take() const noexcept { }
+    void Release() const noexcept { }
 };
 
 #endif

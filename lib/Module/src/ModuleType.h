@@ -19,4 +19,4 @@ enum class ModuleType
     Input = 13,
 };
 
-std::string_view GetModuleTypeName(ModuleType moduleType);
+std::string_view GetModuleTypeName(ModuleType moduleType) noexcept;

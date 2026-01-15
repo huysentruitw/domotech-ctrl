@@ -24,9 +24,12 @@ static EventGroupHandle_t wifi_event_group;
 
 static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data)
 {
-    if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
+    if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START)
+    {
         esp_wifi_connect();
-    } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
+    }
+    else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP)
+    {
         xEventGroupSetBits(wifi_event_group, WIFI_CONNECTED_BIT);
     }
 }
@@ -45,8 +48,10 @@ void wifi_init_sta(void)
 
     #pragma GCC diagnostic push
     #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
-    wifi_config_t wifi_config ={
-        .sta = {
+    wifi_config_t wifi_config =
+    {
+        .sta =
+        {
             .ssid = WIFI_SSID,
             .password = WIFI_PASS,
         },
@@ -98,7 +103,8 @@ esp_err_t index_handler(httpd_req_t *req)
     response.append("bytes\n");
 
     wifi_ap_record_t apInfo;
-    if (esp_wifi_sta_get_ap_info(&apInfo) == ESP_OK) {
+    if (esp_wifi_sta_get_ap_info(&apInfo) == ESP_OK)
+    {
         response.append("Wifi RSSI: ");
         response.append(std::to_string(apInfo.rssi));
         response.append("dBm, quality: ");
@@ -157,7 +163,8 @@ esp_err_t configuration_create_filter_handler(httpd_req_t *req)
 {
     char body[256];
     int received = httpd_req_recv(req, body, sizeof(body) - 1);
-    if (received <= 0) {
+    if (received <= 0)
+    {
         httpd_resp_set_hdr(req, "Connection", "close");
         httpd_resp_set_type(req, "text/plain");
         httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to receive body");
@@ -172,18 +179,22 @@ esp_err_t configuration_create_filter_handler(httpd_req_t *req)
     size_t numberOfFiltersCreated = 0;
 
     IniReader reader;
-    reader.OnSection([&](std::string_view section) {
+    reader.OnSection([&](std::string_view section)
+    {
         id.clear();
         type.clear();
         connections.clear();
     });
-    reader.OnKeyValue([&](std::string_view section, std::string_view key, std::string_view value) {
+    
+    reader.OnKeyValue([&](std::string_view section, std::string_view key, std::string_view value)
+    {
         if (section != "Filter") return;
         if (key == "Id") id = value;
         if (key == "Type") type = value;
         if (key == "Connections") connections = value;
 
-        if (!id.empty() && !type.empty() && !connections.empty()) {
+        if (!id.empty() && !type.empty() && !connections.empty())
+        {
             if (manager.TryCreateFilter(type, id, connections))
                 numberOfFiltersCreated++;
 
@@ -206,8 +217,10 @@ httpd_handle_t start_webserver(void)
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     httpd_handle_t server = NULL;
 
-    if (httpd_start(&server, &config) == ESP_OK) {
-        httpd_uri_t hello_uri = {
+    if (httpd_start(&server, &config) == ESP_OK)
+    {
+        httpd_uri_t hello_uri =
+        {
             .uri       = "/",
             .method    = HTTP_GET,
             .handler   = index_handler,
@@ -215,7 +228,8 @@ httpd_handle_t start_webserver(void)
         };
         httpd_register_uri_handler(server, &hello_uri);
 
-        httpd_uri_t known_filters_uri = {
+        httpd_uri_t known_filters_uri =
+        {
             .uri       = "/known-filters",
             .method    = HTTP_GET,
             .handler   = known_filters_handler,
@@ -223,7 +237,8 @@ httpd_handle_t start_webserver(void)
         };
         httpd_register_uri_handler(server, &known_filters_uri);
 
-        httpd_uri_t configuration_uri = {
+        httpd_uri_t configuration_uri =
+        {
             .uri       = "/configuration",
             .method    = HTTP_GET,
             .handler   = configuration_handler,
@@ -231,7 +246,8 @@ httpd_handle_t start_webserver(void)
         };
         httpd_register_uri_handler(server, &configuration_uri);
 
-        httpd_uri_t configuration_clear_uri = {
+        httpd_uri_t configuration_clear_uri =
+        {
             .uri       = "/configuration/clear",
             .method    = HTTP_POST,
             .handler   = configuration_clear_handler,
@@ -239,7 +255,8 @@ httpd_handle_t start_webserver(void)
         };
         httpd_register_uri_handler(server, &configuration_clear_uri);
 
-        httpd_uri_t configuration_rescan_uri = {
+        httpd_uri_t configuration_rescan_uri =
+        {
             .uri       = "/configuration/rescan",
             .method    = HTTP_POST,
             .handler   = configuration_rescan_handler,
@@ -247,7 +264,8 @@ httpd_handle_t start_webserver(void)
         };
         httpd_register_uri_handler(server, &configuration_rescan_uri);
 
-        httpd_uri_t configuration_create_filter_uri = {
+        httpd_uri_t configuration_create_filter_uri =
+        {
             .uri       = "/configuration/filter",
             .method    = HTTP_POST,
             .handler   = configuration_create_filter_handler,
@@ -261,7 +279,8 @@ httpd_handle_t start_webserver(void)
 
 void ProcessTask(void *arg)
 {
-    while (true) {
+    while (true)
+    {
         manager.ProcessNext();
         vTaskDelay(1);
     }
@@ -294,7 +313,8 @@ extern "C" void app_main()
 
     start_webserver();
 
-    while (true) {
+    while (true)
+    {
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }

@@ -29,20 +29,24 @@ public:
     Pin(
         const PinDirection direction,
         const PinState defaultState,
-        const std::function<void(const Pin&)> onStateChange = {});
+        const std::function<void(const Pin&)> onStateChange = {}) noexcept;
 
-    ~Pin();
+    ~Pin() noexcept;
 
-    const std::string& GetName() const;
-    void SetName(std::string_view name);
+    const std::string& GetName() const noexcept;
+    void SetName(std::string_view name) noexcept;
 
-    PinDirection GetDirection() const;
-    const PinState& GetState() const;
-    template<typename TState> TState GetStateAs() const { return std::get<TState>(m_state); }
-    bool SetState(const PinState& newState);
+    PinDirection GetDirection() const noexcept;
+    const PinState& GetState() const noexcept;
+    template<typename TState> TState GetStateAs() const noexcept
+    {
+        return std::get<TState>(m_state);
+    }
 
-    static bool Connect(std::weak_ptr<Pin> inputPin, std::weak_ptr<Pin> outputPin);
-    static bool Disconnect(std::weak_ptr<Pin> inputPin, std::weak_ptr<Pin> outputPin);
+    bool SetState(const PinState& newState) noexcept;
+
+    static bool Connect(std::weak_ptr<Pin> inputPin, std::weak_ptr<Pin> outputPin) noexcept;
+    static bool Disconnect(std::weak_ptr<Pin> inputPin, std::weak_ptr<Pin> outputPin) noexcept;
     bool IsConnected() const noexcept;
 
 private:
@@ -55,5 +59,5 @@ private:
     std::weak_ptr<Pin> m_connectedOutputPin;
     std::vector<std::weak_ptr<Pin>> m_connectedInputPins;
 
-    void NotifyConnectedInputPins(const PinState& newState);
+    void NotifyConnectedInputPins(const PinState& newState) noexcept;
 };

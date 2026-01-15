@@ -56,7 +56,8 @@ void Processor::UnregisterDevice(std::string_view id) noexcept
 
 void Processor::Process(const BridgeEvent& event) noexcept
 {
-    switch (event.Type) {
+    switch (event.Type)
+    {
         case BridgeEvent::Type::MqttConnected:
             OnMqttConnected();
             break;
@@ -85,9 +86,8 @@ void Processor::OnMqttConnected() noexcept
     m_client.Subscribe("domo/dev/+");
 
     LockGuard guard(m_syncRoot);
-    for (auto& [_, device] : m_devices) {
+    for (auto& [_, device] : m_devices)
         PublishDeviceDiscovery(*device);
-    }
 }
 
 void Processor::OnMqttData(const BridgeEvent& event) noexcept
@@ -100,16 +100,16 @@ void Processor::OnMqttData(const BridgeEvent& event) noexcept
         return;
 
     std::string_view id = topic.substr(strlen("domo/dev/"));
-    if (auto device = TryGetDeviceById(id)) {
+    if (auto device = TryGetDeviceById(id))
         device->ProcessCommand(payload);
-    }
 }
 
 void Processor::OnCompleteDeviceRegistration(const BridgeEvent& event) noexcept
 {
     std::string_view id(event.Id, event.IdLength);
     ESP_LOGI(TAG, "OnCompleteDeviceRegistration (Id: %.*s)", (int)id.length(), id.data());
-    if (auto device = TryGetDeviceById(id)) {
+    if (auto device = TryGetDeviceById(id))
+    {
         PublishDeviceDiscovery(*device);
         SubscribeToStateChanges(*device);
     }
@@ -119,7 +119,8 @@ void Processor::OnUnregisterDevice(const BridgeEvent& event) noexcept
 {
     std::string_view id(event.Id, event.IdLength);
     ESP_LOGI(TAG, "OnUnregisterDevice (Id: %.*s)", (int)id.length(), id.data());
-    if (auto device = TryGetDeviceById(id)) {
+    if (auto device = TryGetDeviceById(id))
+    {
         PublishDeviceRemoval(*device);
 
         LockGuard guard(m_syncRoot);
@@ -175,16 +176,17 @@ void Processor::SubscribeToStateChanges(const IDevice& device) noexcept
     std::string_view id = device.GetId();
     ESP_LOGI(TAG, "SubscribeToStateChanges (Id: %.*s)", (int)id.length(), id.data());
 
-    device.SetStateCallback([this, id](PinState state)
-    {
-        ESP_LOGI(TAG, "OnStateChanges");
-        BridgeEvent event{};
-        event.Type = BridgeEvent::Type::PublishState;
-        event.IdLength = std::min(id.length(), (size_t)sizeof(event.Id));
-        memcpy(event.Id, id.data(), event.IdLength);
-        event.State = state;
-        m_eventLoop.EnqueueEvent(event);
-    });
+    device.SetStateCallback(
+        [this, id](PinState state)
+        {
+            ESP_LOGI(TAG, "OnStateChanges");
+            BridgeEvent event{};
+            event.Type = BridgeEvent::Type::PublishState;
+            event.IdLength = std::min(id.length(), (size_t)sizeof(event.Id));
+            memcpy(event.Id, id.data(), event.IdLength);
+            event.State = state;
+            m_eventLoop.EnqueueEvent(event);
+        });
 }
 
 std::shared_ptr<IDevice> Processor::TryGetDeviceById(std::string_view id) const noexcept

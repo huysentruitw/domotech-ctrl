@@ -32,10 +32,14 @@ public:
         : m_filter(filter)
         , m_id(IdSanitizer::Sanitize(filter->GetId())) {}
 
-    std::string_view GetId() const noexcept override { return m_id; }
+    std::string_view GetId() const noexcept override
+    {
+        return m_id;
+    }
 
 protected:
-    std::shared_ptr<TFilter> TryGetFilter() const noexcept {
+    std::shared_ptr<TFilter> TryGetFilter() const noexcept
+    {
         return m_filter.lock();
     }
 

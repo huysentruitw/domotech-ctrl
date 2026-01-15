@@ -9,7 +9,8 @@ SwitchFilter::SwitchFilter(std::string_view id) noexcept
         "Toggle",
         [this](const Pin& pin)
         {
-            if (pin.GetStateAs<DigitalValue>() == DigitalValue(true)) {
+            if (pin.GetStateAs<DigitalValue>() == DigitalValue(true))
+            {
                 const auto newState = m_controlOutputPin->GetStateAs<DigitalValue>() == DigitalValue(true) ? DigitalValue(false) : DigitalValue(true);
                 SetState(newState);
             }

@@ -8,11 +8,11 @@
 class TeleruptorModule final : public Module
 {
 public:
-    TeleruptorModule(const Bus& bus, const uint8_t address, const uint8_t numberOfTeleruptors);
+    TeleruptorModule(const Bus& bus, const uint8_t address, const uint8_t numberOfTeleruptors) noexcept;
 
-    static std::unique_ptr<TeleruptorModule> CreateFromInitialData(const Bus& bus, const uint8_t address, const uint16_t initialData);
+    static std::unique_ptr<TeleruptorModule> CreateFromInitialData(const Bus& bus, const uint8_t address, const uint16_t initialData) noexcept;
 
-    ProcessResponse Process() override;
+    ProcessResponse Process() noexcept override;
 
 private:
     const uint8_t m_numberOfTeleruptors;
@@ -20,5 +20,5 @@ private:
     std::vector<std::shared_ptr<Pin>> m_teleruptorPins;
     std::vector<std::shared_ptr<Pin>> m_teleruptorFeedbackPins;
 
-    void UpdateTeleruptor(const uint8_t teleruptorIndex, const DigitalValue newValue);
+    void UpdateTeleruptor(const uint8_t teleruptorIndex, const DigitalValue newValue) noexcept;
 };

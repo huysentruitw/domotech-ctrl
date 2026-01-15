@@ -13,7 +13,7 @@
 
 #include <sstream>
 
-Manager::Manager(IBridge* bridge)
+Manager::Manager(IBridge* bridge) noexcept
     : m_bridge(bridge)
     , m_busDriver()
     , m_bus(m_busDriver)
@@ -21,21 +21,20 @@ Manager::Manager(IBridge* bridge)
 {
 }
 
-void Manager::Start()
+void Manager::Start() noexcept
 {
     m_busDriver.Init();
 }
 
-void Manager::ProcessNext()
+void Manager::ProcessNext() noexcept
 {
     std::shared_ptr<Module> moduleToProcess;
 
     {
         LockGuard guard(m_syncRoot);
 
-        if (m_modules.empty()) {
+        if (m_modules.empty())
             return;
-        }
 
         if (m_nextModuleIndexToProcess >= m_modules.size())
         {
@@ -49,7 +48,7 @@ void Manager::ProcessNext()
     moduleToProcess->Process();
 }
 
-void Manager::Clear()
+void Manager::Clear() noexcept
 {
     LockGuard guard(m_syncRoot);
 
@@ -58,7 +57,7 @@ void Manager::Clear()
     m_nextModuleIndexToProcess = 0;
 }
 
-RescanModulesResult Manager::RescanModules()
+RescanModulesResult Manager::RescanModules() noexcept
 {
     LockGuard guard(m_syncRoot);
 
@@ -70,16 +69,16 @@ RescanModulesResult Manager::RescanModules()
     m_nextModuleIndexToProcess = 0;
 
     m_modules.reserve(detectedModules.size());
-    for (auto& module : detectedModules) {
+    for (auto& module : detectedModules)
         m_modules.emplace_back(std::shared_ptr(std::move(module)));
-    }
 
-    return {
+    return
+    {
         .NumberOfDetectedModules = m_modules.size(),
     };
 }
 
-bool Manager::TryCreateFilter(std::string_view typeName, std::string_view id, std::string_view connections)
+bool Manager::TryCreateFilter(std::string_view typeName, std::string_view id, std::string_view connections) noexcept
 {
     LockGuard guard(m_syncRoot);
 
@@ -127,7 +126,7 @@ bool Manager::TryCreateFilter(std::string_view typeName, std::string_view id, st
     return true;
 }
 
-std::string Manager::GetKnownFiltersIni() const
+std::string Manager::GetKnownFiltersIni() const noexcept
 {
     IniWriter iniWriter;
 
@@ -139,26 +138,24 @@ std::string Manager::GetKnownFiltersIni() const
     return iniWriter.GetContent();
 }
 
-std::string Manager::GetConfigurationIni() const
+std::string Manager::GetConfigurationIni() const noexcept
 {
     IniWriter iniWriter;
 
     {
         LockGuard guard(m_syncRoot);
 
-        for (const auto& module : m_modules) {
+        for (const auto& module : m_modules)
             module->WriteConfig(iniWriter);
-        }
 
-        for (const auto& [id, filter] : m_filtersById) {
+        for (const auto& [id, filter] : m_filtersById)
             filter->WriteConfig(iniWriter);
-        }
     }
 
     return iniWriter.GetContent();
 }
 
-std::shared_ptr<Filter> Manager::TryGetFilterById(std::string_view id) const
+std::shared_ptr<Filter> Manager::TryGetFilterById(std::string_view id) const noexcept
 {
     auto it = m_filtersById.find(id);
     if (it == m_filtersById.end())
@@ -167,9 +164,10 @@ std::shared_ptr<Filter> Manager::TryGetFilterById(std::string_view id) const
     return it->second;
 }
 
-std::shared_ptr<Module> Manager::TryGetModuleByAddress(uint8_t address) const
+std::shared_ptr<Module> Manager::TryGetModuleByAddress(uint8_t address) const noexcept
 {
-    for (const auto& module : m_modules) {
+    for (const auto& module : m_modules)
+    {
         if (module->GetAddress() == address)
             return module;
     }

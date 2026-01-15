@@ -9,14 +9,14 @@ struct BridgeEvent
     enum class Type {
         MqttConnected,
         MqttData,
-        CompleteFilterRegistration,
-        UnregisterFilter,
+        CompleteDeviceRegistration,
+        UnregisterDevice,
         PublishState,
         Shutdown,
     } Type;
 
-    char Id[32];            // For CompleteFilterRegistration, UnregisterFilter & PublishState
-    size_t IdLength;        // For CompleteFilterRegistration, UnregisterFilter & PublishState
+    char Id[32];            // For CompleteDeviceRegistration, UnregisterDevice & PublishState
+    size_t IdLength;        // For CompleteDeviceRegistration, UnregisterDevice & PublishState
     PinState State;         // For PublishState
 
     char Topic[64];         // For MqttData

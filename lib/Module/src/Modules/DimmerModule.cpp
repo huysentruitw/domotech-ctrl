@@ -8,7 +8,8 @@ DimmerModule::DimmerModule(const Bus& bus, const uint8_t address, const uint8_t 
 {
     m_dimmerControlPins.reserve(m_numberOfChannels);
     for (uint8_t i = 0; i < m_numberOfChannels; ++i) {
-        const auto onStateChange = [this, i](const Pin& pin) {
+        const auto onStateChange = [this, i](const Pin& pin)
+        {
             UpdateChannel(i, pin.GetStateAs<DimmerControlValue>());
         };
 

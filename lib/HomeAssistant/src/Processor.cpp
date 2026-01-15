@@ -2,10 +2,7 @@
 
 #include "Client.h"
 #include "EventLoop.h"
-#include "IdSanitizer.h"
 
-#include <Filters/SwitchFilter.h>
-#include <Filters/LightFilter.h>
 #include <LockGuard.h>
 
 #include <cstring>
@@ -25,41 +22,35 @@ Processor::Processor(Client& client, EventLoop& eventLoop) noexcept
 {
 }
 
-void Processor::RegisterFilter(std::weak_ptr<Filter> filter) noexcept
+void Processor::RegisterDevice(const std::shared_ptr<IDevice>& device) noexcept
 {
-    const auto filterPtr = filter.lock();
-    if (!filterPtr)
-        return;
+    const std::string_view id = device->GetId();
+    ESP_LOGI(TAG, "RegisterDevice (Id: %.*s)", (int)id.length(), id.data());
 
-    ESP_LOGI(TAG, "RegisterFilter");
-    std::string id = IdSanitizer::Sanitize(filterPtr->GetId());
-
-    // Already add the filter to the map, so we don't have to pass the pointer over the FreeRTOS queue
+    // Already add the device to the map, so we don't have to pass the pointer over the FreeRTOS queue
     {
         LockGuard guard(m_syncRoot);
-        m_filters.emplace(id, filter);
+        m_devices.emplace(id, device);
     }
 
     BridgeEvent event{};
-    event.Type = BridgeEvent::Type::CompleteFilterRegistration;
+    event.Type = BridgeEvent::Type::CompleteDeviceRegistration;
     event.IdLength = std::min(id.length(), (size_t)sizeof(event.Id));
-    memcpy(event.Id, id.c_str(), event.IdLength);
+    memcpy(event.Id, id.data(), event.IdLength);
     m_eventLoop.EnqueueEvent(event);
 }
 
-void Processor::UnregisterFilter(std::weak_ptr<Filter> filter) noexcept
+void Processor::UnregisterDevice(std::string_view id) noexcept
 {
-    const auto filterPtr = filter.lock();
-    if (!filterPtr)
+    ESP_LOGI(TAG, "UnregisterDevice (Id: %.*s)", (int)id.length(), id.data());
+
+    if (!TryGetDeviceById(id))
         return;
 
-    ESP_LOGI(TAG, "UnregisterFilter");
-    std::string id = IdSanitizer::Sanitize(filterPtr->GetId());
-
     BridgeEvent event{};
-    event.Type = BridgeEvent::Type::UnregisterFilter;
+    event.Type = BridgeEvent::Type::UnregisterDevice;
     event.IdLength = std::min(id.length(), (size_t)sizeof(event.Id));
-    memcpy(event.Id, id.c_str(), event.IdLength);
+    memcpy(event.Id, id.data(), event.IdLength);
     m_eventLoop.EnqueueEvent(event);
 }
 
@@ -72,11 +63,11 @@ void Processor::Process(const BridgeEvent& event) noexcept
         case BridgeEvent::Type::MqttData:
             OnMqttData(event);
             break;
-        case BridgeEvent::Type::CompleteFilterRegistration:
-            OnCompleteFilterRegistration(event);
+        case BridgeEvent::Type::CompleteDeviceRegistration:
+            OnCompleteDeviceRegistration(event);
             break;
-        case BridgeEvent::Type::UnregisterFilter:
-            OnUnregisterFilter(event);
+        case BridgeEvent::Type::UnregisterDevice:
+            OnUnregisterDevice(event);
             break;
         case BridgeEvent::Type::PublishState:
             OnPublishState(event);
@@ -91,17 +82,11 @@ void Processor::OnMqttConnected() noexcept
 {
     ESP_LOGI(TAG, "OnMqttConnected");
 
-    m_client.Subscribe("domo/flt/+");
+    m_client.Subscribe("domo/dev/+");
 
     LockGuard guard(m_syncRoot);
-    for (auto it = m_filters.begin(); it != m_filters.end();) {
-        if (auto filter = it->second.lock()) {
-            PublishDeviceDiscovery(filter);
-            ++it;
-        } else {
-            std::string id = it->first;
-            it = m_filters.erase(it);
-        }
+    for (auto& [_, device] : m_devices) {
+        PublishDeviceDiscovery(*device);
     }
 }
 
@@ -111,55 +96,48 @@ void Processor::OnMqttData(const BridgeEvent& event) noexcept
     std::string_view payload(event.Payload, event.PayloadLength);
     ESP_LOGI(TAG, "OnMqttData (Topic: %.*s, Payload: %.*s)", (int)topic.length(), topic.data(), (int)payload.length(), payload.data());
 
-    if (topic.rfind("domo/flt/", 0) == 0) {
-        std::string_view id = topic.substr(strlen("domo/flt/"));
-        const auto state = payload == "ON" ? DigitalValue(true) : DigitalValue(false);
+    if (!topic.starts_with("domo/dev/"))
+        return;
 
-        auto it = m_filters.find(id);
-        if (it != m_filters.end()) {
-            if (auto filter = it->second.lock()) {
-                if (filter->GetType() == FilterType::Switch) {
-                    auto* switchFilter = static_cast<SwitchFilter*>(filter.get());
-                    switchFilter->SetState(state);
-                } else if (filter->GetType() == FilterType::Light) {
-                    auto* lightFilter = static_cast<LightFilter*>(filter.get());
-                    lightFilter->SetState(state);
-                }
-            }
-        }
+    std::string_view id = topic.substr(strlen("domo/dev/"));
+    if (auto device = TryGetDeviceById(id)) {
+        device->ProcessCommand(payload);
     }
 }
 
-void Processor::OnCompleteFilterRegistration(const BridgeEvent& event) noexcept
+void Processor::OnCompleteDeviceRegistration(const BridgeEvent& event) noexcept
 {
-    ESP_LOGI(TAG, "OnCompleteFilterRegistration");
     std::string_view id(event.Id, event.IdLength);
-    if (auto filter = TryGetFilterById(id)) {
-        PublishDeviceDiscovery(filter);
-        SubscribeToStateChanges(filter);
+    ESP_LOGI(TAG, "OnCompleteDeviceRegistration (Id: %.*s)", (int)id.length(), id.data());
+    if (auto device = TryGetDeviceById(id)) {
+        PublishDeviceDiscovery(*device);
+        SubscribeToStateChanges(*device);
     }
 }
 
-void Processor::OnUnregisterFilter(const BridgeEvent& event) noexcept
+void Processor::OnUnregisterDevice(const BridgeEvent& event) noexcept
 {
-    ESP_LOGI(TAG, "OnUnregisterFilter");
     std::string_view id(event.Id, event.IdLength);
-    if (auto filter = TryGetFilterById(id)) {
-        PublishDeviceRemoval(filter);
+    ESP_LOGI(TAG, "OnUnregisterDevice (Id: %.*s)", (int)id.length(), id.data());
+    if (auto device = TryGetDeviceById(id)) {
+        PublishDeviceRemoval(*device);
 
         LockGuard guard(m_syncRoot);
-        m_filters.erase(std::string(id));
+        const auto it = m_devices.find(id);
+        if (it != m_devices.end())
+            m_devices.erase(it);
     }
 }
 
 void Processor::OnPublishState(const BridgeEvent& event) noexcept
 {
-    ESP_LOGI(TAG, "OnPublishState");
+    // TODO This will not work for dimmers or other non DigitalValue stuff
     std::string_view id(event.Id, event.IdLength);
+    ESP_LOGI(TAG, "OnPublishState (Id: %.*s)", (int)id.length(), id.data());
     auto state = std::get<DigitalValue>(event.State);
 
     char topic[64];
-    snprintf(topic, sizeof(topic), "domo/flt/%.*s/state", (int)id.size(), id.data());
+    snprintf(topic, sizeof(topic), "domo/dev/%.*s/state", (int)id.size(), id.data());
 
     const char* payload = (bool)state ? "ON" : "OFF";
     m_client.Publish(topic, payload, false);
@@ -170,122 +148,48 @@ void Processor::OnShutdown() noexcept
     ESP_LOGI(TAG, "OnShutdown");
 }
 
-void Processor::PublishDeviceDiscovery(std::shared_ptr<Filter> filter) noexcept
+void Processor::PublishDeviceDiscovery(const IDevice& device) noexcept
 {
-    std::string id = IdSanitizer::Sanitize(filter->GetId());
-    ESP_LOGI(TAG, "PublishFilterDiscovery (Filter: %s)", id.c_str());
+    std::string_view id = device.GetId();
+    ESP_LOGI(TAG, "PublishDeviceDiscovery (Id: %.*s)", (int)id.length(), id.data());
 
     char topic[64];
     char payload[512];
-
-    if (filter->GetType() == FilterType::Switch) {
-        snprintf(topic, sizeof(topic), "homeassistant/switch/%s/config", id.c_str());
-
-        snprintf(payload, sizeof(payload),
-            "{"
-            "\"unique_id\": \"%s\","
-            "\"name\": \"%s\","
-            "\"state_topic\": \"domo/flt/%s/state\","
-            "\"command_topic\": \"domo/flt/%s\","
-            "\"payload_on\": \"ON\","
-            "\"payload_off\": \"OFF\","
-            "\"optimistic\": false,"
-            "\"retain\": true"
-            "}",
-            id.c_str(),
-            id.c_str(),
-            id.c_str(),
-            id.c_str());
-
-        m_client.Publish(topic, payload, false);
-        return;
-    }
-    
-    if (filter->GetType() == FilterType::Light) {
-        snprintf(topic, sizeof(topic), "homeassistant/light/%s/config", id.c_str());
-
-        snprintf(payload, sizeof(payload),
-            "{"
-            "\"unique_id\": \"%s\","
-            "\"name\": \"%s\","
-            "\"state_topic\": \"domo/flt/%s/state\","
-            "\"command_topic\": \"domo/flt/%s\","
-            "\"payload_on\": \"ON\","
-            "\"payload_off\": \"OFF\","
-            "\"optimistic\": false,"
-            "\"retain\": true"
-            "}",
-            id.c_str(),
-            id.c_str(),
-            id.c_str(),
-            id.c_str());
-
-        m_client.Publish(topic, payload, false);
-        return;
-    }
+    device.BuildDiscoveryTopic(topic, sizeof(topic));
+    device.BuildDiscoveryPayload(payload, sizeof(payload));
+    m_client.Publish(topic, payload, false);
 }
 
-void Processor::PublishDeviceRemoval(std::shared_ptr<Filter> filter) noexcept
+void Processor::PublishDeviceRemoval(const IDevice& device) noexcept
 {
-    std::string id = IdSanitizer::Sanitize(filter->GetId());
-    ESP_LOGI(TAG, "PublishDeviceRemoval (Filter: %s)", id.c_str());
+    std::string_view id = device.GetId();
+    ESP_LOGI(TAG, "PublishDeviceRemoval (Id: %.*s)", (int)id.length(), id.data());
 
     char topic[64];
-
-    if (filter->GetType() == FilterType::Switch) {
-        snprintf(topic, sizeof(topic), "homeassistant/switch/%s/config", id.c_str());
-        m_client.Publish(topic, "", true);
-        return;
-    }
-    
-    if (filter->GetType() == FilterType::Light) {
-        snprintf(topic, sizeof(topic), "homeassistant/light/%s/config", id.c_str());
-        m_client.Publish(topic, "", true);
-        return;
-    }
+    device.BuildDiscoveryTopic(topic, sizeof(topic));
+    m_client.Publish(topic, "", true);
 }
 
-void Processor::SubscribeToStateChanges(std::shared_ptr<Filter> filter) noexcept
+void Processor::SubscribeToStateChanges(const IDevice& device) noexcept
 {
-    std::string id = IdSanitizer::Sanitize(filter->GetId());
-    ESP_LOGI(TAG, "SubscribeToFilterStateChanges (Filter: %s)", id.c_str());
+    std::string_view id = device.GetId();
+    ESP_LOGI(TAG, "SubscribeToStateChanges (Id: %.*s)", (int)id.length(), id.data());
 
-    if (filter->GetType() == FilterType::Switch) {
-        auto& switchFilter = static_cast<SwitchFilter&>(*filter);
-        switchFilter.SetStateCallback([this, id](SwitchFilter& sender, DigitalValue state)
-        {
-            ESP_LOGI(TAG, "StateCallback");
-            BridgeEvent event{};
-            event.Type = BridgeEvent::Type::PublishState;
-            event.IdLength = std::min(id.length(), (size_t)sizeof(event.Id));
-            memcpy(event.Id, id.data(), event.IdLength);
-            event.State = state;
-            m_eventLoop.EnqueueEvent(event);
-        });
-        return;
-    }
-
-    if (filter->GetType() == FilterType::Light) {
-        auto& lightFilter = static_cast<LightFilter&>(*filter);
-        lightFilter.SetStateCallback([this, id](LightFilter& sender, DigitalValue state)
-        {
-            ESP_LOGI(TAG, "StateCallback");
-            BridgeEvent event{};
-            event.Type = BridgeEvent::Type::PublishState;
-            event.IdLength = std::min(id.length(), (size_t)sizeof(event.Id));
-            memcpy(event.Id, id.data(), event.IdLength);
-            event.State = state;
-            m_eventLoop.EnqueueEvent(event);
-        });
-        return;
-    }
+    device.SetStateCallback([this, id](PinState state)
+    {
+        ESP_LOGI(TAG, "OnStateChanges");
+        BridgeEvent event{};
+        event.Type = BridgeEvent::Type::PublishState;
+        event.IdLength = std::min(id.length(), (size_t)sizeof(event.Id));
+        memcpy(event.Id, id.data(), event.IdLength);
+        event.State = state;
+        m_eventLoop.EnqueueEvent(event);
+    });
 }
 
-std::shared_ptr<Filter> Processor::TryGetFilterById(std::string_view id) noexcept
+std::shared_ptr<IDevice> Processor::TryGetDeviceById(std::string_view id) const noexcept
 {
     LockGuard guard(m_syncRoot);
-    auto it = m_filters.find(id);
-    return it != m_filters.end()
-        ? it->second.lock()
-        : nullptr;
+    auto it = m_devices.find(id);
+    return it != m_devices.end() ? it->second : nullptr;
 }

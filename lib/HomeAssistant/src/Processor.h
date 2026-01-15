@@ -4,7 +4,7 @@
 #include <StringHash.h>
 
 #include "BridgeEvent.h"
-#include "Filter.h"
+#include "Devices/Device.h"
 
 #include <memory>
 #include <unordered_map>
@@ -19,28 +19,28 @@ class Processor final
 public:
     Processor(Client& client, EventLoop& eventLoop) noexcept;
 
-    void RegisterFilter(std::weak_ptr<Filter> filter) noexcept;
-    void UnregisterFilter(std::weak_ptr<Filter> filter) noexcept;
+    void RegisterDevice(const std::shared_ptr<IDevice>& device) noexcept;
+    void UnregisterDevice(std::string_view id) noexcept;
 
 private:
     const Lock m_syncRoot;
     Client& m_client;
     EventLoop& m_eventLoop;
-    std::unordered_map<std::string, std::weak_ptr<Filter>, StringHash, std::equal_to<>> m_filters;
+    std::unordered_map<std::string, std::shared_ptr<IDevice>, StringHash, std::equal_to<>> m_devices;
 
     void Process(const BridgeEvent& event) noexcept;
 
     void OnMqttConnected() noexcept;
     void OnMqttData(const BridgeEvent& event) noexcept;
-    void OnCompleteFilterRegistration(const BridgeEvent& event) noexcept;
-    void OnUnregisterFilter(const BridgeEvent& event) noexcept;
+    void OnCompleteDeviceRegistration(const BridgeEvent& event) noexcept;
+    void OnUnregisterDevice(const BridgeEvent& event) noexcept;
     void OnPublishState(const BridgeEvent& event) noexcept;
     void OnShutdown() noexcept;
 
-    void PublishDeviceDiscovery(std::shared_ptr<Filter> filter) noexcept;
-    void PublishDeviceRemoval(std::shared_ptr<Filter> filter) noexcept;
+    void PublishDeviceDiscovery(const IDevice& device) noexcept;
+    void PublishDeviceRemoval(const IDevice& device) noexcept;
 
-    void SubscribeToStateChanges(std::shared_ptr<Filter> filter) noexcept;
+    void SubscribeToStateChanges(const IDevice& device) noexcept;
 
-    std::shared_ptr<Filter> TryGetFilterById(std::string_view id) noexcept;
+    std::shared_ptr<IDevice> TryGetDeviceById(std::string_view id) const noexcept;
 };

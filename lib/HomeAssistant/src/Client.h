@@ -14,10 +14,10 @@ public:
     Client(const char* uri, const char* username, const char* password, ClientCallback callback, void* callbackContext) noexcept;
     ~Client() noexcept;
 
-    void Connect() noexcept;
+    void Connect() const noexcept;
 
-    void Subscribe(const char* topic) noexcept;
-    void Publish(const char* topic, const char* payload, bool retain) noexcept;
+    void Subscribe(const char* topic) const noexcept;
+    void Publish(const char* topic, const char* payload, bool retain) const noexcept;
 
 private:
     ClientCallback m_callback = nullptr;
@@ -36,10 +36,10 @@ public:
     Client(const char* uri, const char* username, const char* password, ClientCallback callback, void* callbackContext) noexcept {};
     ~Client() noexcept {};
 
-    void Connect() noexcept {};
+    void Connect() const noexcept {};
 
-    void Subscribe(const char* topic) noexcept {};
-    void Publish(const char* topic, const char* payload, bool retain) noexcept {};
+    void Subscribe(const char* topic) const noexcept {};
+    void Publish(const char* topic, const char* payload, bool retain) const noexcept {};
 };
 
 #endif

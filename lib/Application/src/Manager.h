@@ -4,7 +4,7 @@
 #include "ScanLed.h"
 
 #include <Filter.h>
-#include <Bridge.h>
+#include <IBridge.h>
 #include <Lock.h>
 #include <Module.h>
 #include <StringHash.h>
@@ -18,7 +18,7 @@
 class Manager final
 {
 public:
-    Manager(Bridge* bridge = nullptr);
+    Manager(IBridge* bridge = nullptr);
 
     void Start();
     void ProcessNext();
@@ -32,7 +32,7 @@ public:
     std::string GetConfigurationIni() const;
 
 private:
-    Bridge* m_bridge = nullptr;
+    IBridge* m_bridge = nullptr;
 
     const BusDriver m_busDriver;
     const ScanLed m_scanLed;

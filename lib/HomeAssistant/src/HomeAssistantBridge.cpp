@@ -1,10 +1,11 @@
 #include "HomeAssistantBridge.h"
 
+#include "Devices/SwitchDevice.h"
+#include "IdSanitizer.h"
+
 #include <Filters/SwitchFilter.h>
 #include <Filters/LightFilter.h>
 #include <PinFactory.h>
-
-#include <algorithm>
 
 #ifndef NATIVE_BUILD
     #include "esp_log.h"
@@ -28,12 +29,31 @@ void HomeAssistantBridge::Init() noexcept
     m_eventLoop.Start();
 }
 
-void HomeAssistantBridge::RegisterFilter(std::weak_ptr<Filter> filter) noexcept
+bool HomeAssistantBridge::RegisterAsDevice(std::weak_ptr<Filter> filter) noexcept
 {
-    m_processor.RegisterFilter(filter);
+    const auto filterPtr = filter.lock();
+    if (!filterPtr)
+        return false;
+
+    const std::string id = IdSanitizer::Sanitize(filterPtr->GetId());
+    ESP_LOGI(TAG, "RegisterAsDevice (Id: %.*s)", (int)id.length(), id.data());
+    if (filterPtr->GetType() == FilterType::Switch) {
+        auto switchFilter = std::static_pointer_cast<SwitchFilter>(filterPtr);
+        m_processor.RegisterDevice(std::make_shared<SwitchDevice>(switchFilter));
+        return true;
+    }
+
+    return false;
 }
 
-void HomeAssistantBridge::UnregisterFilter(std::weak_ptr<Filter> filter) noexcept
+bool HomeAssistantBridge::UnregisterAsDevice(std::weak_ptr<Filter> filter) noexcept
 {
-    m_processor.UnregisterFilter(filter);
+    const auto filterPtr = filter.lock();
+    if (!filterPtr)
+        return false;
+
+    const std::string id = IdSanitizer::Sanitize(filterPtr->GetId());
+    ESP_LOGI(TAG, "UnregisterAsDevice (Id: %.*s)", (int)id.length(), id.data());
+    m_processor.UnregisterDevice(id);
+    return true;
 }

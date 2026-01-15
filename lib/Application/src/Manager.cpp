@@ -13,7 +13,7 @@
 
 #include <sstream>
 
-Manager::Manager(Bridge* bridge)
+Manager::Manager(IBridge* bridge)
     : m_bridge(bridge)
     , m_busDriver()
     , m_bus(m_busDriver)
@@ -97,7 +97,7 @@ bool Manager::TryCreateFilter(std::string_view typeName, std::string_view id, st
     m_filtersById.emplace(filter->GetId(), filter);
 
     if (m_bridge != nullptr)
-        m_bridge->RegisterFilter(filter);
+        m_bridge->RegisterAsDevice(filter);
 
     // Apply connections
     for (size_t i = 0; i < connectionsResult.count; i++)

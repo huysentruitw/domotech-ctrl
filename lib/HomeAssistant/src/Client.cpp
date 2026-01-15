@@ -29,7 +29,7 @@ Client::~Client() noexcept
     }
 }
 
-void Client::Connect() noexcept
+void Client::Connect() const noexcept
 {
     if (esp_mqtt_client_start(m_client) == ESP_OK) {
         ESP_LOGI(TAG, "Connected");
@@ -38,13 +38,13 @@ void Client::Connect() noexcept
     }
 }
 
-void Client::Subscribe(const char* topic) noexcept
+void Client::Subscribe(const char* topic) const noexcept
 {
     ESP_LOGI(TAG, "Subscribe to %s", topic);
     esp_mqtt_client_subscribe(m_client, topic, 1);
 }
 
-void Client::Publish(const char* topic, const char* payload, bool retain) noexcept
+void Client::Publish(const char* topic, const char* payload, bool retain) const noexcept
 {
     ESP_LOGI(TAG, "Publish to %s (Retain: %s)", topic, retain ? "true" : "false");
     esp_mqtt_client_publish(m_client, topic, payload, 0, 1, retain);

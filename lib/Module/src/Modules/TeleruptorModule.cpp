@@ -9,7 +9,8 @@ TeleruptorModule::TeleruptorModule(const Bus& bus, const uint8_t address, const 
     m_teleruptorPins.reserve(m_numberOfTeleruptors);
     m_teleruptorFeedbackPins.reserve(m_numberOfTeleruptors);
     for (uint8_t i = 0; i < m_numberOfTeleruptors; ++i) {
-        const auto onStateChange = [this, i](const Pin& pin) {
+        const auto onStateChange = [this, i](const Pin& pin)
+        {
             UpdateTeleruptor(i, pin.GetStateAs<DigitalValue>());
         };
 

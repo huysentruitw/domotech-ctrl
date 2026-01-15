@@ -2,7 +2,7 @@
 
 #include <PinFactory.h>
 
-LightFilter::LightFilter(std::string_view id)
+LightFilter::LightFilter(std::string_view id) noexcept
     : Filter(FilterType::Light, id)
 {
     m_toggleInputPin = PinFactory::CreateInputPin<DigitalValue>(
@@ -29,7 +29,7 @@ LightFilter::LightFilter(std::string_view id)
     m_outputPins = { m_controlOutputPin, m_feedbackOutputPin };
 }
 
-void LightFilter::SetState(DigitalValue state)
+void LightFilter::SetState(DigitalValue state) noexcept
 {
     bool stateHasChanged = m_controlOutputPin->SetState(state);
 
@@ -41,7 +41,7 @@ void LightFilter::SetState(DigitalValue state)
         m_stateCallback(*this, state);
 }
 
-bool LightFilter::SetStateCallback(const std::function<void(LightFilter&, DigitalValue)>& callback)
+bool LightFilter::SetStateCallback(const std::function<void(const LightFilter&, DigitalValue)>& callback) noexcept
 {
     if (m_stateCallback)
         return false;

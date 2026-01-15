@@ -8,7 +8,7 @@
     #define esp_timer_get_time() 0
 #endif
 
-ShutterFilter::ShutterFilter(std::string_view id)
+ShutterFilter::ShutterFilter(std::string_view id) noexcept
     : Filter(FilterType::Shutter, id)
 {
     m_openInputPin = PinFactory::CreateInputPin<DigitalValue>(

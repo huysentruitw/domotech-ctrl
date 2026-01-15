@@ -8,10 +8,10 @@
 class SwitchFilter final : public Filter
 {
 public:
-    SwitchFilter(std::string_view id = {});
+    SwitchFilter(std::string_view id = {}) noexcept;
 
-    void SetState(DigitalValue state);
-    bool SetStateCallback(const std::function<void(SwitchFilter&, DigitalValue)>& callback);
+    void SetState(DigitalValue state) noexcept;
+    bool SetStateCallback(const std::function<void(const SwitchFilter&, DigitalValue)>& callback) noexcept;
 
 private:
     std::shared_ptr<Pin> m_toggleInputPin;
@@ -19,5 +19,5 @@ private:
     std::shared_ptr<Pin> m_controlOutputPin;
     std::shared_ptr<Pin> m_feedbackOutputPin;
 
-    std::function<void(SwitchFilter&, DigitalValue)> m_stateCallback;
+    std::function<void(const SwitchFilter&, DigitalValue)> m_stateCallback;
 };

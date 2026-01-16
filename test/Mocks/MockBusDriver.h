@@ -8,14 +8,14 @@
 class MockBusDriver : public BusDriver
 {
 public:
-    void Init() const override {}
+    void Init() const noexcept override {}
     
-    void WriteBytes(const uint8_t* data, const uint16_t len) const override
+    void WriteBytes(const uint8_t* data, const uint16_t len) const noexcept override
     {
         BytesWritten.insert(BytesWritten.end(), data, data + len);
     }
     
-    bool ReadBytes(uint8_t* data, const uint16_t len) const override
+    bool ReadBytes(uint8_t* data, const uint16_t len) const noexcept override
     {
         if (BytesToRead.size() < len) {
             return false; // Not enough data to read
@@ -29,7 +29,7 @@ public:
         return true;
     }
 
-    void FlushInput() const override
+    void FlushInput() const noexcept override
     {
         FlushInputCalled = true;
     }

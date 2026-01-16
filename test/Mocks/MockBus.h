@@ -10,13 +10,13 @@
 class MockBus : public Bus
 {
 public:
-    MockBus()
+    MockBus() noexcept
         : Bus(*static_cast<BusDriver*>(nullptr))  // The real bus driver is never used in the mock
     {
     }
 
     // Override the original methods to avoid using the actual driver
-    ScanResponse Poll(const uint8_t address, const uint8_t retries = 2) const override
+    ScanResponse Poll(const uint8_t address, const uint8_t retries = 2) const noexcept override
     {
         PollCalled = true;
         LastPolledAddress = address;
@@ -25,7 +25,7 @@ public:
         return GetNextResponse();
     }
 
-    ScanResponse Exchange(const uint8_t address, const uint16_t data, const uint8_t retries = 2) const override
+    ScanResponse Exchange(const uint8_t address, const uint16_t data, const uint8_t retries = 2) const noexcept override
     {
         ExchangeCalled = true;
         LastExchangeAddress = address;
@@ -36,12 +36,12 @@ public:
     }
 
     // Helper method to queue responses for later consumption
-    void QueueResponse(const ScanResponse& response)
+    void QueueResponse(const ScanResponse& response) noexcept
     {
         ResponseQueue.push(response);
     }
 
-    void ClearCalls()
+    void ClearCalls() noexcept
     {
         PollCalled = false;
         ExchangeCalled = false;
@@ -53,7 +53,7 @@ public:
     }
 
 private:
-    ScanResponse GetNextResponse() const
+    ScanResponse GetNextResponse() const noexcept
     {
         if (ResponseQueue.empty()) {
             return { .Success = false };

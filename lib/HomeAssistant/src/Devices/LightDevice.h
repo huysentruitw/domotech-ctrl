@@ -1,15 +1,15 @@
 #pragma once
 
-#include <Filters/SwitchFilter.h>
+#include <Filters/LightFilter.h>
 
 #include "Device.h"
 
 #include <memory>
 
-class SwitchDevice final : public Device<SwitchFilter>
+class LightDevice final : public Device<LightFilter>
 {
 public:
-    explicit SwitchDevice(const std::shared_ptr<SwitchFilter>& filter) noexcept;
+    explicit LightDevice(const std::shared_ptr<LightFilter>& filter) noexcept;
 
     size_t BuildDiscoveryTopic(char* buffer, size_t bufferLength) const noexcept override;
     size_t BuildDiscoveryPayload(char* buffer, size_t bufferLength) const noexcept override;

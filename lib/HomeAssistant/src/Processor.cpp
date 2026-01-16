@@ -83,7 +83,7 @@ void Processor::OnMqttConnected() noexcept
 {
     ESP_LOGI(TAG, "OnMqttConnected");
 
-    m_client.Subscribe("domo/dev/+");
+    m_client.Subscribe("domo/dev/#");
 
     LockGuard guard(m_syncRoot);
     for (auto& [_, device] : m_devices)
@@ -96,12 +96,22 @@ void Processor::OnMqttData(const BridgeEvent& event) noexcept
     std::string_view payload(event.Payload, event.PayloadLength);
     ESP_LOGI(TAG, "OnMqttData (Topic: %.*s, Payload: %.*s)", (int)topic.length(), topic.data(), (int)payload.length(), payload.data());
 
-    if (!topic.starts_with("domo/dev/"))
+    constexpr std::string_view prefix = "domo/dev/";
+    if (!topic.starts_with(prefix))
         return;
 
-    std::string_view id = topic.substr(strlen("domo/dev/"));
+    std::string_view rest = topic.substr(prefix.length());
+
+    // Find next slash to separate <id> and <subtopic>
+    size_t slashPos = rest.find('/');
+    if (slashPos == std::string_view::npos)
+        return; // No subtopic -> ignore
+
+    std::string_view id = rest.substr(0, slashPos);
+    std::string_view subtopic = rest.substr(slashPos + 1);
+        
     if (auto device = TryGetDeviceById(id))
-        device->ProcessCommand(payload);
+        device->ProcessCommand(subtopic, payload);
 }
 
 void Processor::OnCompleteDeviceRegistration(const BridgeEvent& event) noexcept
@@ -132,16 +142,34 @@ void Processor::OnUnregisterDevice(const BridgeEvent& event) noexcept
 
 void Processor::OnPublishState(const BridgeEvent& event) noexcept
 {
-    // TODO This will not work for dimmers or other non DigitalValue stuff
     std::string_view id(event.Id, event.IdLength);
     ESP_LOGI(TAG, "OnPublishState (Id: %.*s)", (int)id.length(), id.data());
-    auto state = std::get<DigitalValue>(event.State);
+    
+    if (auto digitalValue = std::get_if<DigitalValue>(&event.State))
+    {
+        char topic[64];
+        snprintf(topic, sizeof(topic), "domo/dev/%.*s/status", (int)id.size(), id.data());
+        const char* payload = (bool)*digitalValue ? "ON" : "OFF";
+        m_client.Publish(topic, payload, false);
+    }
+    else if (auto dimmerControlValue = std::get_if<DimmerControlValue>(&event.State))
+    {
+        uint8_t percentage = dimmerControlValue->GetPercentage();
 
-    char topic[64];
-    snprintf(topic, sizeof(topic), "domo/dev/%.*s/state", (int)id.size(), id.data());
+        char topic[64];
+        char payload[8];
 
-    const char* payload = (bool)state ? "ON" : "OFF";
-    m_client.Publish(topic, payload, false);
+        snprintf(topic, sizeof(topic), "domo/dev/%.*s/status", (int)id.size(), id.data());
+        const char* statePayload = percentage > 0 ? "ON" : "OFF";
+        m_client.Publish(topic, statePayload, false);
+
+        if (percentage > 0)
+        {
+            snprintf(topic, sizeof(topic), "domo/dev/%.*s/brightness", (int)id.size(), id.data());
+            snprintf(payload, sizeof(payload), "%d", percentage);
+            m_client.Publish(topic, payload, false);
+        }
+    }
 }
 
 void Processor::OnShutdown() noexcept
@@ -179,7 +207,6 @@ void Processor::SubscribeToStateChanges(const IDevice& device) noexcept
     device.SetStateCallback(
         [this, id](PinState state)
         {
-            ESP_LOGI(TAG, "OnStateChanges");
             BridgeEvent event{};
             event.Type = BridgeEvent::Type::PublishState;
             event.IdLength = std::min(id.length(), (size_t)sizeof(event.Id));

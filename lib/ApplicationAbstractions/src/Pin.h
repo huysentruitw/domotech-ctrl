@@ -40,7 +40,8 @@ public:
     const PinState& GetState() const noexcept;
     template<typename TState> TState GetStateAs() const noexcept
     {
-        return std::get<TState>(m_state);
+        auto state = std::get_if<TState>(&m_state);
+        return state ? *state : TState{};
     }
 
     bool SetState(const PinState& newState) noexcept;

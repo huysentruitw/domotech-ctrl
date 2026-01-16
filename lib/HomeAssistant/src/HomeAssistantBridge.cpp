@@ -1,10 +1,13 @@
 #include "HomeAssistantBridge.h"
 
+#include "Devices/DimmableLightDevice.h"
+#include "Devices/LightDevice.h"
 #include "Devices/SwitchDevice.h"
 #include "IdSanitizer.h"
 
-#include <Filters/SwitchFilter.h>
+#include <Filters/DimmerFilter.h>
 #include <Filters/LightFilter.h>
+#include <Filters/SwitchFilter.h>
 #include <PinFactory.h>
 
 #ifndef NATIVE_BUILD
@@ -37,10 +40,26 @@ bool HomeAssistantBridge::RegisterAsDevice(std::weak_ptr<Filter> filter) noexcep
 
     const std::string id = IdSanitizer::Sanitize(filterPtr->GetId());
     ESP_LOGI(TAG, "RegisterAsDevice (Id: %.*s)", (int)id.length(), id.data());
-    if (filterPtr->GetType() == FilterType::Switch)
+
+    const auto filterType = filterPtr->GetType();
+    if (filterType == FilterType::Switch)
     {
         auto switchFilter = std::static_pointer_cast<SwitchFilter>(filterPtr);
         m_processor.RegisterDevice(std::make_shared<SwitchDevice>(switchFilter));
+        return true;
+    }
+
+    if (filterType == FilterType::Light)
+    {
+        auto lightFilter = std::static_pointer_cast<LightFilter>(filterPtr);
+        m_processor.RegisterDevice(std::make_shared<LightDevice>(lightFilter));
+        return true;
+    }
+
+    if (filterType == FilterType::Dimmer)
+    {
+        auto dimmerFilter = std::static_pointer_cast<DimmerFilter>(filterPtr);
+        m_processor.RegisterDevice(std::make_shared<DimmableLightDevice>(dimmerFilter));
         return true;
     }
 

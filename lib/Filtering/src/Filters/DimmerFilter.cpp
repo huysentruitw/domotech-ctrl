@@ -12,7 +12,7 @@ DimmerFilter::DimmerFilter(std::string_view id) noexcept
             if (pin.GetStateAs<DigitalValue>() == DigitalValue(true))
             {
                 const auto currentState = m_controlOutputPin->GetStateAs<DimmerControlValue>();
-                const auto newState = currentState.GetPercentage() == 0 ? DimmerControlValue(100, 2) : DimmerControlValue(0, 2);
+                const auto newState = currentState.GetPercentage() == 0 ? DimmerControlValue(m_lastOnPercentage, 2) : DimmerControlValue(0, 2);
                 SetState(newState);
             }
         });
@@ -24,8 +24,16 @@ DimmerFilter::DimmerFilter(std::string_view id) noexcept
     m_outputPins = { m_controlOutputPin, m_feedbackOutputPin };
 }
 
+uint8_t DimmerFilter::GetLastOnPercentage() noexcept
+{
+    return m_lastOnPercentage;
+}
+
 void DimmerFilter::SetState(DimmerControlValue state) noexcept
 {
+    if (state.GetPercentage() > 0)
+        m_lastOnPercentage = state.GetPercentage();
+
     bool stateHasChanged = m_controlOutputPin->SetState(state);
 
     // No feedback input, use optimistic value

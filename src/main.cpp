@@ -217,6 +217,8 @@ httpd_handle_t start_webserver(void)
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     httpd_handle_t server = NULL;
 
+    config.stack_size = 8192;
+
     if (httpd_start(&server, &config) == ESP_OK)
     {
         httpd_uri_t hello_uri =

@@ -1,18 +1,18 @@
-#include "SwitchDevice.h"
+#include "LightDevice.h"
 #include "IdSanitizer.h"
 
-SwitchDevice::SwitchDevice(const std::shared_ptr<SwitchFilter>& filter) noexcept
+LightDevice::LightDevice(const std::shared_ptr<LightFilter>& filter) noexcept
     : Device(filter)
 {
 }
 
-size_t SwitchDevice::BuildDiscoveryTopic(char* buffer, size_t bufferLength) const noexcept
+size_t LightDevice::BuildDiscoveryTopic(char* buffer, size_t bufferLength) const noexcept
 {
     std::string_view id = GetId();
-    return snprintf(buffer, bufferLength, "homeassistant/switch/%.*s/config", (int)id.length(), id.data());
+    return snprintf(buffer, bufferLength, "homeassistant/light/%.*s/config", (int)id.length(), id.data());
 }
 
-size_t SwitchDevice::BuildDiscoveryPayload(char* buffer, size_t bufferLength) const noexcept
+size_t LightDevice::BuildDiscoveryPayload(char* buffer, size_t bufferLength) const noexcept
 {
     std::string_view id = GetId();
     return snprintf(buffer, bufferLength,
@@ -32,7 +32,7 @@ size_t SwitchDevice::BuildDiscoveryPayload(char* buffer, size_t bufferLength) co
         (int)id.length(), id.data());
 }
 
-void SwitchDevice::ProcessCommand(std::string_view subtopic, std::string_view command) const noexcept
+void LightDevice::ProcessCommand(std::string_view subtopic, std::string_view command) const noexcept
 {
     if (subtopic != "switch")
         return;
@@ -42,12 +42,12 @@ void SwitchDevice::ProcessCommand(std::string_view subtopic, std::string_view co
         filter->SetState(state);
 }
 
-void SwitchDevice::SetStateCallback(std::function<void(PinState)> callback) const noexcept
+void LightDevice::SetStateCallback(std::function<void(PinState)> callback) const noexcept
 {
     if (auto filter = TryGetFilter())
     {
         filter->SetStateCallback(
-            [callback](const SwitchFilter& sender, DigitalValue state)
+            [callback](const LightFilter& sender, DigitalValue state)
             {
                 callback(state);
             });

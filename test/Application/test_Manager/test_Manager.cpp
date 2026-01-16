@@ -43,7 +43,10 @@ void Manager_GetKnownFiltersIni()
         "Input.3=OpenFeedback,DigitalValue\n"
         "Input.4=CloseFeedback,DigitalValue\n"
         "Output.0=Open,DigitalValue\n"
-        "Output.1=Close,DigitalValue\n";
+        "Output.1=Close,DigitalValue\n"
+        "\n"
+        "[Filter]\n"
+        "Type=Climate\n";
 
     // Act
     std::string iniContent = manager.GetKnownFiltersIni();

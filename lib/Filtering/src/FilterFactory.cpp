@@ -1,5 +1,6 @@
 #include "FilterFactory.h"
 
+#include "Filters/ClimateFilter.h"
 #include "Filters/DimmerFilter.h"
 #include "Filters/LightFilter.h"
 #include "Filters/ShutterFilter.h"
@@ -11,5 +12,6 @@ std::unique_ptr<Filter> FilterFactory::TryCreateFilterByTypeName(std::string_vie
     if (typeName == GetFilterTypeName(FilterType::Light)) return std::make_unique<LightFilter>(id);
     if (typeName == GetFilterTypeName(FilterType::Dimmer)) return std::make_unique<DimmerFilter>(id);
     if (typeName == GetFilterTypeName(FilterType::Shutter)) return std::make_unique<ShutterFilter>(id);
+    if (typeName == GetFilterTypeName(FilterType::Climate)) return std::make_unique<ClimateFilter>(id);
     return nullptr;
 }

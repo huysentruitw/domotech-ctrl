@@ -19,7 +19,7 @@ void FilterType_GetFilterTypeNames()
         "Light\n"
         "Dimmer\n"
         "Shutter\n"
-        "Unknown\n"
+        "Climate\n"
         "Unknown\n"
         "Unknown\n";
 

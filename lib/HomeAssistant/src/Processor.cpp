@@ -194,7 +194,7 @@ void Processor::PublishDeviceDiscovery(const IDevice& device) noexcept
     ESP_LOGI(TAG, "PublishDeviceDiscovery (Id: %.*s)", (int)id.length(), id.data());
 
     char topic[64];
-    char payload[512];
+    char payload[640];
     device.BuildDiscoveryTopic(topic, sizeof(topic));
     device.BuildDiscoveryPayload(payload, sizeof(payload));
     m_client.Publish(topic, payload, false);

@@ -1,11 +1,13 @@
 #include "HomeAssistantBridge.h"
 
+#include "Devices/ClimateDevice.h"
 #include "Devices/CoverDevice.h"
 #include "Devices/DimmableLightDevice.h"
 #include "Devices/LightDevice.h"
 #include "Devices/SwitchDevice.h"
 #include "IdSanitizer.h"
 
+#include <Filters/ClimateFilter.h>
 #include <Filters/DimmerFilter.h>
 #include <Filters/LightFilter.h>
 #include <Filters/ShutterFilter.h>
@@ -69,6 +71,13 @@ bool HomeAssistantBridge::RegisterAsDevice(std::weak_ptr<Filter> filter) noexcep
     {
         auto shutterFilter = std::static_pointer_cast<ShutterFilter>(filterPtr);
         m_processor.RegisterDevice(std::make_shared<CoverDevice>(shutterFilter));
+        return true;
+    }
+
+    if (filterType == FilterType::Climate)
+    {
+        auto climateFilter = std::static_pointer_cast<ClimateFilter>(filterPtr);
+        m_processor.RegisterDevice(std::make_shared<ClimateDevice>(climateFilter));
         return true;
     }
 

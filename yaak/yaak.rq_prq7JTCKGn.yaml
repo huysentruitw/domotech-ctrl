@@ -1,8 +1,8 @@
 type: http_request
 model: http_request
-id: rq_GjmTEHqiP7
-createdAt: 2026-01-03T18:54:13.873237100
-updatedAt: 2026-01-16T20:26:31.560447200
+id: rq_prq7JTCKGn
+createdAt: 2026-01-16T20:26:41.553520800
+updatedAt: 2026-01-16T20:27:47.004938300
 workspaceId: wk_u8HifqEVo2
 folderId: null
 authentication: {}
@@ -10,9 +10,9 @@ authenticationType: null
 body:
   text: |
     [Filter]
-    Id=Stopcontact A
-    Type=Switch
-    Connections=I0=A3:O0,O0=A5:I0,I1=A5:O0
+    Id=Lamp bureau
+    Type=Light
+    Connections=I0=A3:O1,O0=A5:I1,I1=A5:O1
 bodyType: other
 description: ''
 headers:
@@ -21,7 +21,7 @@ headers:
   value: text/plain
   id: 4CARgCKAf3
 method: POST
-name: Add Switch Filter
-sortPriority: -1767451503047.996
+name: Add Light Filter
+sortPriority: -1767451503047.995
 url: ${[ api_uri ]}/configuration/filter
 urlParameters: []

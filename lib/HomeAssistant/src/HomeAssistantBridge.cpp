@@ -1,5 +1,6 @@
 #include "HomeAssistantBridge.h"
 
+#include "Devices/CoverDevice.h"
 #include "Devices/DimmableLightDevice.h"
 #include "Devices/LightDevice.h"
 #include "Devices/SwitchDevice.h"
@@ -7,6 +8,7 @@
 
 #include <Filters/DimmerFilter.h>
 #include <Filters/LightFilter.h>
+#include <Filters/ShutterFilter.h>
 #include <Filters/SwitchFilter.h>
 #include <PinFactory.h>
 
@@ -60,6 +62,13 @@ bool HomeAssistantBridge::RegisterAsDevice(std::weak_ptr<Filter> filter) noexcep
     {
         auto dimmerFilter = std::static_pointer_cast<DimmerFilter>(filterPtr);
         m_processor.RegisterDevice(std::make_shared<DimmableLightDevice>(dimmerFilter));
+        return true;
+    }
+
+    if (filterType == FilterType::Shutter)
+    {
+        auto shutterFilter = std::static_pointer_cast<ShutterFilter>(filterPtr);
+        m_processor.RegisterDevice(std::make_shared<CoverDevice>(shutterFilter));
         return true;
     }
 

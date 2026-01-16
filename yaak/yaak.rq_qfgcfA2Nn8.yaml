@@ -1,8 +1,8 @@
 type: http_request
 model: http_request
-id: rq_GjmTEHqiP7
-createdAt: 2026-01-03T18:54:13.873237100
-updatedAt: 2026-01-16T20:26:31.560447200
+id: rq_qfgcfA2Nn8
+createdAt: 2026-01-16T20:28:14.914196800
+updatedAt: 2026-01-16T20:34:08.158971700
 workspaceId: wk_u8HifqEVo2
 folderId: null
 authentication: {}
@@ -10,9 +10,9 @@ authenticationType: null
 body:
   text: |
     [Filter]
-    Id=Stopcontact A
-    Type=Switch
-    Connections=I0=A3:O0,O0=A5:I0,I1=A5:O0
+    Id=Rolluik A
+    Type=Shutter
+    Connections=I0=A3:O4,I1=A3:O5,I2=A3:O6,I3=A5:O2,I4=A5:O3,O0=A5:I2,O1=A5:I3
 bodyType: other
 description: ''
 headers:
@@ -21,7 +21,7 @@ headers:
   value: text/plain
   id: 4CARgCKAf3
 method: POST
-name: Add Switch Filter
-sortPriority: -1767451503047.996
+name: Add Shutter Filter
+sortPriority: -1767451503047.993
 url: ${[ api_uri ]}/configuration/filter
 urlParameters: []

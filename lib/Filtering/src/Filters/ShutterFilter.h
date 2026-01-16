@@ -17,6 +17,15 @@ class ShutterFilter final : public Filter
 public:
     ShutterFilter(std::string_view id = {}) noexcept;
 
+    void Open() noexcept;
+    void Close() noexcept;
+    void Stop() noexcept;
+
+    bool SetStateCallback(const std::function<void(const ShutterFilter&, ShutterControlValue)>& callback) noexcept;
+
+    // For testing
+    void MoveSignalStartMs(int offsetMs) noexcept;
+
 private:
     ShutterCommand m_currentShutterCommand = ShutterCommand::Stop;
     std::shared_ptr<Pin> m_openInputPin;
@@ -29,4 +38,6 @@ private:
 
     uint64_t m_signalStartMs = 0;
     static uint64_t GetMsSinceBoot() noexcept;
+
+    std::function<void(const ShutterFilter&, ShutterControlValue)> m_stateCallback;
 };

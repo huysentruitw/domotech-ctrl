@@ -2,6 +2,7 @@
 
 #include "DigitalValue.h"
 #include "DimmerControlValue.h"
+#include "ShutterControlValue.h"
 
 #include <algorithm>
 #include <functional>
@@ -16,11 +17,15 @@ enum class PinDirection
     Output
 };
 
-typedef std::variant<DigitalValue, DimmerControlValue> PinState;
+typedef std::variant<
+    DigitalValue,
+    DimmerControlValue,
+    ShutterControlValue> PinState;
 
 constexpr const char* PinStateTypes[] = {
     "DigitalValue",
     "DimmerControlValue",
+    "ShutterControlValue",
 };
 
 class Pin final

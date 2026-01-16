@@ -170,6 +170,17 @@ void Processor::OnPublishState(const BridgeEvent& event) noexcept
             m_client.Publish(topic, payload, false);
         }
     }
+    else if (auto shutterControlValue = std::get_if<ShutterControlValue>(&event.State))
+    {
+        char topic[64];
+        snprintf(topic, sizeof(topic), "domo/dev/%.*s/status", (int)id.size(), id.data());
+        const char* payload = *shutterControlValue == ShutterControlValue::Open
+            ? "OPENING"
+            : *shutterControlValue == ShutterControlValue::Close
+                ? "CLOSING"
+                : "STOPPED";
+        m_client.Publish(topic, payload, false);
+    }
 }
 
 void Processor::OnShutdown() noexcept

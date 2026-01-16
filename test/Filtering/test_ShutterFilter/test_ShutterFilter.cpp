@@ -54,7 +54,7 @@ void ShutterFilter_Constructor_CreatesPins()
     TEST_ASSERT_EQUAL(DigitalValue(false), closeOutput->GetStateAs<DigitalValue>());
 }
 
-void ShutterFilter_OpenInput_ChangesOpenOutput()
+void ShutterFilter_OpenInput_ShortPress_ChangesOpenOutputAndRemains()
 {
     // Arrange
     ShutterFilter filter;
@@ -73,11 +73,35 @@ void ShutterFilter_OpenInput_ChangesOpenOutput()
     // Act: Set open input to false
     openPin->SetState(DigitalValue(false));
 
+    // Assert: Open output should remain true
+    TEST_ASSERT_EQUAL(DigitalValue(true), openOutput->GetStateAs<DigitalValue>());
+}
+
+void ShutterFilter_OpenInput_LongPress_ChangesOpenOutputAndStops()
+{
+    // Arrange
+    ShutterFilter filter;
+    auto inputPins = filter.GetInputPins();
+    auto outputPins = filter.GetOutputPins();
+
+    auto openPin = inputPins[0].lock();
+    auto openOutput = outputPins[0].lock();
+
+    // Act: Set open input to true
+    openPin->SetState(DigitalValue(true));
+
+    // Assert: Open output should now be true
+    TEST_ASSERT_EQUAL(DigitalValue(true), openOutput->GetStateAs<DigitalValue>());
+
+    // Act: Set open input to false (simulate long press)
+    filter.MoveSignalStartMs(-1100);
+    openPin->SetState(DigitalValue(false));
+
     // Assert: Open output should now be false
     TEST_ASSERT_EQUAL(DigitalValue(false), openOutput->GetStateAs<DigitalValue>());
 }
 
-void ShutterFilter_CloseInput_ChangesCloseOutput()
+void ShutterFilter_CloseInput_ShortPress_ChangesCloseOutputAndRemains()
 {
     // Arrange
     ShutterFilter filter;
@@ -96,6 +120,30 @@ void ShutterFilter_CloseInput_ChangesCloseOutput()
     // Act: Set close input to false
     closePin->SetState(DigitalValue(false));
 
+    // Assert: Close output should remain true
+    TEST_ASSERT_EQUAL(DigitalValue(true), closeOutput->GetStateAs<DigitalValue>());
+}
+
+void ShutterFilter_CloseInput_LongPress_ChangesCloseOutputAndStops()
+{
+    // Arrange
+    ShutterFilter filter;
+    auto inputPins = filter.GetInputPins();
+    auto outputPins = filter.GetOutputPins();
+
+    auto closePin = inputPins[1].lock();
+    auto closeOutput = outputPins[1].lock();
+
+    // Act: Set close input to true
+    closePin->SetState(DigitalValue(true));
+
+    // Assert: Close output should now be true
+    TEST_ASSERT_EQUAL(DigitalValue(true), closeOutput->GetStateAs<DigitalValue>());
+
+    // Act: Set close input to false (simulate long press)
+    filter.MoveSignalStartMs(-1100);
+    closePin->SetState(DigitalValue(false));
+
     // Assert: Close output should now be false
     TEST_ASSERT_EQUAL(DigitalValue(false), closeOutput->GetStateAs<DigitalValue>());
 }
@@ -105,8 +153,10 @@ int main(int argc, char** argv)
     UNITY_BEGIN();
 
     RUN_TEST(ShutterFilter_Constructor_CreatesPins);
-    RUN_TEST(ShutterFilter_OpenInput_ChangesOpenOutput);
-    RUN_TEST(ShutterFilter_CloseInput_ChangesCloseOutput);
+    RUN_TEST(ShutterFilter_OpenInput_LongPress_ChangesOpenOutputAndStops);
+    RUN_TEST(ShutterFilter_OpenInput_ShortPress_ChangesOpenOutputAndRemains);
+    RUN_TEST(ShutterFilter_CloseInput_LongPress_ChangesCloseOutputAndStops);
+    RUN_TEST(ShutterFilter_CloseInput_ShortPress_ChangesCloseOutputAndRemains);
 
     // TODO: Add feedback input tests
 

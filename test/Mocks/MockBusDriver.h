@@ -17,13 +17,11 @@ public:
     
     bool ReadBytes(uint8_t* data, const uint16_t len) const noexcept override
     {
-        if (BytesToRead.size() < len) {
+        if (BytesToRead.size() < len)
             return false; // Not enough data to read
-        }
 
-        for (uint16_t i = 0; i < len; ++i) {
+        for (uint16_t i = 0; i < len; ++i)
             data[i] = BytesToRead[i];
-        }
         
         BytesToRead.erase(BytesToRead.begin(), BytesToRead.begin() + len);
         return true;

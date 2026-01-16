@@ -25,7 +25,8 @@ void FilterType_GetFilterTypeNames()
 
     // Act
     std::string filterTypeNames;
-    for (auto i = 0; i < 8; i++) {
+    for (auto i = 0; i < 8; i++)
+    {
         filterTypeNames.append(GetFilterTypeName((FilterType)i));
         filterTypeNames.append("\n");
     }

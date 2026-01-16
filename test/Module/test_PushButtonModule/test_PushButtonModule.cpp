@@ -29,7 +29,8 @@ void PushButtonModule_CreateFromInitialData_InitializesCorrectly()
     TEST_ASSERT_EQUAL(4, outputPins.size());
     
     // Verify each pin is initially set to false
-    for (const auto& weakPin : outputPins) {
+    for (const auto& weakPin : outputPins)
+    {
         auto pin = weakPin.lock();
         TEST_ASSERT_NOT_NULL(pin.get());
         TEST_ASSERT_EQUAL(DigitalValue(false), pin->GetStateAs<DigitalValue>());
@@ -71,7 +72,8 @@ void PushButtonModule_Process_SuccessfulPoll_ButtonsPressed()
     const uint16_t numberOfButtons = 8;
     
     // Setup mock response with buttons pressed (0x0010 is button 0 pressed)
-    ScanResponse pollResponse = {
+    ScanResponse pollResponse =
+    {
         .Success = true,
         .RespondedWithTypeAndData = true,
         .Data = 0x0010
@@ -90,7 +92,8 @@ void PushButtonModule_Process_SuccessfulPoll_ButtonsPressed()
     // Verify button pin states
     auto outputPins = module.GetOutputPins();
     TEST_ASSERT_EQUAL(DigitalValue(true), outputPins[0].lock()->GetStateAs<DigitalValue>()); // Button 0 should be pressed
-    for (size_t i = 1; i < outputPins.size(); i++) {
+    for (size_t i = 1; i < outputPins.size(); i++)
+    {
         TEST_ASSERT_EQUAL(DigitalValue(false), outputPins[i].lock()->GetStateAs<DigitalValue>()); // Other buttons should not be pressed
     }
 }
@@ -103,7 +106,8 @@ void PushButtonModule_Process_ButtonsReleased()
     const uint16_t numberOfButtons = 8;
     
     // First response with buttons pressed
-    ScanResponse firstResponse = {
+    ScanResponse firstResponse =
+    {
         .Success = true,
         .RespondedWithTypeAndData = true,
         .Data = 0x0010 // Button 0 pressed
@@ -111,7 +115,8 @@ void PushButtonModule_Process_ButtonsReleased()
     bus.QueueResponse(firstResponse);
     
     // Second response with no buttons pressed
-    ScanResponse secondResponse = {
+    ScanResponse secondResponse =
+    {
         .Success = true,
         .RespondedWithTypeAndData = false
     };
@@ -134,7 +139,8 @@ void PushButtonModule_Process_ButtonsReleased()
     
     // Verify all buttons are released
     auto outputPins = module.GetOutputPins();
-    for (const auto& weakPin : outputPins) {
+    for (const auto& weakPin : outputPins)
+    {
         TEST_ASSERT_EQUAL(DigitalValue(false), weakPin.lock()->GetStateAs<DigitalValue>());
     }
 }
@@ -147,7 +153,8 @@ void PushButtonModule_Process_ButtonsPressedThenExchangeRequested()
     const uint16_t numberOfButtons = 8;
     
     // First response with buttons pressed
-    ScanResponse firstResponse = {
+    ScanResponse firstResponse =
+    {
         .Success = true,
         .RespondedWithTypeAndData = true,
         .Data = 0x0010 // Button 0 pressed
@@ -155,7 +162,8 @@ void PushButtonModule_Process_ButtonsPressedThenExchangeRequested()
     bus.QueueResponse(firstResponse);
     
     // Second response when Exchange is called
-    ScanResponse secondResponse = {
+    ScanResponse secondResponse =
+    {
         .Success = true,
         .RespondedWithTypeAndData = true,
         .Data = 0x0010 // Button 0 still pressed
@@ -191,7 +199,8 @@ void PushButtonModule_Process_FailedPoll()
     const uint16_t numberOfButtons = 8;
     
     // Setup mock response for failed poll
-    ScanResponse failedResponse = {
+    ScanResponse failedResponse =
+    {
         .Success = false
     };
     bus.QueueResponse(failedResponse);

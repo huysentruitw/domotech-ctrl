@@ -43,7 +43,8 @@ void ModuleScanner_DetectModules_OneModuleFound()
     ModuleScanner scanner(bus);
     
     // Setup mock response for one module at address 42
-    ScanResponse response = {
+    ScanResponse response =
+    {
         .Success = true,
         .RespondedWithTypeAndData = true,
         .ModuleType = static_cast<uint8_t>(ModuleType::PushButton),
@@ -51,17 +52,15 @@ void ModuleScanner_DetectModules_OneModuleFound()
     };
     
     // Queue 41 failed responses (for addresses 1-41)
-    for (int i = 0; i < 41; i++) {
+    for (int i = 0; i < 41; i++)
         bus.QueueResponse({.Success = false});
-    }
     
     // Queue successful response for address 42
     bus.QueueResponse(response);
     
     // Queue remaining failed responses (for addresses 43-127)
-    for (int i = 0; i < 85; i++) {
+    for (int i = 0; i < 85; i++)
         bus.QueueResponse({.Success = false});
-    }
     
     // Act
     auto modules = scanner.DetectModules();
@@ -86,14 +85,16 @@ void ModuleScanner_DetectModules_MultipleModulesFound()
     ModuleScanner scanner(bus);
     
     // Setup mock responses for modules
-    ScanResponse pushButtonResponse = {
+    ScanResponse pushButtonResponse =
+    {
         .Success = true,
         .RespondedWithTypeAndData = true,
         .ModuleType = static_cast<uint8_t>(ModuleType::PushButton),
         .Data = 0x4000  // 4 buttons
     };
     
-    ScanResponse teleruptorResponse = {
+    ScanResponse teleruptorResponse =
+    {
         .Success = true,
         .RespondedWithTypeAndData = true,
         .ModuleType = static_cast<uint8_t>(ModuleType::Teleruptor),
@@ -101,25 +102,22 @@ void ModuleScanner_DetectModules_MultipleModulesFound()
     };
     
     // Queue responses for address 1-9 (failures)
-    for (int i = 0; i < 9; i++) {
+    for (int i = 0; i < 9; i++)
         bus.QueueResponse({.Success = false});
-    }
     
     // Queue response for address 10 (push button)
     bus.QueueResponse(pushButtonResponse);
     
     // Queue responses for address 11-19 (failures)
-    for (int i = 0; i < 9; i++) {
+    for (int i = 0; i < 9; i++)
         bus.QueueResponse({.Success = false});
-    }
     
     // Queue response for address 20 (teleruptor)
     bus.QueueResponse(teleruptorResponse);
     
     // Queue remaining failed responses
-    for (int i = 0; i < 107; i++) {
+    for (int i = 0; i < 107; i++)
         bus.QueueResponse({.Success = false});
-    }
     
     // Act
     auto modules = scanner.DetectModules();
@@ -147,7 +145,8 @@ void ModuleScanner_DetectModules_UnknownModuleTypeSkipped()
     ModuleScanner scanner(bus);
     
     // Setup mock response for an unknown module type
-    ScanResponse unknownResponse = {
+    ScanResponse unknownResponse =
+    {
         .Success = true,
         .RespondedWithTypeAndData = true,
         .ModuleType = 99,  // Unknown module type
@@ -158,7 +157,8 @@ void ModuleScanner_DetectModules_UnknownModuleTypeSkipped()
     bus.QueueResponse(unknownResponse);
     
     // Queue response for address 2 (valid push button module)
-    ScanResponse validResponse = {
+    ScanResponse validResponse =
+    {
         .Success = true,
         .RespondedWithTypeAndData = true,
         .ModuleType = static_cast<uint8_t>(ModuleType::PushButton),
@@ -167,9 +167,8 @@ void ModuleScanner_DetectModules_UnknownModuleTypeSkipped()
     bus.QueueResponse(validResponse);
     
     // Queue remaining failed responses
-    for (int i = 0; i < 125; i++) {
+    for (int i = 0; i < 125; i++)
         bus.QueueResponse({.Success = false});
-    }
     
     // Act
     auto modules = scanner.DetectModules();

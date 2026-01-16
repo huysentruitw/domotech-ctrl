@@ -33,7 +33,8 @@ void ModuleType_GetModuleTypeNames()
 
     // Act
     std::string moduleTypeNames;
-    for (auto i = 0; i < 16; i++) {
+    for (auto i = 0; i < 16; i++)
+    {
         moduleTypeNames.append(GetModuleTypeName((ModuleType)i));
         moduleTypeNames.append("\n");
     }

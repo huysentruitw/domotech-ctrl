@@ -40,15 +40,19 @@ void ConnectionsParser_SingleMapping()
 {
     // Arrange
     std::string connections = "I1=A25:O3";
-    Mapping expectedMapping = {
-        .LocalPin = {
+    Mapping expectedMapping =
+    {
+        .LocalPin =
+        {
             .Direction = PinDirection::Input,
             .Index = 1,
         },
-        .RemoteModule = {
+        .RemoteModule =
+        {
             .Address = 25,
         },
-        .RemotePin = {
+        .RemotePin =
+        {
             .Direction = PinDirection::Output,
             .Index = 3,
         },

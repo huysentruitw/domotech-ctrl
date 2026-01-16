@@ -32,14 +32,16 @@ void TeleruptorModule_CreateFromInitialData_InitializesCorrectly()
     TEST_ASSERT_EQUAL(4, outputPins.size());
     
     // Verify each input pin is initially set to false
-    for (const auto& weakPin : inputPins) {
+    for (const auto& weakPin : inputPins)
+    {
         auto pin = weakPin.lock();
         TEST_ASSERT_NOT_NULL(pin.get());
         TEST_ASSERT_EQUAL(DigitalValue(false), pin->GetStateAs<DigitalValue>());
     }
     
     // Verify each output pin is initially set to false
-    for (const auto& weakPin : outputPins) {
+    for (const auto& weakPin : outputPins)
+    {
         auto pin = weakPin.lock();
         TEST_ASSERT_NOT_NULL(pin.get());
         TEST_ASSERT_EQUAL(DigitalValue(false), pin->GetStateAs<DigitalValue>());
@@ -54,11 +56,13 @@ void TeleruptorModule_Process_SuccessfulPoll_NoFeedbackChange()
     const uint16_t numberOfTeleruptors = 4;
     
     // Setup mock response for poll
-    ScanResponse pollResponse = {
+    ScanResponse pollResponse =
+    {
         .Success = true,
         .RespondedWithTypeAndData = false
     };
-    ScanResponse exchangeResponse = {
+    ScanResponse exchangeResponse =
+    {
         .Success = true,
         .RespondedWithTypeAndData = true,
         .Data = 0x0000 // No feedback change
@@ -87,14 +91,16 @@ void TeleruptorModule_Process_WithFeedbackChange()
     
     // Setup mock responses
     // First poll response indicates change in feedback
-    ScanResponse pollResponse = {
+    ScanResponse pollResponse =
+    {
         .Success = true,
         .RespondedWithTypeAndData = true
     };
     bus.QueueResponse(pollResponse);
     
     // Second response for feedback state request
-    ScanResponse feedbackResponse = {
+    ScanResponse feedbackResponse =
+    {
         .Success = true,
         .RespondedWithTypeAndData = true,
         .Data = 0x0003 // First two teleruptors are ON
@@ -129,7 +135,8 @@ void TeleruptorModule_Process_FailedPoll()
     const uint16_t numberOfTeleruptors = 4;
     
     // Setup mock response for failed poll
-    ScanResponse failedResponse = {
+    ScanResponse failedResponse =
+    {
         .Success = false
     };
     bus.QueueResponse(failedResponse);
@@ -153,14 +160,16 @@ void TeleruptorModule_Process_FailedFeedbackExchange()
     
     // Setup mock responses
     // First poll response indicates change in feedback
-    ScanResponse pollResponse = {
+    ScanResponse pollResponse =
+    {
         .Success = true,
         .RespondedWithTypeAndData = true
     };
     bus.QueueResponse(pollResponse);
     
     // Second response for feedback state request - fails
-    ScanResponse failedFeedbackResponse = {
+    ScanResponse failedFeedbackResponse =
+    {
         .Success = false
     };
     bus.QueueResponse(failedFeedbackResponse);
@@ -184,7 +193,8 @@ void TeleruptorModule_UpdateTeleruptorState()
     const uint16_t numberOfTeleruptors = 4;
     
     // Setup mock response for Exchange
-    ScanResponse exchangeResponse = {
+    ScanResponse exchangeResponse =
+    {
         .Success = true
     };
     bus.QueueResponse(exchangeResponse);

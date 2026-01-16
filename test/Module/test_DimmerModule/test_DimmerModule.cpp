@@ -33,7 +33,8 @@ void DimmerModule_CreateFromInitialData_InitializesCorrectly()
     TEST_ASSERT_EQUAL(16, dimmerPins.size());
     
     // Verify each pin is initially set to 0% with 0 fade time
-    for (const auto& weakPin : dimmerPins) {
+    for (const auto& weakPin : dimmerPins)
+    {
         auto pin = weakPin.lock();
         TEST_ASSERT_NOT_NULL(pin.get());
         TEST_ASSERT_EQUAL(0, pin->GetStateAs<DimmerControlValue>().GetPercentage());
@@ -49,7 +50,8 @@ void DimmerModule_Process_SuccessfulPoll()
     const uint8_t numberOfChannels = 12; 
     
     // Setup mock responses
-    ScanResponse pollResponse = {
+    ScanResponse pollResponse =
+    {
         .Success = true,
         .RespondedWithTypeAndData = false
     };
@@ -76,7 +78,8 @@ void DimmerModule_Process_FailedPoll()
     const uint8_t numberOfChannels = 12;
     
     // Setup mock responses with a failed poll
-    ScanResponse pollResponse = {
+    ScanResponse pollResponse =
+    {
         .Success = false
     };
     bus.QueueResponse(pollResponse);
@@ -101,10 +104,12 @@ void DimmerModule_UpdateChannel_SendsCorrectCommands()
     const uint8_t numberOfChannels = 12;
     
     // Setup mock responses for the two Exchange calls
-    ScanResponse response1 = {
+    ScanResponse response1 =
+    {
         .Success = true
     };
-    ScanResponse response2 = {
+    ScanResponse response2 =
+    {
         .Success = true
     };
     bus.QueueResponse(response1);
@@ -137,7 +142,8 @@ void DimmerModule_UpdateMultipleChannels_SendsCorrectCommands()
     const uint8_t numberOfChannels = 12;
     
     // Setup mock responses for the Exchange calls (4 calls for 2 channels)
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < 4; i++)
+    {
         bus.QueueResponse({ .Success = true });
     }
     

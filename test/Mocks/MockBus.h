@@ -55,9 +55,8 @@ public:
 private:
     ScanResponse GetNextResponse() const noexcept
     {
-        if (ResponseQueue.empty()) {
+        if (ResponseQueue.empty())
             return { .Success = false };
-        }
         
         ScanResponse response = ResponseQueue.front();
         ResponseQueue.pop();

@@ -48,7 +48,7 @@ void TeleruptorModule_CreateFromInitialData_InitializesCorrectly()
     }
 }
 
-void TeleruptorModule_Process_SuccessfulPoll_NoFeedbackChange()
+void TeleruptorModule_Process_InitialExchange_RequestFeedbackState()
 {
     // Arrange
     MockBus bus;
@@ -59,16 +59,9 @@ void TeleruptorModule_Process_SuccessfulPoll_NoFeedbackChange()
     ScanResponse pollResponse =
     {
         .Success = true,
-        .RespondedWithTypeAndData = false
-    };
-    ScanResponse exchangeResponse =
-    {
-        .Success = true,
-        .RespondedWithTypeAndData = true,
-        .Data = 0x0000 // No feedback change
+        .RespondedWithTypeAndData = false,
     };
     bus.QueueResponse(pollResponse);
-    bus.QueueResponse(exchangeResponse);
     
     TeleruptorModule module(bus, address, numberOfTeleruptors);
     
@@ -77,48 +70,81 @@ void TeleruptorModule_Process_SuccessfulPoll_NoFeedbackChange()
     
     // Assert
     TEST_ASSERT_TRUE(response.Success);
-    TEST_ASSERT_TRUE(bus.PollCalled);
     TEST_ASSERT_TRUE(bus.ExchangeCalled);
-    TEST_ASSERT_EQUAL(address, bus.LastPolledAddress);
+    TEST_ASSERT_TRUE(bus.LastForceDataExchange);
+    TEST_ASSERT_EQUAL(address, bus.LastExchangeAddress);
 }
 
-void TeleruptorModule_Process_WithFeedbackChange()
+void TeleruptorModule_Process_SubsequentExchange_NoFeedbackStateChange()
 {
     // Arrange
     MockBus bus;
     const uint8_t address = 0x20;
     const uint16_t numberOfTeleruptors = 4;
     
-    // Setup mock responses
-    // First poll response indicates change in feedback
-    ScanResponse pollResponse =
+    // Setup mock response for poll
+    ScanResponse initialResponse =
     {
         .Success = true,
-        .RespondedWithTypeAndData = true
+        .RespondedWithTypeAndData = true,
     };
-    bus.QueueResponse(pollResponse);
+    ScanResponse subsequentResponse =
+    {
+        .Success = true,
+        .RespondedWithTypeAndData = false,
+    };
+    bus.QueueResponse(initialResponse);
+    bus.QueueResponse(subsequentResponse);
+
+    TeleruptorModule module(bus, address, numberOfTeleruptors);
     
-    // Second response for feedback state request
-    ScanResponse feedbackResponse =
+    // Act
+    module.Process();
+    bus.ClearCalls(); // Ignore initial exchange
+    auto response = module.Process();
+    
+    // Assert
+    TEST_ASSERT_TRUE(response.Success);
+    TEST_ASSERT_TRUE(bus.ExchangeCalled);
+    TEST_ASSERT_FALSE(bus.LastForceDataExchange);
+    TEST_ASSERT_EQUAL(address, bus.LastExchangeAddress);
+}
+
+void TeleruptorModule_Process_SubsequentExchange_WithFeedbackStateChange()
+{
+    // Arrange
+    MockBus bus;
+    const uint8_t address = 0x20;
+    const uint16_t numberOfTeleruptors = 4;
+    
+    // Setup mock response for poll
+    ScanResponse initialResponse =
+    {
+        .Success = true,
+        .RespondedWithTypeAndData = true,
+    };
+    ScanResponse subsequentResponse =
     {
         .Success = true,
         .RespondedWithTypeAndData = true,
         .Data = 0x0003 // First two teleruptors are ON
     };
-    bus.QueueResponse(feedbackResponse);
-    
+    bus.QueueResponse(initialResponse);
+    bus.QueueResponse(subsequentResponse);
+
     TeleruptorModule module(bus, address, numberOfTeleruptors);
     
     // Act
+    module.Process();
+    bus.ClearCalls(); // Ignore initial exchange
     auto response = module.Process();
     
     // Assert
     TEST_ASSERT_TRUE(response.Success);
-    TEST_ASSERT_TRUE(bus.PollCalled);
     TEST_ASSERT_TRUE(bus.ExchangeCalled);
+    TEST_ASSERT_FALSE(bus.LastForceDataExchange);
     TEST_ASSERT_EQUAL(address, bus.LastExchangeAddress);
-    TEST_ASSERT_EQUAL(0x06, bus.LastExchangeData); // Command 6 - Request feedback state
-    
+
     // Verify feedback pins state
     auto outputPins = module.GetOutputPins();
     TEST_ASSERT_EQUAL(DigitalValue(true), outputPins[0].lock()->GetStateAs<DigitalValue>());  // First teleruptor ON
@@ -148,41 +174,8 @@ void TeleruptorModule_Process_FailedPoll()
     
     // Assert
     TEST_ASSERT_FALSE(response.Success);
-    TEST_ASSERT_TRUE(bus.PollCalled);
-}
-
-void TeleruptorModule_Process_FailedFeedbackExchange()
-{
-    // Arrange
-    MockBus bus;
-    const uint8_t address = 0x20;
-    const uint16_t numberOfTeleruptors = 4;
-    
-    // Setup mock responses
-    // First poll response indicates change in feedback
-    ScanResponse pollResponse =
-    {
-        .Success = true,
-        .RespondedWithTypeAndData = true
-    };
-    bus.QueueResponse(pollResponse);
-    
-    // Second response for feedback state request - fails
-    ScanResponse failedFeedbackResponse =
-    {
-        .Success = false
-    };
-    bus.QueueResponse(failedFeedbackResponse);
-    
-    TeleruptorModule module(bus, address, numberOfTeleruptors);
-    
-    // Act
-    auto response = module.Process();
-    
-    // Assert
-    TEST_ASSERT_FALSE(response.Success);
-    TEST_ASSERT_TRUE(bus.PollCalled);
     TEST_ASSERT_TRUE(bus.ExchangeCalled);
+    TEST_ASSERT_TRUE(bus.LastForceDataExchange);
 }
 
 void TeleruptorModule_UpdateTeleruptorState()
@@ -216,10 +209,10 @@ int main()
     UNITY_BEGIN();
     
     RUN_TEST(TeleruptorModule_CreateFromInitialData_InitializesCorrectly);
-    RUN_TEST(TeleruptorModule_Process_SuccessfulPoll_NoFeedbackChange);
-    RUN_TEST(TeleruptorModule_Process_WithFeedbackChange);
+    RUN_TEST(TeleruptorModule_Process_InitialExchange_RequestFeedbackState);
+    RUN_TEST(TeleruptorModule_Process_SubsequentExchange_NoFeedbackStateChange);
+    RUN_TEST(TeleruptorModule_Process_SubsequentExchange_WithFeedbackStateChange);
     RUN_TEST(TeleruptorModule_Process_FailedPoll);
-    RUN_TEST(TeleruptorModule_Process_FailedFeedbackExchange);
     RUN_TEST(TeleruptorModule_UpdateTeleruptorState);
     
     return UNITY_END();

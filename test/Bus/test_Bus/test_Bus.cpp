@@ -15,20 +15,20 @@ void tearDown(void)
     // clean stuff up here
 }
 
-void Poll_FlushesInput()
+void Exchange_FlushesInput()
 {
     // Arrange
     MockBusDriver driver;
     Bus bus(driver);
 
     // Act
-    auto response = bus.Poll(0x01);
+    auto response = bus.Exchange(0x01, 0x1234, true);
 
     // Assert
     TEST_ASSERT_TRUE(driver.FlushInputCalled);
 }
 
-void Poll_Successful()
+void Exchange_NoDataExchange_Successful()
 {
     // Arrange
     MockBusDriver driver;
@@ -37,7 +37,7 @@ void Poll_Successful()
     driver.BytesToRead = { 0xD5 }; // Simulate a success response from the bus
 
     // Act
-    auto response = bus.Poll(0x14, /*retries:*/ 0);
+    auto response = bus.Exchange(0x14, 0x1234, /*forceDataExchange*/ false, /*retries:*/ 0);
 
     // Assert
     TEST_ASSERT_EQUAL(2, driver.BytesWritten.size());
@@ -46,20 +46,7 @@ void Poll_Successful()
     TEST_ASSERT_FALSE(response.RespondedWithTypeAndData); // Poll does not respond with type and data
 }
 
-void Exchange_FlushesInput()
-{
-    // Arrange
-    MockBusDriver driver;
-    Bus bus(driver);
-
-    // Act
-    auto response = bus.Exchange(0x01, 0x1234);
-
-    // Assert
-    TEST_ASSERT_TRUE(driver.FlushInputCalled);
-}
-
-void Exchange_Successful()
+void Exchange_ForceDataExchange_Successful()
 {
     // Arrange
     MockBusDriver driver;
@@ -68,7 +55,7 @@ void Exchange_Successful()
     driver.BytesToRead = { 0x84, 0xB5, 0xA8, 0xA7, 0xA6, 0xA5, 0xBC };
 
     // Act
-    auto response = bus.Exchange(0x14, 0x1234, /*retries:*/ 0);
+    auto response = bus.Exchange(0x14, 0x1234, /*forceDataExchange*/ true, /*retries:*/ 0);
 
     // Assert
     TEST_ASSERT_EQUAL(7, driver.BytesWritten.size());
@@ -83,10 +70,9 @@ int main()
 {
     UNITY_BEGIN();
 
-    RUN_TEST(Poll_FlushesInput);
-    RUN_TEST(Poll_Successful);
     RUN_TEST(Exchange_FlushesInput);
-    RUN_TEST(Exchange_Successful);
+    RUN_TEST(Exchange_NoDataExchange_Successful);
+    RUN_TEST(Exchange_ForceDataExchange_Successful);
 
     return UNITY_END();
 }

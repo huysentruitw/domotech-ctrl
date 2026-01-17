@@ -16,20 +16,12 @@ public:
     }
 
     // Override the original methods to avoid using the actual driver
-    ScanResponse Poll(const uint8_t address, const uint8_t retries = 2) const noexcept override
-    {
-        PollCalled = true;
-        LastPolledAddress = address;
-        LastPolledRetries = retries;
-        
-        return GetNextResponse();
-    }
-
-    ScanResponse Exchange(const uint8_t address, const uint16_t data, const uint8_t retries = 2) const noexcept override
+    ScanResponse Exchange(const uint8_t address, const uint16_t data, const bool forceDataExchange, const uint8_t retries = 2) const noexcept override
     {
         ExchangeCalled = true;
         LastExchangeAddress = address;
         LastExchangeData = data;
+        LastForceDataExchange = forceDataExchange;
         LastExchangeRetries = retries;
         
         return GetNextResponse();
@@ -43,12 +35,10 @@ public:
 
     void ClearCalls() noexcept
     {
-        PollCalled = false;
         ExchangeCalled = false;
-        LastPolledAddress = 0;
         LastExchangeAddress = 0;
         LastExchangeData = 0;
-        LastPolledRetries = 0;
+        LastForceDataExchange = false;
         LastExchangeRetries = 0;
     }
 
@@ -65,12 +55,10 @@ private:
 
 public:
     // For test verification
-    mutable bool PollCalled = false;
     mutable bool ExchangeCalled = false;
-    mutable uint8_t LastPolledAddress = 0;
     mutable uint8_t LastExchangeAddress = 0;
     mutable uint16_t LastExchangeData = 0;
-    mutable uint8_t LastPolledRetries = 0;
+    mutable bool LastForceDataExchange = false;
     mutable uint8_t LastExchangeRetries = 0;
     mutable std::queue<ScanResponse> ResponseQueue;
 };

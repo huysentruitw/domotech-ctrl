@@ -24,9 +24,8 @@ std::unique_ptr<PushButtonModule> PushButtonModule::CreateFromInitialData(const 
 
 ProcessResponse PushButtonModule::Process() noexcept
 {
-    auto response = m_hasPressedButtons
-        ? Exchange(0x06) // CMD6 - Request button state
-        : Poll();
+    const auto forceDataExchange = m_hasPressedButtons;
+    auto response = Exchange(0x06, forceDataExchange); // CMD6 - Request button state
 
     if (!response.Success)
         return { .Success = false };

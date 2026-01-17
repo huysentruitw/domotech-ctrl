@@ -29,15 +29,15 @@ std::unique_ptr<DimmerModule> DimmerModule::CreateFromInitialData(const Bus& bus
 
 ProcessResponse DimmerModule::Process() noexcept
 {
-    auto response = Poll();
+    auto response = Exchange(0x00, false);
     return { .Success = response.Success };
 }
 
 void DimmerModule::UpdateChannel(const uint8_t channelIndex, const DimmerControlValue newValue) noexcept
 {
     uint16_t command = 0x02; // CMD2 - Set dimmer time
-    Exchange(command | (newValue.GetFadeTimeInSeconds() << 8));
+    Exchange(command | (newValue.GetFadeTimeInSeconds() << 8), true);
 
     command = 0x01; // CMD1 - Set dimmer percentage
-    Exchange(command | (newValue.GetPercentage() << 8) | ((channelIndex + 1) << 4));
+    Exchange(command | (newValue.GetPercentage() << 8) | ((channelIndex + 1) << 4), true);
 }

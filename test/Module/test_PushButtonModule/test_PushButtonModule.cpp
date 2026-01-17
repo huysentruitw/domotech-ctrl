@@ -45,7 +45,8 @@ void PushButtonModule_Process_SuccessfulPoll_NoButtonsPressed()
     const uint16_t numberOfButtons = 2;
     
     // Setup mock responses
-    ScanResponse pollResponse = {
+    ScanResponse pollResponse =
+    {
         .Success = true,
         .RespondedWithTypeAndData = false
     };
@@ -59,9 +60,9 @@ void PushButtonModule_Process_SuccessfulPoll_NoButtonsPressed()
     // Assert
     TEST_ASSERT_TRUE(response.Success);
     TEST_ASSERT_FALSE(response.RaisePriority);
-    TEST_ASSERT_TRUE(bus.PollCalled);
-    TEST_ASSERT_FALSE(bus.ExchangeCalled);
-    TEST_ASSERT_EQUAL(address, bus.LastPolledAddress);
+    TEST_ASSERT_TRUE(bus.ExchangeCalled);
+    TEST_ASSERT_FALSE(bus.LastForceDataExchange);
+    TEST_ASSERT_EQUAL(address, bus.LastExchangeAddress);
 }
 
 void PushButtonModule_Process_SuccessfulPoll_ButtonsPressed()
@@ -185,8 +186,8 @@ void PushButtonModule_Process_ButtonsPressedThenExchangeRequested()
     // Assert
     TEST_ASSERT_TRUE(secondProcessResponse.Success);
     TEST_ASSERT_TRUE(secondProcessResponse.RaisePriority);
-    TEST_ASSERT_FALSE(bus.PollCalled);
     TEST_ASSERT_TRUE(bus.ExchangeCalled);
+    TEST_ASSERT_TRUE(bus.LastForceDataExchange);
     TEST_ASSERT_EQUAL(address, bus.LastExchangeAddress);
     TEST_ASSERT_EQUAL(0x06, bus.LastExchangeData); // Command 6
 }
@@ -212,7 +213,8 @@ void PushButtonModule_Process_FailedPoll()
     
     // Assert
     TEST_ASSERT_FALSE(response.Success);
-    TEST_ASSERT_TRUE(bus.PollCalled);
+    TEST_ASSERT_TRUE(bus.ExchangeCalled);
+    TEST_ASSERT_FALSE(bus.LastForceDataExchange);
 }
 
 int main()

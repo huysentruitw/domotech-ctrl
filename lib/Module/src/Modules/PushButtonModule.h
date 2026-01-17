@@ -16,8 +16,9 @@ public:
 
 private:
     const uint8_t m_numberOfButtons;
-    std::vector<std::shared_ptr<Pin>> m_buttonPins;
     bool m_hasPressedButtons = false;
+
+    std::vector<std::shared_ptr<Pin>> m_buttonPins;
 
     DigitalValue MapButtonState(const uint8_t buttonIndex, const uint16_t data) const noexcept;
 };

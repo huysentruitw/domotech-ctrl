@@ -15,28 +15,13 @@ Bus::Bus(const BusDriver& driver) noexcept
 {
 }
 
-ScanResponse Bus::Poll(const uint8_t address, const uint8_t retries) const noexcept
+ScanResponse Bus::Exchange(const uint8_t address, const uint16_t data, const bool forceDataExchange, const uint8_t retries) const noexcept
 {
     LockGuard guard(m_syncRoot);
 
     for (uint8_t i = 0; i <= retries; i++)
     {
-        auto response = ExchangeInternal(address, 0, false);
-
-        if (response.Success)
-            return response;
-    }
-
-    return ScanResponse { .Success = false };
-}
-
-ScanResponse Bus::Exchange(const uint8_t address, const uint16_t data, const uint8_t retries) const noexcept
-{
-    LockGuard guard(m_syncRoot);
-
-    for (uint8_t i = 0; i <= retries; i++)
-    {
-        auto response = ExchangeInternal(address, data, true);
+        auto response = ExchangeInternal(address, data, forceDataExchange);
 
         if (response.Success)
             return response;

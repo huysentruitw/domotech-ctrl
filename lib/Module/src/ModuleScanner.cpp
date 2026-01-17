@@ -18,7 +18,7 @@ std::vector<std::unique_ptr<Module>> ModuleScanner::DetectModules() const noexce
 
     for (uint8_t address = 1; address < 128; address++)
     {
-        auto response = m_bus.Exchange(address, 0);
+        auto response = m_bus.Exchange(address, 0, true);
 
         if (!response.Success || !response.RespondedWithTypeAndData)
             continue;

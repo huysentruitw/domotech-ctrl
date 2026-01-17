@@ -35,21 +35,15 @@ std::unique_ptr<TeleruptorModule> TeleruptorModule::CreateFromInitialData(const 
 
 ProcessResponse TeleruptorModule::Process() noexcept
 {
-    auto response = Poll();
+    const bool forceDataExchange = !m_feedbackStateInSync;
+    auto response = Exchange(0x06, forceDataExchange); // CMD6 - Request feedback state
 
     if (!response.Success) {
         return { .Success = false };
     }
 
-    // The module response with type and data when one or more relais feedback pins are changed
-    // The response doesn't include the current state, so we need to request it separately
-    if (response.RespondedWithTypeAndData || !m_feedbackStateInSync)
+    if (response.RespondedWithTypeAndData)
     {
-        response = Exchange(0x06); // CMD6 - Request feedback state
-
-        if (!response.Success || !response.RespondedWithTypeAndData)
-            return { .Success = false };
-
         for (uint8_t i = 0; i < m_numberOfTeleruptors; ++i)
             m_teleruptorFeedbackPins[i]->SetState(DigitalValue((response.Data & (1 << i)) != 0));
 
@@ -62,5 +56,5 @@ ProcessResponse TeleruptorModule::Process() noexcept
 void TeleruptorModule::UpdateTeleruptor(const uint8_t teleruptorIndex, const DigitalValue newValue) noexcept
 {
     uint16_t command = newValue ? 0x01 : 0x02; // CMD1 - Set teleruptor ON, CMD2 - Set teleruptor OFF
-    Exchange(command | (teleruptorIndex << 4));
+    Exchange(command | (teleruptorIndex << 4), true);
 }

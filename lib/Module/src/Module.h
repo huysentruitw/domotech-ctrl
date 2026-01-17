@@ -28,8 +28,7 @@ public:
     void WriteConfig(IniWriter& iniWriter) const noexcept;
 
 protected:
-    ScanResponse Poll() const noexcept;
-    ScanResponse Exchange(const uint16_t data) const noexcept;
+    ScanResponse Exchange(const uint16_t data, const bool forceDataExchange) const noexcept;
 
 private:
     const Bus& m_bus;

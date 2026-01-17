@@ -10,14 +10,9 @@ Module::Module(const Bus& bus, const uint8_t address, const ModuleType type) noe
     SetId(std::string_view(id, len));
 }
 
-ScanResponse Module::Poll() const noexcept
+ScanResponse Module::Exchange(const uint16_t data, const bool forceDataExchange) const noexcept
 {
-    return m_bus.Poll(m_address);
-}
-
-ScanResponse Module::Exchange(const uint16_t data) const noexcept
-{
-    return m_bus.Exchange(m_address, data);
+    return m_bus.Exchange(m_address, data, forceDataExchange);
 }
 
 uint8_t Module::GetAddress() const noexcept

@@ -3,6 +3,7 @@
 #include "DigitalValue.h"
 #include "DimmerControlValue.h"
 #include "ShutterControlValue.h"
+#include "TemperatureValue.h"
 
 #include <algorithm>
 #include <functional>
@@ -20,12 +21,14 @@ enum class PinDirection
 typedef std::variant<
     DigitalValue,
     DimmerControlValue,
-    ShutterControlValue> PinState;
+    ShutterControlValue,
+    TemperatureValue> PinState;
 
 constexpr const char* PinStateTypes[] = {
     "DigitalValue",
     "DimmerControlValue",
     "ShutterControlValue",
+    "TemperatureValue"
 };
 
 class Pin final

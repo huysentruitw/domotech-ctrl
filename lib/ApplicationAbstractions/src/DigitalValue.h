@@ -3,11 +3,11 @@
 struct DigitalValue
 {
 public:
-    explicit DigitalValue(bool value = false) noexcept : m_value(value) {}
+    constexpr explicit DigitalValue(bool value = false) noexcept : m_value(value) {}
 
-    bool operator==(const DigitalValue& other) const noexcept = default;
+    constexpr bool operator==(const DigitalValue& other) const noexcept = default;
 
-    operator bool() const noexcept
+    constexpr operator bool() const noexcept
     {
         return m_value;
     }

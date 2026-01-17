@@ -65,9 +65,9 @@ void DimmerModule_Process_SuccessfulPoll()
     // Assert
     TEST_ASSERT_TRUE(response.Success);
     TEST_ASSERT_FALSE(response.RaisePriority);
-    TEST_ASSERT_TRUE(bus.PollCalled);
-    TEST_ASSERT_FALSE(bus.ExchangeCalled);
-    TEST_ASSERT_EQUAL(address, bus.LastPolledAddress);
+    TEST_ASSERT_TRUE(bus.ExchangeCalled);
+    TEST_ASSERT_FALSE(bus.LastForceDataExchange);
+    TEST_ASSERT_EQUAL(address, bus.LastExchangeAddress);
 }
 
 void DimmerModule_Process_FailedPoll()
@@ -91,9 +91,9 @@ void DimmerModule_Process_FailedPoll()
     
     // Assert
     TEST_ASSERT_FALSE(response.Success);
-    TEST_ASSERT_TRUE(bus.PollCalled);
-    TEST_ASSERT_FALSE(bus.ExchangeCalled);
-    TEST_ASSERT_EQUAL(address, bus.LastPolledAddress);
+    TEST_ASSERT_TRUE(bus.ExchangeCalled);
+    TEST_ASSERT_FALSE(bus.LastForceDataExchange);
+    TEST_ASSERT_EQUAL(address, bus.LastExchangeAddress);
 }
 
 void DimmerModule_UpdateChannel_SendsCorrectCommands()

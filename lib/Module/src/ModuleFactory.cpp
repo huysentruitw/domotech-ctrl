@@ -1,6 +1,7 @@
 #include "ModuleFactory.h"
 
 #include "Modules/DimmerModule.h"
+#include "Modules/PushButtonLedModule.h"
 #include "Modules/PushButtonModule.h"
 #include "Modules/PushButtonTemperatureModule.h"
 #include "Modules/TeleruptorModule.h"
@@ -13,6 +14,8 @@ std::unique_ptr<Module> ModuleFactory::CreateModule(const Bus& bus, const Module
             return DimmerModule::CreateFromInitialData(bus, address, initialData);
         case ModuleType::PushButton:
             return PushButtonModule::CreateFromInitialData(bus, address, initialData);
+        case ModuleType::PushButtonWithLed:
+            return PushButtonLedModule::CreateFromInitialData(bus, address, initialData);
         case ModuleType::PushButtonWithTemperature:
             return PushButtonTemperatureModule::CreateFromInitialData(bus, address, initialData);
         case ModuleType::Teleruptor:

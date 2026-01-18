@@ -14,9 +14,11 @@ PushButtonTemperatureModule::PushButtonTemperatureModule(const Bus& bus, const u
 
     m_temperaturePin = PinFactory::CreateOutputPin<TemperatureValue>();
 
-    m_outputPins.reserve(m_buttonPins.size());
+    m_outputPins.reserve(m_buttonPins.size() + 1);
     for (const auto& pin : m_buttonPins)
         m_outputPins.emplace_back(pin);
+
+    m_outputPins.emplace_back(m_temperaturePin);
 }
 
 std::unique_ptr<PushButtonTemperatureModule> PushButtonTemperatureModule::CreateFromInitialData(const Bus& bus, const uint8_t address, const uint16_t initialData) noexcept

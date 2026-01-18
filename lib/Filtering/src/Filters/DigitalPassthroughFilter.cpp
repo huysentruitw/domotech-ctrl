@@ -9,7 +9,11 @@ DigitalPassthroughFilter::DigitalPassthroughFilter(std::string_view id) noexcept
         "Input",
         [this](const Pin& pin)
         {
-            m_outputPin->SetState(pin.GetStateAs<DigitalValue>());
+            auto state = pin.GetStateAs<DigitalValue>();
+            bool stateHasChanged = m_outputPin->SetState(state);
+
+            if (m_stateCallback && stateHasChanged)
+                m_stateCallback(*this, state);
         });
 
     m_outputPin = PinFactory::CreateOutputPin<DigitalValue>("Output");

@@ -11,6 +11,7 @@ std::string_view GetFilterTypeName(FilterType filterType) noexcept
         { FilterType::Dimmer, "Dimmer" },
         { FilterType::Shutter, "Shutter" },
         { FilterType::Climate, "Climate" },
+        { FilterType::DigitalPassthrough, "DigitalPassthrough" },
     };
 
     for (auto&& [key, value] : identifiers)

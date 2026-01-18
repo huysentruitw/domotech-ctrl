@@ -46,7 +46,12 @@ void Manager_GetKnownFiltersIni()
         "Output.1=Close,DigitalValue\n"
         "\n"
         "[Filter]\n"
-        "Type=Climate\n";
+        "Type=Climate\n"
+        "\n"
+        "[Filter]\n"
+        "Type=DigitalPassthrough\n"
+        "Input.0=Input,DigitalValue\n"
+        "Output.0=Output,DigitalValue\n";
 
     // Act
     std::string iniContent = manager.GetKnownFiltersIni();

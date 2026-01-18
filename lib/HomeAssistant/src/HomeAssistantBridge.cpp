@@ -1,5 +1,6 @@
 #include "HomeAssistantBridge.h"
 
+#include "Devices/BinarySensorDevice.h"
 #include "Devices/ClimateDevice.h"
 #include "Devices/CoverDevice.h"
 #include "Devices/DimmableLightDevice.h"
@@ -8,6 +9,7 @@
 #include "IdSanitizer.h"
 
 #include <Filters/ClimateFilter.h>
+#include <Filters/DigitalPassthroughFilter.h>
 #include <Filters/DimmerFilter.h>
 #include <Filters/LightFilter.h>
 #include <Filters/ShutterFilter.h>
@@ -78,6 +80,13 @@ bool HomeAssistantBridge::RegisterAsDevice(std::weak_ptr<Filter> filter) noexcep
     {
         auto climateFilter = std::static_pointer_cast<ClimateFilter>(filterPtr);
         m_processor.RegisterDevice(std::make_shared<ClimateDevice>(climateFilter));
+        return true;
+    }
+
+    if (filterType == FilterType::DigitalPassthrough)
+    {
+        auto digitalPassthroughFilter = std::static_pointer_cast<DigitalPassthroughFilter>(filterPtr);
+        m_processor.RegisterDevice(std::make_shared<BinarySensorDevice>(digitalPassthroughFilter));
         return true;
     }
 

@@ -20,7 +20,7 @@ void FilterType_GetFilterTypeNames()
         "Dimmer\n"
         "Shutter\n"
         "Climate\n"
-        "Unknown\n"
+        "DigitalPassthrough\n"
         "Unknown\n";
 
     // Act

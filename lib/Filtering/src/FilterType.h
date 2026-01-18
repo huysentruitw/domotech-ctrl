@@ -9,6 +9,7 @@ enum class FilterType
     Dimmer = 3,
     Shutter = 4,
     Climate = 5,
+    DigitalPassthrough = 6,
 };
 
 std::string_view GetFilterTypeName(FilterType filterType) noexcept;

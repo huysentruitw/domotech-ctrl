@@ -7,6 +7,7 @@
 
 #include <FilterFactory.h>
 #include <Filters/ClimateFilter.h>
+#include <Filters/DigitalPassthroughFilter.h>
 #include <Filters/DimmerFilter.h>
 #include <Filters/LightFilter.h>
 #include <Filters/ShutterFilter.h>
@@ -123,6 +124,7 @@ std::string Manager::GetKnownFiltersIni() const noexcept
     DimmerFilter().WriteDescriptor(iniWriter);
     ShutterFilter().WriteDescriptor(iniWriter);
     ClimateFilter().WriteDescriptor(iniWriter);
+    DigitalPassthroughFilter().WriteDescriptor(iniWriter);
 
     return iniWriter.GetContent();
 }

@@ -50,7 +50,7 @@ ProcessResponse PushButtonTemperatureModule::Process() noexcept
         }
 
         m_stateInSync = true;
-        return { .Success = true, .RaisePriority = m_hasPressedButtons };
+        return { .Success = true, .BoostPriority = m_hasPressedButtons };
     }
 
     if (m_hasPressedButtons)

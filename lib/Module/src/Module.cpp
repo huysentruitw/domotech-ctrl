@@ -4,10 +4,29 @@ Module::Module(const Bus& bus, const uint8_t address, const ModuleType type) noe
     : m_bus(bus)
     , m_address(address)
     , m_type(type)
+    , m_defaultPriority(8)
 {
     char id[8];
     int len = snprintf(id, sizeof(id), "A%u", m_address);
     SetId(std::string_view(id, len));
+    m_priority = m_defaultPriority;
+}
+
+void Module::Tick(uint16_t tick) noexcept
+{
+    if ((tick + m_address) % m_priority != 0)
+        return;
+
+    auto response = Process();
+
+    if (response.Success)
+    {
+        m_priority = response.BoostPriority ? 1 : m_defaultPriority;
+    }
+    else
+    {
+        m_priority = (uint8_t)std::min<uint16_t>(m_priority << 1, 128);
+    }
 }
 
 ScanResponse Module::Exchange(const uint16_t data, const bool forceDataExchange) const noexcept

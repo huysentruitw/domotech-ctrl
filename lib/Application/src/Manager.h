@@ -39,7 +39,7 @@ private:
     const Bus m_bus;
     const Lock m_syncRoot;
 
-    std::size_t m_nextModuleIndexToProcess = 0;
+    uint16_t m_tick = 0;
 
     std::unordered_map<std::string, std::shared_ptr<Filter>, StringHash, std::equal_to<>> m_filtersById;
     std::vector<std::shared_ptr<Module>> m_modules;

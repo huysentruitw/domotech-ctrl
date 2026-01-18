@@ -36,7 +36,7 @@ ProcessResponse PushButtonModule::Process() noexcept
             m_buttonPins[i]->SetState(MapButtonState(i, response.Data));
 
         m_hasPressedButtons = (response.Data & 0x0FFF) != 0;
-        return { .Success = true, .RaisePriority = m_hasPressedButtons };
+        return { .Success = true, .BoostPriority = m_hasPressedButtons };
     }
 
     if (m_hasPressedButtons)

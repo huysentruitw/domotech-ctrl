@@ -29,33 +29,21 @@ void Manager::Start() noexcept
 
 void Manager::ProcessNext() noexcept
 {
-    std::shared_ptr<Module> moduleToProcess;
+    if (m_tick % 8 == 0)
+        m_scanLed.Toggle();
 
-    {
-        LockGuard guard(m_syncRoot);
+    LockGuard guard(m_syncRoot);
+    for (const auto& module : m_modules)
+        module->Tick(m_tick);
 
-        if (m_modules.empty())
-            return;
-
-        if (m_nextModuleIndexToProcess >= m_modules.size())
-        {
-            m_nextModuleIndexToProcess = 0;
-            m_scanLed.Toggle();
-        }
-        
-        moduleToProcess = m_modules[m_nextModuleIndexToProcess++];
-    }
-
-    moduleToProcess->Process();
+    m_tick++;
 }
 
 void Manager::Clear() noexcept
 {
     LockGuard guard(m_syncRoot);
-
     m_filtersById.clear();
     m_modules.clear();
-    m_nextModuleIndexToProcess = 0;
 }
 
 RescanModulesResult Manager::RescanModules() noexcept
@@ -67,7 +55,6 @@ RescanModulesResult Manager::RescanModules() noexcept
 
     m_filtersById.clear();
     m_modules.clear();
-    m_nextModuleIndexToProcess = 0;
 
     m_modules.reserve(detectedModules.size());
     for (auto& module : detectedModules)

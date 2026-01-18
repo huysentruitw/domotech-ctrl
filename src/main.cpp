@@ -284,7 +284,7 @@ void ProcessTask(void *arg)
     while (true)
     {
         manager.ProcessNext();
-        vTaskDelay(1);
+        vTaskDelay(0);
     }
 
     vTaskDelete(NULL);

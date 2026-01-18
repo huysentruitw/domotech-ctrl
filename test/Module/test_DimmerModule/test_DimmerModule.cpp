@@ -64,7 +64,7 @@ void DimmerModule_Process_SuccessfulPoll()
     
     // Assert
     TEST_ASSERT_TRUE(response.Success);
-    TEST_ASSERT_FALSE(response.RaisePriority);
+    TEST_ASSERT_FALSE(response.BoostPriority);
     TEST_ASSERT_TRUE(bus.ExchangeCalled);
     TEST_ASSERT_FALSE(bus.LastForceDataExchange);
     TEST_ASSERT_EQUAL(address, bus.LastExchangeAddress);

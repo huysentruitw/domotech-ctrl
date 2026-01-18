@@ -12,7 +12,7 @@
 struct ProcessResponse
 {
     bool Success;
-    bool RaisePriority = false;
+    bool BoostPriority = false;
 };
 
 class Module : public Node
@@ -20,6 +20,7 @@ class Module : public Node
 public:
     Module(const Bus& bus, const uint8_t address, const ModuleType moduleType) noexcept;
 
+    void Tick(uint16_t tick) noexcept;
     virtual ProcessResponse Process() noexcept = 0;
 
     uint8_t GetAddress() const noexcept;
@@ -34,4 +35,7 @@ private:
     const Bus& m_bus;
     const uint8_t m_address;
     const ModuleType m_type;
+
+    const uint8_t m_defaultPriority;
+    uint8_t m_priority;
 };

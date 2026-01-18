@@ -59,7 +59,7 @@ void PushButtonModule_Process_SuccessfulPoll_NoButtonsPressed()
     
     // Assert
     TEST_ASSERT_TRUE(response.Success);
-    TEST_ASSERT_FALSE(response.RaisePriority);
+    TEST_ASSERT_FALSE(response.BoostPriority);
     TEST_ASSERT_TRUE(bus.ExchangeCalled);
     TEST_ASSERT_FALSE(bus.LastForceDataExchange);
     TEST_ASSERT_EQUAL(address, bus.LastExchangeAddress);
@@ -88,7 +88,7 @@ void PushButtonModule_Process_SuccessfulPoll_ButtonsPressed()
     
     // Assert
     TEST_ASSERT_TRUE(response.Success);
-    TEST_ASSERT_TRUE(response.RaisePriority);
+    TEST_ASSERT_TRUE(response.BoostPriority);
     
     // Verify button pin states
     auto outputPins = module.GetOutputPins();
@@ -128,7 +128,7 @@ void PushButtonModule_Process_ButtonsReleased()
     // Press the button first
     auto firstProcessResponse = module.Process();
     TEST_ASSERT_TRUE(firstProcessResponse.Success);
-    TEST_ASSERT_TRUE(firstProcessResponse.RaisePriority);
+    TEST_ASSERT_TRUE(firstProcessResponse.BoostPriority);
     
     // Act - Process again to release buttons
     bus.ClearCalls();
@@ -136,7 +136,7 @@ void PushButtonModule_Process_ButtonsReleased()
     
     // Assert
     TEST_ASSERT_TRUE(secondProcessResponse.Success);
-    TEST_ASSERT_FALSE(secondProcessResponse.RaisePriority);
+    TEST_ASSERT_FALSE(secondProcessResponse.BoostPriority);
     
     // Verify all buttons are released
     auto outputPins = module.GetOutputPins();
@@ -185,7 +185,7 @@ void PushButtonModule_Process_ButtonsPressedThenExchangeRequested()
     
     // Assert
     TEST_ASSERT_TRUE(secondProcessResponse.Success);
-    TEST_ASSERT_TRUE(secondProcessResponse.RaisePriority);
+    TEST_ASSERT_TRUE(secondProcessResponse.BoostPriority);
     TEST_ASSERT_TRUE(bus.ExchangeCalled);
     TEST_ASSERT_TRUE(bus.LastForceDataExchange);
     TEST_ASSERT_EQUAL(address, bus.LastExchangeAddress);

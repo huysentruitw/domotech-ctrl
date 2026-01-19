@@ -40,15 +40,15 @@ void SwitchFilter::SetState(DigitalValue state) noexcept
     if (!m_feedbackInputPin->IsConnected())
         m_feedbackOutputPin->SetState(state);
 
-    if (m_stateCallback && stateHasChanged)
-        m_stateCallback(*this, state);
+    if (m_stateChangedCallback && stateHasChanged)
+        m_stateChangedCallback(*this, state);
 }
 
-bool SwitchFilter::SetStateCallback(const std::function<void(const SwitchFilter&, DigitalValue)>& callback) noexcept
+bool SwitchFilter::SetStateChangedCallback(const std::function<void(const SwitchFilter&, DigitalValue)>& callback) noexcept
 {
-    if (m_stateCallback)
+    if (m_stateChangedCallback)
         return false;
 
-    m_stateCallback = callback;
+    m_stateChangedCallback = callback;
     return true;
 }

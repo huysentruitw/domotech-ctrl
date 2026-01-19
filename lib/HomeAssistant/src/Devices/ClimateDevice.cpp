@@ -46,6 +46,6 @@ void ClimateDevice::ProcessCommand(std::string_view subtopic, std::string_view c
 {
 }
 
-void ClimateDevice::SetStateCallback(std::function<void(PinState)> callback) const noexcept
+void ClimateDevice::SetStateChangedCallback(std::function<void(PinState)> callback) const noexcept
 {
 }

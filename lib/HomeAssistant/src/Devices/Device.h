@@ -18,7 +18,7 @@ public:
     virtual size_t BuildDiscoveryPayload(char* buffer, size_t bufferLength) const noexcept = 0;
 
     virtual void ProcessCommand(std::string_view subtopic, std::string_view command) const noexcept = 0;
-    virtual void SetStateCallback(std::function<void(PinState)> callback) const noexcept = 0;
+    virtual void SetStateChangedCallback(std::function<void(PinState)> callback) const noexcept = 0;
 };
 
 template<class T, class U>

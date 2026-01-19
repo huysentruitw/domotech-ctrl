@@ -42,11 +42,11 @@ void LightDevice::ProcessCommand(std::string_view subtopic, std::string_view com
         filter->SetState(state);
 }
 
-void LightDevice::SetStateCallback(std::function<void(PinState)> callback) const noexcept
+void LightDevice::SetStateChangedCallback(std::function<void(PinState)> callback) const noexcept
 {
     if (auto filter = TryGetFilter())
     {
-        filter->SetStateCallback(
+        filter->SetStateChangedCallback(
             [callback](const LightFilter& sender, DigitalValue state)
             {
                 callback(state);

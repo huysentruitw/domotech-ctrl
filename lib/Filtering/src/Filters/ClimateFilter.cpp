@@ -11,7 +11,7 @@ void ClimateFilter::SetState(DigitalValue state) noexcept
 {
 }
 
-bool ClimateFilter::SetStateCallback(const std::function<void(const ClimateFilter&, DigitalValue)>& callback) noexcept
+bool ClimateFilter::SetStateChangedCallback(const std::function<void(const ClimateFilter&, DigitalValue)>& callback) noexcept
 {
     return false;
 }

@@ -94,8 +94,8 @@ void ShutterFilter::Open() noexcept
     else
         m_openOutputPin->SetState(DigitalValue(true));
 
-    if (m_stateCallback)
-        m_stateCallback(*this, ShutterControlValue::Open);
+    if (m_stateChangedCallback)
+        m_stateChangedCallback(*this, ShutterControlValue::Open);
 }
 
 void ShutterFilter::Close() noexcept
@@ -108,8 +108,8 @@ void ShutterFilter::Close() noexcept
     else
         m_closeOutputPin->SetState(DigitalValue(true));
 
-    if (m_stateCallback)
-        m_stateCallback(*this, ShutterControlValue::Close);
+    if (m_stateChangedCallback)
+        m_stateChangedCallback(*this, ShutterControlValue::Close);
 }
 
 void ShutterFilter::Stop() noexcept
@@ -118,15 +118,15 @@ void ShutterFilter::Stop() noexcept
     m_openOutputPin->SetState(DigitalValue(false));
     m_closeOutputPin->SetState(DigitalValue(false));
 
-    if (m_stateCallback)
-        m_stateCallback(*this, ShutterControlValue::Stop);
+    if (m_stateChangedCallback)
+        m_stateChangedCallback(*this, ShutterControlValue::Stop);
 }
 
-bool ShutterFilter::SetStateCallback(const std::function<void(const ShutterFilter&, ShutterControlValue)>& callback) noexcept
+bool ShutterFilter::SetStateChangedCallback(const std::function<void(const ShutterFilter&, ShutterControlValue)>& callback) noexcept
 {
-    if (m_stateCallback)
+    if (m_stateChangedCallback)
         return false;
 
-    m_stateCallback = callback;
+    m_stateChangedCallback = callback;
     return true;
 }

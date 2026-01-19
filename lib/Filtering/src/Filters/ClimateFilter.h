@@ -11,7 +11,7 @@ public:
     ClimateFilter(std::string_view id = {}) noexcept;
 
     void SetState(DigitalValue state) noexcept;
-    bool SetStateCallback(const std::function<void(const ClimateFilter&, DigitalValue)>& callback) noexcept;
+    bool SetStateChangedCallback(const std::function<void(const ClimateFilter&, DigitalValue)>& callback) noexcept;
 
 private:
 };

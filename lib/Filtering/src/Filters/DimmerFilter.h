@@ -12,7 +12,7 @@ public:
 
     uint8_t GetLastOnPercentage() noexcept;
     void SetState(DimmerControlValue state) noexcept;
-    bool SetStateCallback(const std::function<void(const DimmerFilter&, DimmerControlValue)>& callback) noexcept;
+    bool SetStateChangedCallback(const std::function<void(const DimmerFilter&, DimmerControlValue)>& callback) noexcept;
 
 private:
     uint8_t m_lastOnPercentage = 100;
@@ -21,5 +21,5 @@ private:
     std::shared_ptr<Pin> m_controlOutputPin;
     std::shared_ptr<Pin> m_feedbackOutputPin;
 
-    std::function<void(const DimmerFilter&, DimmerControlValue)> m_stateCallback;
+    std::function<void(const DimmerFilter&, DimmerControlValue)> m_stateChangedCallback;
 };

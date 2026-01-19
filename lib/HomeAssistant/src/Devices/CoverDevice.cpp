@@ -52,11 +52,11 @@ void CoverDevice::ProcessCommand(std::string_view subtopic, std::string_view com
     }
 }
 
-void CoverDevice::SetStateCallback(std::function<void(PinState)> callback) const noexcept
+void CoverDevice::SetStateChangedCallback(std::function<void(PinState)> callback) const noexcept
 {
     if (auto filter = TryGetFilter())
     {
-        filter->SetStateCallback(
+        filter->SetStateChangedCallback(
             [callback](const ShutterFilter& sender, ShutterControlValue state)
             {
                 callback(state);

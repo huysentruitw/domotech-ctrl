@@ -66,7 +66,7 @@ void DigitalPassthroughFilter_Callback_IsCalled_OnChange()
     bool callbackCalled = false;
     DigitalValue callbackValue(false);
 
-    filter.SetStateCallback(
+    filter.SetStateChangedCallback(
         [&](const DigitalPassthroughFilter&, DigitalValue value)
         {
             callbackCalled = true;
@@ -89,7 +89,7 @@ void DigitalPassthroughFilter_Callback_NotCalled_WhenStateUnchanged()
 
     bool callbackCalled = false;
 
-    filter.SetStateCallback(
+    filter.SetStateChangedCallback(
         [&](const DigitalPassthroughFilter&, DigitalValue)
         {
             callbackCalled = true;
@@ -111,8 +111,8 @@ void DigitalPassthroughFilter_SetStateCallback_OnlyOnce()
     auto second = [&](const DigitalPassthroughFilter&, DigitalValue) {};
 
     // Act
-    bool firstResult = filter.SetStateCallback(first);
-    bool secondResult = filter.SetStateCallback(second);
+    bool firstResult = filter.SetStateChangedCallback(first);
+    bool secondResult = filter.SetStateChangedCallback(second);
 
     // Assert
     TEST_ASSERT_TRUE(firstResult);

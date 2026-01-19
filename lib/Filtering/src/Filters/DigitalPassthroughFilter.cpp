@@ -12,8 +12,8 @@ DigitalPassthroughFilter::DigitalPassthroughFilter(std::string_view id) noexcept
             auto state = pin.GetStateAs<DigitalValue>();
             bool stateHasChanged = m_outputPin->SetState(state);
 
-            if (m_stateCallback && stateHasChanged)
-                m_stateCallback(*this, state);
+            if (m_stateChangedCallback && stateHasChanged)
+                m_stateChangedCallback(*this, state);
         });
 
     m_outputPin = PinFactory::CreateOutputPin<DigitalValue>("Output");
@@ -22,11 +22,11 @@ DigitalPassthroughFilter::DigitalPassthroughFilter(std::string_view id) noexcept
     m_outputPins = { m_outputPin };
 }
 
-bool DigitalPassthroughFilter::SetStateCallback(const std::function<void(const DigitalPassthroughFilter&, DigitalValue)>& callback) noexcept
+bool DigitalPassthroughFilter::SetStateChangedCallback(const std::function<void(const DigitalPassthroughFilter&, DigitalValue)>& callback) noexcept
 {
-    if (m_stateCallback)
+    if (m_stateChangedCallback)
         return false;
 
-    m_stateCallback = callback;
+    m_stateChangedCallback = callback;
     return true;
 }

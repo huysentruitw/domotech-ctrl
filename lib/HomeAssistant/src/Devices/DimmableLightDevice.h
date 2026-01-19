@@ -15,7 +15,7 @@ public:
     size_t BuildDiscoveryPayload(char* buffer, size_t bufferLength) const noexcept override;
 
     void ProcessCommand(std::string_view subtopic, std::string_view command) const noexcept override;
-    void SetStateCallback(std::function<void(PinState)> callback) const noexcept override;
+    void SetStateChangedCallback(std::function<void(PinState)> callback) const noexcept override;
 
 private:
     static uint8_t ParsePercentage(std::string_view value) noexcept;

@@ -39,15 +39,15 @@ void DimmerFilter::SetState(DimmerControlValue state) noexcept
     // No feedback input, use optimistic value
     m_feedbackOutputPin->SetState(state.GetPercentage() == 0 ? DigitalValue(false) : DigitalValue(true));
 
-    if (m_stateCallback && stateHasChanged)
-        m_stateCallback(*this, state);
+    if (m_stateChangedCallback && stateHasChanged)
+        m_stateChangedCallback(*this, state);
 }
 
-bool DimmerFilter::SetStateCallback(const std::function<void(const DimmerFilter&, DimmerControlValue)>& callback) noexcept
+bool DimmerFilter::SetStateChangedCallback(const std::function<void(const DimmerFilter&, DimmerControlValue)>& callback) noexcept
 {
-    if (m_stateCallback)
+    if (m_stateChangedCallback)
         return false;
 
-    m_stateCallback = callback;
+    m_stateChangedCallback = callback;
     return true;
 }

@@ -215,7 +215,7 @@ void Processor::SubscribeToStateChanges(const IDevice& device) noexcept
     std::string_view id = device.GetId();
     ESP_LOGI(TAG, "SubscribeToStateChanges (Id: %.*s)", (int)id.length(), id.data());
 
-    device.SetStateCallback(
+    device.SetStateChangedCallback(
         [this, id](PinState state)
         {
             BridgeEvent event{};

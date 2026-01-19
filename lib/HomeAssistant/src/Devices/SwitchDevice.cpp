@@ -42,11 +42,11 @@ void SwitchDevice::ProcessCommand(std::string_view subtopic, std::string_view co
         filter->SetState(state);
 }
 
-void SwitchDevice::SetStateCallback(std::function<void(PinState)> callback) const noexcept
+void SwitchDevice::SetStateChangedCallback(std::function<void(PinState)> callback) const noexcept
 {
     if (auto filter = TryGetFilter())
     {
-        filter->SetStateCallback(
+        filter->SetStateChangedCallback(
             [callback](const SwitchFilter& sender, DigitalValue state)
             {
                 callback(state);

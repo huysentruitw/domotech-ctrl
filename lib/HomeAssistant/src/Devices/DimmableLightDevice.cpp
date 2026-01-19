@@ -69,11 +69,11 @@ uint8_t DimmableLightDevice::ParsePercentage(std::string_view value) noexcept
     return result;
 }
 
-void DimmableLightDevice::SetStateCallback(std::function<void(PinState)> callback) const noexcept
+void DimmableLightDevice::SetStateChangedCallback(std::function<void(PinState)> callback) const noexcept
 {
     if (auto filter = TryGetFilter())
     {
-        filter->SetStateCallback(
+        filter->SetStateChangedCallback(
             [this, callback](const DimmerFilter& sender, DimmerControlValue state)
             {
                 callback(state);

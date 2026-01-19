@@ -35,11 +35,11 @@ void BinarySensorDevice::ProcessCommand(std::string_view subtopic, std::string_v
     // This device doesn't support commands
 }
 
-void BinarySensorDevice::SetStateCallback(std::function<void(PinState)> callback) const noexcept
+void BinarySensorDevice::SetStateChangedCallback(std::function<void(PinState)> callback) const noexcept
 {
     if (auto filter = TryGetFilter())
     {
-        filter->SetStateCallback(
+        filter->SetStateChangedCallback(
             [callback](const DigitalPassthroughFilter& sender, DigitalValue state)
             {
                 callback(state);

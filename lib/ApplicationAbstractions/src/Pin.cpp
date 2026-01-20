@@ -23,7 +23,7 @@ Pin::~Pin()
     }
 }
 
-const std::string& Pin::GetName() const noexcept
+std::string_view Pin::GetName() const noexcept
 {
     return m_name;
 }

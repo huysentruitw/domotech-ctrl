@@ -41,7 +41,7 @@ public:
 
     ~Pin() noexcept;
 
-    const std::string& GetName() const noexcept;
+    std::string_view GetName() const noexcept;
     void SetName(std::string_view name) noexcept;
 
     PinDirection GetDirection() const noexcept;
@@ -63,7 +63,7 @@ private:
     const PinState m_defaultState;
     PinState m_state;
     const std::function<void(const Pin&)> m_onStateChange;
-    std::string m_name;
+    std::string_view m_name;
 
     std::weak_ptr<Pin> m_connectedOutputPin;
     std::vector<std::weak_ptr<Pin>> m_connectedInputPins;

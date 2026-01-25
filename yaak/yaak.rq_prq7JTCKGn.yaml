@@ -2,7 +2,7 @@ type: http_request
 model: http_request
 id: rq_prq7JTCKGn
 createdAt: 2026-01-16T20:26:41.553520800
-updatedAt: 2026-01-16T20:27:47.004938300
+updatedAt: 2026-01-24T22:25:13.718603500
 workspaceId: wk_u8HifqEVo2
 folderId: null
 authentication: {}
@@ -22,6 +22,6 @@ headers:
   id: 4CARgCKAf3
 method: POST
 name: Add Light Filter
-sortPriority: -1767451503047.995
+sortPriority: 7000.0
 url: ${[ api_uri ]}/configuration/filter
 urlParameters: []

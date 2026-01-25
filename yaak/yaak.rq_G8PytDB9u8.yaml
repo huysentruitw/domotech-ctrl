@@ -1,8 +1,8 @@
 type: http_request
 model: http_request
-id: rq_zuz7r8fbFM
-createdAt: 2026-01-03T14:57:56.630190600
-updatedAt: 2026-01-24T22:25:13.729564100
+id: rq_G8PytDB9u8
+createdAt: 2026-01-24T22:25:06.544434100
+updatedAt: 2026-01-24T22:25:28.131602900
 workspaceId: wk_u8HifqEVo2
 folderId: null
 authentication: {}
@@ -12,7 +12,7 @@ bodyType: null
 description: ''
 headers: []
 method: POST
-name: Rescan Modules
-sortPriority: 4000.0
-url: ${[ api_uri ]}/configuration/rescan
+name: Factory Reset
+sortPriority: 11000.0
+url: ${[ api_uri ]}/reset
 urlParameters: []

@@ -2,7 +2,7 @@ type: http_request
 model: http_request
 id: rq_vjCG6Rwwp8
 createdAt: 2026-01-16T20:27:51.912312700
-updatedAt: 2026-01-16T20:28:26.454525100
+updatedAt: 2026-01-24T23:07:29.597383400
 workspaceId: wk_u8HifqEVo2
 folderId: null
 authentication: {}
@@ -22,6 +22,6 @@ headers:
   id: 4CARgCKAf3
 method: POST
 name: Add Dimmer Filter
-sortPriority: -1767451503047.994
+sortPriority: 9333.333333333334
 url: ${[ api_uri ]}/configuration/filter
 urlParameters: []

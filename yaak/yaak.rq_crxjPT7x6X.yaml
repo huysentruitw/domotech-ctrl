@@ -2,7 +2,7 @@ type: http_request
 model: http_request
 id: rq_crxjPT7x6X
 createdAt: 2026-01-18T21:29:46.535424300
-updatedAt: 2026-01-18T21:38:07.831955200
+updatedAt: 2026-01-24T22:49:19.914330
 workspaceId: wk_u8HifqEVo2
 folderId: null
 authentication: {}
@@ -10,9 +10,9 @@ authenticationType: null
 body:
   text: |
     [Filter]
-    Id=inp0
+    Id=inp2
     Type=DigitalPassthrough
-    Connections=I0=A54:O0
+    Connections=I0=A54:O2
 bodyType: other
 description: ''
 headers:
@@ -22,6 +22,6 @@ headers:
   id: 4CARgCKAf3
 method: POST
 name: Add Digital Passthrough Filter
-sortPriority: -1767451503047.991
+sortPriority: 10000.0
 url: ${[ api_uri ]}/configuration/filter
 urlParameters: []

@@ -2,7 +2,7 @@ type: http_request
 model: http_request
 id: rq_qfgcfA2Nn8
 createdAt: 2026-01-16T20:28:14.914196800
-updatedAt: 2026-01-16T20:34:08.158971700
+updatedAt: 2026-01-24T22:25:13.731774800
 workspaceId: wk_u8HifqEVo2
 folderId: null
 authentication: {}
@@ -22,6 +22,6 @@ headers:
   id: 4CARgCKAf3
 method: POST
 name: Add Shutter Filter
-sortPriority: -1767451503047.993
+sortPriority: 8000.0
 url: ${[ api_uri ]}/configuration/filter
 urlParameters: []

@@ -2,7 +2,7 @@ type: http_request
 model: http_request
 id: rq_3PK4nKyzKh
 createdAt: 2026-01-16T21:25:28.050185
-updatedAt: 2026-01-16T21:29:06.288799400
+updatedAt: 2026-01-24T22:25:13.736927200
 workspaceId: wk_u8HifqEVo2
 folderId: null
 authentication: {}
@@ -22,6 +22,6 @@ headers:
   id: 4CARgCKAf3
 method: POST
 name: Add Climate Filter
-sortPriority: -1767451503047.992
+sortPriority: 9000.0
 url: ${[ api_uri ]}/configuration/filter
 urlParameters: []

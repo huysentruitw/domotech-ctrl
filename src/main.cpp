@@ -4,67 +4,21 @@
 #include <HomeAssistantBridge.h>
 #include <IniReader.h>
 #include <Manager.h>
+#include <Wifi.h>
 
-#include "esp_event.h"
+#include "KeyVault.h"
+
 #include "esp_http_server.h"
 #include "esp_log.h"
 #include "esp_sntp.h"
-#include "esp_wifi.h"
 #include "nvs_flash.h"
-#include "secrets.h"
 
 #define VERSION "1.0"
 #define POSIX_TIMEZONE "CET-1CEST,M3.5.0/2,M10.5.0/3" // Belgium
 
-HomeAssistantBridge homeAssistantBridge(HA_MQTT_URI, HA_MQTT_USER, HA_MQTT_PASS);
+Wifi wifi;
+HomeAssistantBridge homeAssistantBridge;
 Manager manager(&homeAssistantBridge);
-
-static EventGroupHandle_t wifi_event_group;
-#define WIFI_CONNECTED_BIT BIT0
-
-static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data)
-{
-    if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START)
-    {
-        esp_wifi_connect();
-    }
-    else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP)
-    {
-        xEventGroupSetBits(wifi_event_group, WIFI_CONNECTED_BIT);
-    }
-}
-
-void wifi_init_sta(void)
-{
-    wifi_event_group = xEventGroupCreate();
-    esp_netif_init();
-    esp_event_loop_create_default();
-    esp_netif_create_default_wifi_sta();
-
-    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    esp_wifi_init(&cfg);
-    esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, NULL);
-    esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &wifi_event_handler, NULL);
-
-    #pragma GCC diagnostic push
-    #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
-    wifi_config_t wifi_config =
-    {
-        .sta =
-        {
-            .ssid = WIFI_SSID,
-            .password = WIFI_PASS,
-        },
-    };
-    #pragma GCC diagnostic pop
-
-    esp_wifi_set_mode(WIFI_MODE_STA);
-    esp_wifi_set_config(WIFI_IF_STA, &wifi_config);
-    esp_wifi_start();
-
-    esp_wifi_set_ps(WIFI_PS_NONE);
-    esp_wifi_set_max_tx_power(78);
-}
 
 void time_init(void)
 {
@@ -102,13 +56,13 @@ esp_err_t index_handler(httpd_req_t *req)
     response.append(std::to_string(esp_get_free_heap_size()));
     response.append("bytes\n");
 
-    wifi_ap_record_t apInfo;
-    if (esp_wifi_sta_get_ap_info(&apInfo) == ESP_OK)
+    int8_t rssi = wifi.GetRssi();
+    if (rssi > INT8_MIN)
     {
         response.append("Wifi RSSI: ");
-        response.append(std::to_string(apInfo.rssi));
+        response.append(std::to_string(rssi));
         response.append("dBm, quality: ");
-        const auto quality = apInfo.rssi <= -100 ? 0 : apInfo.rssi >= -50 ? 100 : 2 * (apInfo.rssi + 100);
+        const auto quality = rssi <= -100 ? 0 : rssi >= -50 ? 100 : 2 * (rssi + 100);
         response.append(std::to_string(quality));
         response.append("%\n");
     }
@@ -212,7 +166,164 @@ esp_err_t configuration_create_filter_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
-httpd_handle_t start_webserver(void)
+esp_err_t reset_handler(httpd_req_t *req)
+{
+    KeyVault::Clear();
+    httpd_resp_set_hdr(req, "Connection", "close");
+    httpd_resp_set_type(req, "text/plain");
+    httpd_resp_sendstr(req, "Reset complete! Please reboot the device.");
+    return ESP_OK;
+}
+
+esp_err_t setup_handler(httpd_req_t *req)
+{
+    Secrets secrets = {};
+    if (!KeyVault::LoadSecrets(secrets))
+        memset(&secrets, 0, sizeof(secrets));
+
+    char html[2045];
+    snprintf(html, sizeof(html),
+        "<!DOCTYPE html><html><head>"
+        "<meta name='viewport' content='width=device-width, initial-scale=1'>"
+        "</head><body>"
+        "<form method='POST' action='/'>"
+        "<h1>Domotech CTRL Setup</h1>"
+        "<h2>WiFi configuration</h2>"
+        "SSID: <input name='wifi_ssid' value='%s'><br>"
+        "Password: <input name='wifi_pass' value='%s' type='password'><br>"
+        "<h2>HA MQTT configuration</h2>"
+        "MQTT URI: <input name='ha_mqtt_uri' value='%s'><br>"
+        "MQTT User: <input name='ha_mqtt_user' value='%s'><br>"
+        "MQTT Password: <input name='ha_mqtt_pass' value='%s' type='password'><br>"
+        "<input type='submit' value='Save'>"
+        "</form>"
+        "</body></html>",
+        secrets.WifiSsid,
+        secrets.WifiPass,
+        secrets.HaMqttUri,
+        secrets.HaMqttUser,
+        secrets.HaMqttPass);
+
+    httpd_resp_set_hdr(req, "Connection", "close");
+    httpd_resp_set_type(req, "text/html");
+    httpd_resp_sendstr(req, html);
+    return ESP_OK;
+}
+
+void urlDecodeInPlace(char* s)
+{
+    char* src = s;
+    char* dst = s;
+
+    while (*src)
+    {
+        if (*src == '%' && isxdigit(src[1]) && isxdigit(src[2]))
+        {
+            char hex[3] = { src[1], src[2], 0 };
+            *dst++ = strtol(hex, nullptr, 16);
+            src += 3;
+        }
+        else if (*src == '+')
+        {
+            *dst++ = ' ';
+            src++;
+        }
+        else
+        {
+            *dst++ = *src++;
+        }
+    }
+
+    *dst = '\0';
+}
+
+esp_err_t setup_post_handler(httpd_req_t *req)
+{
+    char buffer[512];
+    int total = req->content_len;
+
+    if (total >= sizeof(buffer))
+    {
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Body too large");
+        return ESP_FAIL;
+    }
+
+    int received = httpd_req_recv(req, buffer, total);
+    if (received <= 0)
+    {
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Failed to read body");
+        return ESP_FAIL;
+    }
+
+    buffer[received] = '\0';
+    ESP_LOGI("WEB", "Received: %s", buffer);
+
+    auto parseNext = [&](const char* key) -> std::string_view
+    {
+        char* p = strstr(buffer, key);
+        if (!p) return "";
+        p += strlen(key);
+        char* end = strchr(p, '&');
+        return end ? std::string_view(p, end - p) : std::string_view(p);
+    };
+
+    std::string_view ssid      = parseNext("wifi_ssid=");
+    std::string_view pass      = parseNext("wifi_pass=");
+    std::string_view mqtt_uri  = parseNext("ha_mqtt_uri=");
+    std::string_view mqtt_user = parseNext("ha_mqtt_user=");
+    std::string_view mqtt_pass = parseNext("ha_mqtt_pass=");
+
+    Secrets secrets = {};
+    snprintf(secrets.WifiSsid, sizeof(secrets.WifiSsid), "%.*s", (int)ssid.length(), ssid.data());
+    snprintf(secrets.WifiPass, sizeof(secrets.WifiPass), "%.*s", (int)pass.length(), pass.data());
+    snprintf(secrets.HaMqttUri, sizeof(secrets.HaMqttUri), "%.*s", (int)mqtt_uri.length(), mqtt_uri.data());
+    snprintf(secrets.HaMqttUser, sizeof(secrets.HaMqttUser), "%.*s", (int)mqtt_user.length(), mqtt_user.data());
+    snprintf(secrets.HaMqttPass, sizeof(secrets.HaMqttPass), "%.*s", (int)mqtt_pass.length(), mqtt_pass.data());
+    urlDecodeInPlace(secrets.HaMqttUri);
+    KeyVault::SaveSecrets(secrets);
+
+    const char resp[] =
+        "<html><body>" "<h1>Saved!</h1>"
+        "<p>Your configuration has been stored.</p>"
+        "<p>The device will now reboot.</p>"
+        "</body></html>";
+
+    httpd_resp_set_hdr(req, "Connection", "close");
+    httpd_resp_set_type(req, "text/html");
+    httpd_resp_sendstr(req, resp);
+    return ESP_OK;
+}
+
+void start_setup_webserver(void)
+{
+    httpd_config_t config = HTTPD_DEFAULT_CONFIG();
+    httpd_handle_t server = NULL;
+
+    config.stack_size = 8192;
+
+    if (httpd_start(&server, &config) == ESP_OK)
+    {
+        httpd_uri_t setup_uri =
+        {
+            .uri       = "/",
+            .method    = HTTP_GET,
+            .handler   = setup_handler,
+            .user_ctx  = NULL,
+        };
+        httpd_register_uri_handler(server, &setup_uri);
+
+        httpd_uri_t setup_post_uri =
+        {
+            .uri       = "/",
+            .method    = HTTP_POST,
+            .handler   = setup_post_handler,
+            .user_ctx  = NULL,
+        };
+        httpd_register_uri_handler(server, &setup_post_uri);
+    }
+}
+
+void start_webserver(void)
 {
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     httpd_handle_t server = NULL;
@@ -274,9 +385,16 @@ httpd_handle_t start_webserver(void)
             .user_ctx  = NULL,
         };
         httpd_register_uri_handler(server, &configuration_create_filter_uri);
-    }
 
-    return server;
+        httpd_uri_t reset_uri =
+        {
+            .uri       = "/reset",
+            .method    = HTTP_POST,
+            .handler   = reset_handler,
+            .user_ctx  = NULL,
+        };
+        httpd_register_uri_handler(server, &reset_uri);
+    }
 }
 
 void ProcessTask(void *arg)
@@ -292,9 +410,26 @@ void ProcessTask(void *arg)
 
 extern "C" void app_main()
 {
-    nvs_flash_init();   // Required for Wi-Fi
-    wifi_init_sta();    // Connect to Wi-Fi
+    ESP_ERROR_CHECK(nvs_flash_init());  // Required for Wi-Fi
+    wifi.Init();
 
+    Secrets secrets = {};
+    if (!KeyVault::LoadSecrets(secrets) || !wifi.SwitchToStationMode(secrets.WifiSsid, secrets.WifiPass, pdMS_TO_TICKS(10000)))
+    {
+        ScanLed led;
+        ESP_LOGW("MAIN", "STA failed, starting AP config mode");
+        wifi.SwitchToAccessPointMode("DOMOTECH_CTRL", "domotech");
+        start_setup_webserver();
+        while (true)
+        {
+            led.Toggle();
+            vTaskDelay(pdMS_TO_TICKS(1000));
+        }
+    }
+
+    ESP_LOGI("MAIN", "Started!");
+
+    homeAssistantBridge.Init(secrets.HaMqttUri, secrets.HaMqttUser, secrets.HaMqttPass);
     manager.Start();
 
     xTaskCreate(
@@ -306,13 +441,7 @@ extern "C" void app_main()
         NULL            // Optional handle
     );
 
-    xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_BIT, false, true, portMAX_DELAY);
-
-    ESP_LOGI("MAIN", "Started!");
-
     time_init();
-    homeAssistantBridge.Init();
-
     start_webserver();
 
     while (true)

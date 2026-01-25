@@ -5,17 +5,7 @@
 DimmerFilter::DimmerFilter(std::string_view id) noexcept
     : Filter(FilterType::Dimmer, id)
 {
-    m_toggleInputPin = PinFactory::CreateInputPin<DigitalValue>(
-        "Toggle",
-        [this](const Pin& pin)
-        {
-            if (pin.GetStateAs<DigitalValue>() == DigitalValue(true))
-            {
-                const auto currentState = m_controlOutputPin->GetStateAs<DimmerControlValue>();
-                const auto newState = currentState.GetPercentage() == 0 ? DimmerControlValue(m_lastOnPercentage, 2) : DimmerControlValue(0, 2);
-                SetState(newState);
-            }
-        });
+    m_toggleInputPin = PinFactory::CreateInputPin<DigitalValue>("Toggle", this);
 
     m_controlOutputPin = PinFactory::CreateOutputPin<DimmerControlValue>("Control");
     m_feedbackOutputPin = PinFactory::CreateOutputPin<DigitalValue>("Feedback");
@@ -34,20 +24,21 @@ void DimmerFilter::SetState(DimmerControlValue state) noexcept
     if (state.GetPercentage() > 0)
         m_lastOnPercentage = state.GetPercentage();
 
-    bool stateHasChanged = m_controlOutputPin->SetState(state);
+    m_controlOutputPin->SetState(state);
 
     // No feedback input, use optimistic value
     m_feedbackOutputPin->SetState(state.GetPercentage() == 0 ? DigitalValue(false) : DigitalValue(true));
-
-    if (m_stateChangedCallback && stateHasChanged)
-        m_stateChangedCallback(*this, state);
 }
 
-bool DimmerFilter::SetStateChangedCallback(const std::function<void(const DimmerFilter&, DimmerControlValue)>& callback) noexcept
+void DimmerFilter::OnPinStateChanged(const Pin& pin) noexcept
 {
-    if (m_stateChangedCallback)
-        return false;
-
-    m_stateChangedCallback = callback;
-    return true;
+    if (pin == m_toggleInputPin)
+    {
+        if (pin.GetStateAs<DigitalValue>() == DigitalValue(true))
+        {
+            const auto currentState = m_controlOutputPin->GetStateAs<DimmerControlValue>();
+            const auto newState = currentState.GetPercentage() == 0 ? DimmerControlValue(m_lastOnPercentage, 2) : DimmerControlValue(0, 2);
+            SetState(newState);
+        }
+    }
 }

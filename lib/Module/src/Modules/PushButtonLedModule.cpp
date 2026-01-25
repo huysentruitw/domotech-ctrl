@@ -13,12 +13,7 @@ PushButtonLedModule::PushButtonLedModule(const Bus& bus, const uint8_t address, 
     for (uint8_t i = 0; i < m_numberOfButtons; ++i)
     {
         m_buttonPins.emplace_back(PinFactory::CreateOutputPin<DigitalValue>());
-
-        const auto onStateChange = [this, i](const Pin& pin)
-        {
-            UpdateLed(i, pin.GetStateAs<DigitalValue>());
-        };
-        m_ledPins.emplace_back(PinFactory::CreateInputPin<DigitalValue>(onStateChange));
+        m_ledPins.emplace_back(PinFactory::CreateInputPin<DigitalValue>(this));
     }
 
     m_outputPins.reserve(m_buttonPins.size());
@@ -60,6 +55,13 @@ ProcessResponse PushButtonLedModule::Process() noexcept
     }
 
     return { .Success = true };
+}
+
+void PushButtonLedModule::OnPinStateChanged(const Pin& pin) noexcept
+{
+    int8_t index = FindIndex(pin, m_ledPins);
+    if (index >= 0)
+        UpdateLed(index, pin.GetStateAs<DigitalValue>());
 }
 
 void PushButtonLedModule::UpdateLed(const uint8_t ledIndex, const DigitalValue newValue) noexcept

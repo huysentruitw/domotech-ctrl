@@ -2,18 +2,13 @@
 
 #include <unity.h>
 
+#include <IPinObserver.h>
 #include <Pin.h>
 #include <PinFactory.h>
 
-// Counters for callback testing
-int g_callbackCounter = 0;
-DigitalValue g_lastState = DigitalValue(false);
-
 void setUp(void)
 {
-    // Reset counters before each test
-    g_callbackCounter = 0;
-    g_lastState = DigitalValue(false);
+    // Setup for each test
 }
 
 void tearDown(void)
@@ -22,41 +17,50 @@ void tearDown(void)
 }
 
 // Callback function for testing InputPin
-void onStateChangeCallback(const Pin& pin)
+class StateObserver : public IPinObserver
 {
-    g_callbackCounter++;
-    g_lastState = pin.GetStateAs<DigitalValue>();
-}
+public:
+    int g_callbackCounter = 0;
+    DigitalValue g_lastState = DigitalValue(false);
+
+    void OnPinStateChanged(const Pin& pin) noexcept override
+    {
+        g_callbackCounter++;
+        g_lastState = pin.GetStateAs<DigitalValue>();        
+    }
+};
 
 void InputPin_InitialState()
 {
     // Arrange & Act
-    auto pin = PinFactory::CreateInputPin<DigitalValue>(onStateChangeCallback, DigitalValue(true));
+    StateObserver observer;
+    auto pin = PinFactory::CreateInputPin<DigitalValue>(&observer, DigitalValue(true));
     
     // Assert
     TEST_ASSERT_EQUAL(DigitalValue(true), pin->GetStateAs<DigitalValue>());
-    TEST_ASSERT_EQUAL(0, g_callbackCounter); // Constructor shouldn't trigger callback
+    TEST_ASSERT_EQUAL(0, observer.g_callbackCounter); // Constructor shouldn't trigger callback
     TEST_ASSERT_FALSE(pin->IsConnected());
 }
 
 void InputPin_StateChange_TriggersCallback()
 {
     // Arrange
-    auto pin = PinFactory::CreateInputPin<DigitalValue>(onStateChangeCallback);
+    StateObserver observer;
+    auto pin = PinFactory::CreateInputPin<DigitalValue>(&observer);
     
     // Act
     pin->SetState(DigitalValue(true));
     
     // Assert
     TEST_ASSERT_EQUAL(DigitalValue(true), pin->GetStateAs<DigitalValue>());
-    TEST_ASSERT_EQUAL(1, g_callbackCounter);
-    TEST_ASSERT_TRUE(g_lastState);
+    TEST_ASSERT_EQUAL(1, observer.g_callbackCounter);
+    TEST_ASSERT_TRUE(observer.g_lastState);
     
     // Act again - same state should not trigger callback
     pin->SetState(DigitalValue(true));
     
     // Assert
-    TEST_ASSERT_EQUAL(1, g_callbackCounter); // No additional callback
+    TEST_ASSERT_EQUAL(1, observer.g_callbackCounter); // No additional callback
 }
 
 void OutputPin_InitialState()
@@ -84,8 +88,9 @@ void OutputPin_StateChange()
 void PinConnection_PropagatesInitialState()
 {
     // Arrange
+    StateObserver observer;
     auto outputPin = PinFactory::CreateOutputPin<DigitalValue>(DigitalValue(true));
-    auto inputPin = PinFactory::CreateInputPin<DigitalValue>(onStateChangeCallback);
+    auto inputPin = PinFactory::CreateInputPin<DigitalValue>(&observer);
     
     // Act
     bool result = Pin::Connect(inputPin, outputPin);
@@ -93,24 +98,25 @@ void PinConnection_PropagatesInitialState()
     // Assert
     TEST_ASSERT_TRUE(result);
     TEST_ASSERT_EQUAL(DigitalValue(true), inputPin->GetStateAs<DigitalValue>());
-    TEST_ASSERT_EQUAL(1, g_callbackCounter);
+    TEST_ASSERT_EQUAL(1, observer.g_callbackCounter);
 }
 
 void PinConnection_PropagatesStateChanges()
 {
     // Arrange
+    StateObserver observer;
     auto outputPin = PinFactory::CreateOutputPin<DigitalValue>();
-    auto inputPin = PinFactory::CreateInputPin<DigitalValue>(onStateChangeCallback);
+    auto inputPin = PinFactory::CreateInputPin<DigitalValue>(&observer);
     Pin::Connect(inputPin, outputPin);
-    g_callbackCounter = 0; // Reset after connection
+    observer.g_callbackCounter = 0; // Reset after connection
     
     // Act
     outputPin->SetState(DigitalValue(true));
     
     // Assert
     TEST_ASSERT_EQUAL(DigitalValue(true), inputPin->GetStateAs<DigitalValue>());
-    TEST_ASSERT_EQUAL(1, g_callbackCounter);
-    TEST_ASSERT_EQUAL(DigitalValue(true), g_lastState);
+    TEST_ASSERT_EQUAL(1, observer.g_callbackCounter);
+    TEST_ASSERT_EQUAL(DigitalValue(true), observer.g_lastState);
 }
 
 void PinConnection_OneOutputToMultipleInputs_AllInputsReceiveState()
@@ -118,37 +124,36 @@ void PinConnection_OneOutputToMultipleInputs_AllInputsReceiveState()
     // Arrange
     auto outputPin = PinFactory::CreateOutputPin<DigitalValue>();
     
-    int counter1 = 0;
-    auto state1 = DigitalValue(false);
-    auto inputPin1 = PinFactory::CreateInputPin<DigitalValue>([&counter1, &state1](const Pin& pin) { counter1++; state1 = pin.GetStateAs<DigitalValue>(); });
-    
-    int counter2 = 0;
-    auto state2 = DigitalValue(false);
-    auto inputPin2 = PinFactory::CreateInputPin<DigitalValue>([&counter2, &state2](const Pin& pin) { counter2++; state2 = pin.GetStateAs<DigitalValue>(); });
+    StateObserver observer1;
+    auto inputPin1 = PinFactory::CreateInputPin<DigitalValue>(&observer1);
+
+    StateObserver observer2;
+    auto inputPin2 = PinFactory::CreateInputPin<DigitalValue>(&observer2);
     
     // Act
     Pin::Connect(inputPin1, outputPin);
     Pin::Connect(inputPin2, outputPin);
-    counter1 = counter2 = 0; // Reset after connections
+    observer1.g_callbackCounter = observer2.g_callbackCounter = 0; // Reset after connections
     
     outputPin->SetState(DigitalValue(true));
     
     // Assert
     TEST_ASSERT_EQUAL(DigitalValue(true), inputPin1->GetStateAs<DigitalValue>());
     TEST_ASSERT_EQUAL(DigitalValue(true), inputPin2->GetStateAs<DigitalValue>());
-    TEST_ASSERT_EQUAL(1, counter1);
-    TEST_ASSERT_EQUAL(1, counter2);
-    TEST_ASSERT_EQUAL(DigitalValue(true), state1);
-    TEST_ASSERT_EQUAL(DigitalValue(true), state2);
+    TEST_ASSERT_EQUAL(1, observer1.g_callbackCounter);
+    TEST_ASSERT_EQUAL(1, observer2.g_callbackCounter);
+    TEST_ASSERT_EQUAL(DigitalValue(true), observer1.g_lastState);
+    TEST_ASSERT_EQUAL(DigitalValue(true), observer2.g_lastState);
 }
 
 void PinConnection_Disconnect_InputResetsToDefaultState()
 {
     // Arrange
+    StateObserver observer;
     auto outputPin = PinFactory::CreateOutputPin<DigitalValue>(DigitalValue(true));
-    auto inputPin = PinFactory::CreateInputPin<DigitalValue>(onStateChangeCallback, DigitalValue(false));
+    auto inputPin = PinFactory::CreateInputPin<DigitalValue>(&observer, DigitalValue(false));
     Pin::Connect(inputPin, outputPin);
-    g_callbackCounter = 0; // Reset after connection
+    observer.g_callbackCounter = 0; // Reset after connection
     
     // Act
     Pin::Disconnect(inputPin, outputPin);
@@ -156,26 +161,27 @@ void PinConnection_Disconnect_InputResetsToDefaultState()
     
     // Assert
     TEST_ASSERT_EQUAL(DigitalValue(false), inputPin->GetStateAs<DigitalValue>()); // Input should have reset to default state (false)
-    TEST_ASSERT_EQUAL(1, g_callbackCounter); // Callback triggered by disconnect
+    TEST_ASSERT_EQUAL(1, observer.g_callbackCounter); // Callback triggered by disconnect
 }
 
 void PinConnection_ExpiredOutputPin()
 {
     // Arrange
-    auto inputPin = PinFactory::CreateInputPin<DigitalValue>(onStateChangeCallback);
+    StateObserver observer;    
+    auto inputPin = PinFactory::CreateInputPin<DigitalValue>(&observer);
     
     // Act
     bool result;
     {
         auto tempOutputPin = PinFactory::CreateOutputPin<DigitalValue>(DigitalValue(true));
         result = Pin::Connect(inputPin, tempOutputPin);
-        g_callbackCounter = 0; // Reset after connection
+        observer.g_callbackCounter = 0; // Reset after connection
     } // tempOutputPin goes out of scope here
     
     // Assert
     TEST_ASSERT_TRUE(result); // Connection was successful
     TEST_ASSERT_EQUAL(DigitalValue(false), inputPin->GetStateAs<DigitalValue>()); // Input state back to default
-    TEST_ASSERT_EQUAL(1, g_callbackCounter); // Callback triggered by connection
+    TEST_ASSERT_EQUAL(1, observer.g_callbackCounter); // Callback triggered by connection
 }
 
 void PinConnection_ExpiredInputPin()
@@ -185,7 +191,8 @@ void PinConnection_ExpiredInputPin()
     
     // Act
     {
-        auto tempInputPin = PinFactory::CreateInputPin<DigitalValue>(onStateChangeCallback);
+        StateObserver observer;
+        auto tempInputPin = PinFactory::CreateInputPin<DigitalValue>(&observer);
         Pin::Connect(tempInputPin, outputPin);
     } // tempInputPin goes out of scope here
     
@@ -200,9 +207,10 @@ void PinConnection_ExpiredInputPin()
 void PinConnection_AlreadyConnected_ConnectFails()
 {
     // Arrange
+    StateObserver observer;
     auto outputPin1 = PinFactory::CreateOutputPin<DigitalValue>(DigitalValue(false));
     auto outputPin2 = PinFactory::CreateOutputPin<DigitalValue>(DigitalValue(true));
-    auto inputPin = PinFactory::CreateInputPin<DigitalValue>(onStateChangeCallback);
+    auto inputPin = PinFactory::CreateInputPin<DigitalValue>(&observer);
     
     // Act
     bool result1 = Pin::Connect(inputPin, outputPin1);

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <IPinObserver.h>
+
 #include "Filter.h"
 
 #include <memory>
@@ -12,7 +14,7 @@ enum ShutterCommand
     Stop
 };
 
-class ShutterFilter final : public Filter
+class ShutterFilter final : public Filter, private IPinObserver
 {
 public:
     ShutterFilter(std::string_view id = {}) noexcept;
@@ -20,8 +22,6 @@ public:
     void Open() noexcept;
     void Close() noexcept;
     void Stop() noexcept;
-
-    bool SetStateChangedCallback(const std::function<void(const ShutterFilter&, ShutterControlValue)>& callback) noexcept;
 
     // For testing
     void MoveSignalStartMs(int offsetMs) noexcept;
@@ -39,5 +39,5 @@ private:
     uint64_t m_signalStartMs = 0;
     static uint64_t GetMsSinceBoot() noexcept;
 
-    std::function<void(const ShutterFilter&, ShutterControlValue)> m_stateChangedCallback;
+    void OnPinStateChanged(const Pin& pin) noexcept override;
 };

@@ -121,7 +121,7 @@ void Processor::OnCompleteDeviceRegistration(const BridgeEvent& event) noexcept
     if (auto device = TryGetDeviceById(id))
     {
         PublishDeviceDiscovery(*device);
-        SubscribeToStateChanges(*device);
+        device->SubscribeToStateChanges();
     }
 }
 
@@ -144,43 +144,7 @@ void Processor::OnPublishState(const BridgeEvent& event) noexcept
 {
     std::string_view id(event.Id, event.IdLength);
     ESP_LOGI(TAG, "OnPublishState (Id: %.*s)", (int)id.length(), id.data());
-    
-    if (auto digitalValue = std::get_if<DigitalValue>(&event.State))
-    {
-        char topic[64];
-        snprintf(topic, sizeof(topic), "domo/dev/%.*s/status", (int)id.size(), id.data());
-        const char* payload = (bool)*digitalValue ? "ON" : "OFF";
-        m_client.Publish(topic, payload, false);
-    }
-    else if (auto dimmerControlValue = std::get_if<DimmerControlValue>(&event.State))
-    {
-        uint8_t percentage = dimmerControlValue->GetPercentage();
-
-        char topic[64];
-        char payload[8];
-
-        snprintf(topic, sizeof(topic), "domo/dev/%.*s/status", (int)id.size(), id.data());
-        const char* statePayload = percentage > 0 ? "ON" : "OFF";
-        m_client.Publish(topic, statePayload, false);
-
-        if (percentage > 0)
-        {
-            snprintf(topic, sizeof(topic), "domo/dev/%.*s/brightness", (int)id.size(), id.data());
-            snprintf(payload, sizeof(payload), "%d", percentage);
-            m_client.Publish(topic, payload, false);
-        }
-    }
-    else if (auto shutterControlValue = std::get_if<ShutterControlValue>(&event.State))
-    {
-        char topic[64];
-        snprintf(topic, sizeof(topic), "domo/dev/%.*s/status", (int)id.size(), id.data());
-        const char* payload = *shutterControlValue == ShutterControlValue::Open
-            ? "OPENING"
-            : *shutterControlValue == ShutterControlValue::Close
-                ? "CLOSING"
-                : "STOPPED";
-        m_client.Publish(topic, payload, false);
-    }
+    m_client.Publish(event.Topic, event.Payload, event.Retain);
 }
 
 void Processor::OnShutdown() noexcept
@@ -208,23 +172,6 @@ void Processor::PublishDeviceRemoval(const IDevice& device) noexcept
     char topic[64];
     device.BuildDiscoveryTopic(topic, sizeof(topic));
     m_client.Publish(topic, "", true);
-}
-
-void Processor::SubscribeToStateChanges(const IDevice& device) noexcept
-{
-    std::string_view id = device.GetId();
-    ESP_LOGI(TAG, "SubscribeToStateChanges (Id: %.*s)", (int)id.length(), id.data());
-
-    device.SetStateChangedCallback(
-        [this, id](PinState state)
-        {
-            BridgeEvent event{};
-            event.Type = BridgeEvent::Type::PublishState;
-            event.IdLength = std::min(id.length(), (size_t)sizeof(event.Id));
-            memcpy(event.Id, id.data(), event.IdLength);
-            event.State = state;
-            m_eventLoop.EnqueueEvent(event);
-        });
 }
 
 std::shared_ptr<IDevice> Processor::TryGetDeviceById(std::string_view id) const noexcept

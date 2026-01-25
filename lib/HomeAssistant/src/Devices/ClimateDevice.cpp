@@ -1,8 +1,8 @@
 #include "ClimateDevice.h"
 #include "IdSanitizer.h"
 
-ClimateDevice::ClimateDevice(const std::shared_ptr<ClimateFilter>& filter) noexcept
-    : Device(filter)
+ClimateDevice::ClimateDevice(const std::shared_ptr<ClimateFilter>& filter, const std::weak_ptr<IEventBus>& eventBus) noexcept
+    : Device(filter, eventBus)
 {
 }
 
@@ -42,10 +42,10 @@ size_t ClimateDevice::BuildDiscoveryPayload(char* buffer, size_t bufferLength) c
         (int)id.length(), id.data());
 }
 
-void ClimateDevice::ProcessCommand(std::string_view subtopic, std::string_view command) const noexcept
+void ClimateDevice::SubscribeToStateChanges() noexcept
 {
 }
 
-void ClimateDevice::SetStateChangedCallback(std::function<void(PinState)> callback) const noexcept
+void ClimateDevice::ProcessCommand(std::string_view subtopic, std::string_view command) const noexcept
 {
 }

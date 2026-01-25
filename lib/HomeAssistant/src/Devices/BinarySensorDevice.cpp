@@ -1,8 +1,10 @@
 #include "BinarySensorDevice.h"
 #include "IdSanitizer.h"
 
-BinarySensorDevice::BinarySensorDevice(const std::shared_ptr<DigitalPassthroughFilter>& filter) noexcept
-    : Device(filter)
+#include <PinFactory.h>
+
+BinarySensorDevice::BinarySensorDevice(const std::shared_ptr<DigitalPassthroughFilter>& filter, const std::weak_ptr<IEventBus>& eventBus) noexcept
+    : Device(filter, eventBus)
 {
 }
 
@@ -19,7 +21,7 @@ size_t BinarySensorDevice::BuildDiscoveryPayload(char* buffer, size_t bufferLeng
         "{"
         "\"unique_id\": \"%.*s\","
         "\"name\": \"%.*s\","
-        "\"state_topic\": \"domo/dev/%.*s/status\","
+        "\"state_topic\": \"domo/dev/%.*s/state\","
         "\"payload_on\": \"ON\","
         "\"payload_off\": \"OFF\","
         "\"optimistic\": false,"
@@ -30,19 +32,39 @@ size_t BinarySensorDevice::BuildDiscoveryPayload(char* buffer, size_t bufferLeng
         (int)id.length(), id.data());
 }
 
+void BinarySensorDevice::SubscribeToStateChanges() noexcept
+{
+    auto filter = TryGetFilter();
+    if (!filter)
+        return;
+
+    auto outputPin = filter->TryGetPinByName(PinDirection::Output, "Output");
+    if (!outputPin)
+        return;
+
+    m_tap = PinFactory::CreateInputPin<DigitalValue>(this);
+    Pin::Connect(m_tap, outputPin);
+}
+
 void BinarySensorDevice::ProcessCommand(std::string_view subtopic, std::string_view command) const noexcept
 {
     // This device doesn't support commands
 }
 
-void BinarySensorDevice::SetStateChangedCallback(std::function<void(PinState)> callback) const noexcept
+void BinarySensorDevice::OnPinStateChanged(const Pin& pin) noexcept
 {
-    if (auto filter = TryGetFilter())
+    auto eventBus = TryGetEventBus();
+    if (!eventBus)
+        return;
+
+    if (pin == m_tap)
     {
-        filter->SetStateChangedCallback(
-            [callback](const DigitalPassthroughFilter& sender, DigitalValue state)
-            {
-                callback(state);
-            });
+        std::string_view id = GetId();
+        BridgeEvent event{};
+        event.Type = BridgeEvent::Type::PublishState;
+        event.TopicLength = snprintf(event.Topic, sizeof(event.Topic), "domo/dev/%.*s/state", (int)id.length(), id.data());
+        event.PayloadLength = snprintf(event.Payload, sizeof(event.Payload), pin.GetStateAs<DigitalValue>() ? "ON" : "OFF");
+        event.Retain = true;
+        eventBus->EnqueueEvent(event);
     }
 }

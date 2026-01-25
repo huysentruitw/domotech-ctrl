@@ -8,14 +8,7 @@ DimmerModule::DimmerModule(const Bus& bus, const uint8_t address, const uint8_t 
 {
     m_dimmerControlPins.reserve(m_numberOfChannels);
     for (uint8_t i = 0; i < m_numberOfChannels; ++i)
-    {
-        const auto onStateChange = [this, i](const Pin& pin)
-        {
-            UpdateChannel(i, pin.GetStateAs<DimmerControlValue>());
-        };
-
-        m_dimmerControlPins.emplace_back(PinFactory::CreateInputPin<DimmerControlValue>(onStateChange));
-    }
+        m_dimmerControlPins.emplace_back(PinFactory::CreateInputPin<DimmerControlValue>(this));
 
     m_inputPins.reserve(m_dimmerControlPins.size());
     for (const auto& pin : m_dimmerControlPins)
@@ -31,6 +24,13 @@ ProcessResponse DimmerModule::Process() noexcept
 {
     auto response = Exchange(0x00, false);
     return { .Success = response.Success };
+}
+
+void DimmerModule::OnPinStateChanged(const Pin& pin) noexcept
+{
+    int8_t index = FindIndex(pin, m_dimmerControlPins);
+    if (index >= 0)
+        UpdateChannel(index, pin.GetStateAs<DimmerControlValue>());
 }
 
 void DimmerModule::UpdateChannel(const uint8_t channelIndex, const DimmerControlValue newValue) noexcept

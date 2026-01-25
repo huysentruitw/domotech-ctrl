@@ -1,13 +1,10 @@
 #include "Pin.h"
 
-Pin::Pin(
-    const PinDirection direction,
-    const PinState defaultState,
-    const std::function<void(const Pin&)> onStateChange) noexcept
+Pin::Pin(const PinDirection direction, const PinState defaultState, IPinObserver* observer) noexcept
     : m_direction(direction)
     , m_defaultState(defaultState)
     , m_state(defaultState)
-    , m_onStateChange(onStateChange)
+    , m_observer(observer)
 {
 }
 
@@ -53,8 +50,8 @@ bool Pin::SetState(const PinState& newState) noexcept
     if (m_direction == PinDirection::Output)
         NotifyConnectedInputPins(newState);
 
-    if (m_onStateChange)
-        m_onStateChange(*this);
+    if (m_observer)
+        m_observer->OnPinStateChanged(*this);
 
     return true;
 }

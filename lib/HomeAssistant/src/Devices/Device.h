@@ -3,6 +3,7 @@
 #include <Filter.h>
 
 #include "IdSanitizer.h"
+#include "IEventBus.h"
 
 #include <memory>
 #include <string>
@@ -17,8 +18,8 @@ public:
     virtual size_t BuildDiscoveryTopic(char* buffer, size_t bufferLength) const noexcept = 0;
     virtual size_t BuildDiscoveryPayload(char* buffer, size_t bufferLength) const noexcept = 0;
 
+    virtual void SubscribeToStateChanges() noexcept = 0;
     virtual void ProcessCommand(std::string_view subtopic, std::string_view command) const noexcept = 0;
-    virtual void SetStateChangedCallback(std::function<void(PinState)> callback) const noexcept = 0;
 };
 
 template<class T, class U>
@@ -28,8 +29,9 @@ template<Derived<Filter> TFilter>
 class Device : public IDevice
 {
 public:
-    explicit Device(const std::shared_ptr<TFilter>& filter) noexcept
+    explicit Device(const std::shared_ptr<TFilter>& filter, const std::weak_ptr<IEventBus>& eventPublisher) noexcept
         : m_filter(filter)
+        , m_eventPublisher(eventPublisher)
         , m_id(IdSanitizer::Sanitize(filter->GetId())) {}
 
     std::string_view GetId() const noexcept override
@@ -43,7 +45,13 @@ protected:
         return m_filter.lock();
     }
 
+    std::shared_ptr<IEventBus> TryGetEventBus() const noexcept
+    {
+        return m_eventPublisher.lock();
+    }
+
 private:
-    std::weak_ptr<TFilter> m_filter;
-    std::string m_id;
+    const std::weak_ptr<TFilter> m_filter;
+    const std::weak_ptr<IEventBus> m_eventPublisher;
+    const std::string m_id;
 };

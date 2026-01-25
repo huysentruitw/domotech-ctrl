@@ -1,11 +1,13 @@
 #pragma once
 
+#include <IPinObserver.h>
+
 #include "../Module.h"
 
 #include <memory>
 #include <vector>
 
-class PushButtonLedModule final : public Module
+class PushButtonLedModule final : public Module, private IPinObserver
 {
 public:
     PushButtonLedModule(const Bus& bus, const uint8_t address, const uint8_t numberOfButtons) noexcept;
@@ -21,6 +23,7 @@ private:
     std::vector<std::shared_ptr<Pin>> m_buttonPins;
     std::vector<std::shared_ptr<Pin>> m_ledPins;
 
+    void OnPinStateChanged(const Pin& pin) noexcept override;
     void UpdateLed(const uint8_t ledIndex, const DigitalValue newValue) noexcept;
     DigitalValue MapButtonState(const uint8_t buttonIndex, const uint16_t data) const noexcept;
 };

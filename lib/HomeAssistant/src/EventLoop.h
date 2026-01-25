@@ -1,6 +1,7 @@
 #pragma once
 
 #include "BridgeEvent.h"
+#include "IEventBus.h"
 
 class Processor; // forward declaration
 
@@ -8,21 +9,21 @@ class Processor; // forward declaration
 
 #include "freertos/FreeRTOS.h"
 
-class EventLoop final
+class EventLoop final : public IEventBus
 {
     friend class HomeAssistantBridge;
 
 public:
-    EventLoop(Processor& processor) noexcept;
+    EventLoop() noexcept;
     ~EventLoop() noexcept;
 
-    void Start() noexcept;
+    void Start(std::shared_ptr<Processor> processor) noexcept;
 
     void EnqueueEvent(const BridgeEvent& event) noexcept;
 
 private:
-    Processor& m_processor;
     QueueHandle_t m_queue = nullptr;
+    std::weak_ptr<Processor> m_processor;
 
     static void TaskEntry(void* arg) noexcept;
     void Task() noexcept;
@@ -32,15 +33,15 @@ private:
 
 #else
 
-class EventLoop final
+class EventLoop final : public IEventBus
 {
     friend class HomeAssistantBridge;
 
 public:
-    EventLoop(Processor& processor) noexcept {};
+    EventLoop() noexcept {};
     ~EventLoop() noexcept {};
 
-    void Start() noexcept {};
+    void Start(std::shared_ptr<Processor> processor) noexcept {};
 
     void EnqueueEvent(const BridgeEvent& event) noexcept {};
 

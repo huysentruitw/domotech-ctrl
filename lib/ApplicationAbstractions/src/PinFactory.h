@@ -1,21 +1,21 @@
 #pragma once
 
+#include "IPinObserver.h"
 #include "Pin.h"
 
 #include <memory>
-#include <functional>
 
 class PinFactory final
 {
 public:
-    template<typename TState> static const std::shared_ptr<Pin> CreateInputPin(const std::function<void(const Pin&)> onStateChange = {}, const TState& defaultState = TState()) noexcept
+    template<typename TState> static const std::shared_ptr<Pin> CreateInputPin(IPinObserver* observer = nullptr, const TState& defaultState = TState()) noexcept
     {
-        return std::make_shared<Pin>(PinDirection::Input, defaultState, onStateChange);
+        return std::make_shared<Pin>(PinDirection::Input, defaultState, observer);
     }
 
-    template<typename TState> static const std::shared_ptr<Pin> CreateInputPin(std::string_view name, const std::function<void(const Pin&)> onStateChange = {}, const TState& defaultState = TState()) noexcept
+    template<typename TState> static const std::shared_ptr<Pin> CreateInputPin(std::string_view name, IPinObserver* observer = nullptr, const TState& defaultState = TState()) noexcept
     {
-        const auto pin = std::make_shared<Pin>(PinDirection::Input, defaultState, onStateChange);
+        const auto pin = std::make_shared<Pin>(PinDirection::Input, defaultState, observer);
         pin->SetName(name);
         return pin;
     }

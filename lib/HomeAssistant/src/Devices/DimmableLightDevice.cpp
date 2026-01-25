@@ -1,8 +1,10 @@
 #include "DimmableLightDevice.h"
 #include "IdSanitizer.h"
 
-DimmableLightDevice::DimmableLightDevice(const std::shared_ptr<DimmerFilter>& filter) noexcept
-    : Device(filter)
+#include <PinFactory.h>
+
+DimmableLightDevice::DimmableLightDevice(const std::shared_ptr<DimmerFilter>& filter, const std::weak_ptr<IEventBus>& eventBus) noexcept
+    : Device(filter, eventBus)
 {
 }
 
@@ -19,7 +21,7 @@ size_t DimmableLightDevice::BuildDiscoveryPayload(char* buffer, size_t bufferLen
         "{"
         "\"unique_id\": \"%.*s\","
         "\"name\": \"%.*s\","
-        "\"state_topic\": \"domo/dev/%.*s/status\","
+        "\"state_topic\": \"domo/dev/%.*s/state\","
         "\"command_topic\": \"domo/dev/%.*s/switch\","
         "\"brightness_scale\": 100,"
         "\"brightness_state_topic\": \"domo/dev/%.*s/brightness\","
@@ -37,6 +39,20 @@ size_t DimmableLightDevice::BuildDiscoveryPayload(char* buffer, size_t bufferLen
         (int)id.length(), id.data());
 }
 
+void DimmableLightDevice::SubscribeToStateChanges() noexcept
+{
+    auto filter = TryGetFilter();
+    if (!filter)
+        return;
+
+    auto controlPin = filter->TryGetPinByName(PinDirection::Output, "Control");
+    if (!controlPin)
+        return;
+
+    m_tap = PinFactory::CreateInputPin<DimmerControlValue>(this);
+    Pin::Connect(m_tap, controlPin);
+}
+
 void DimmableLightDevice::ProcessCommand(std::string_view subtopic, std::string_view command) const noexcept
 {
     if (subtopic == "switch")
@@ -48,6 +64,41 @@ void DimmableLightDevice::ProcessCommand(std::string_view subtopic, std::string_
     {
         if (auto filter = TryGetFilter())
             filter->SetState(DimmerControlValue(ParsePercentage(command), 1));
+    }
+}
+
+void DimmableLightDevice::OnPinStateChanged(const Pin& pin) noexcept
+{
+    auto eventBus = TryGetEventBus();
+    if (!eventBus)
+        return;
+
+    if (pin == m_tap)
+    {
+        std::string_view id = GetId();
+        const auto state = pin.GetStateAs<DimmerControlValue>();
+
+        // Emit status
+        uint8_t percentage = state.GetPercentage();
+        {
+            BridgeEvent event{};
+            event.Type = BridgeEvent::Type::PublishState;
+            event.TopicLength = snprintf(event.Topic, sizeof(event.Topic), "domo/dev/%.*s/state", (int)id.size(), id.data());
+            event.PayloadLength = snprintf(event.Payload, sizeof(event.Payload), percentage > 0 ? "ON" : "OFF");
+            event.Retain = true;
+            eventBus->EnqueueEvent(event);
+        }
+
+        // Emit brightness
+        if (percentage > 0)
+        {
+            BridgeEvent event{};
+            event.Type = BridgeEvent::Type::PublishState;
+            event.TopicLength = snprintf(event.Topic, sizeof(event.Topic), "domo/dev/%.*s/brightness", (int)id.size(), id.data());
+            event.PayloadLength = snprintf(event.Payload, sizeof(event.Payload), "%d", percentage);
+            event.Retain = true;
+            eventBus->EnqueueEvent(event);
+        }
     }
 }
 
@@ -63,20 +114,8 @@ uint8_t DimmableLightDevice::ParsePercentage(std::string_view value) noexcept
         result = result * 10 + (c - '0');
 
         if (result > 100)
-            return result;
+            return 100;
     }
 
     return result;
-}
-
-void DimmableLightDevice::SetStateChangedCallback(std::function<void(PinState)> callback) const noexcept
-{
-    if (auto filter = TryGetFilter())
-    {
-        filter->SetStateChangedCallback(
-            [this, callback](const DimmerFilter& sender, DimmerControlValue state)
-            {
-                callback(state);
-            });
-    }
 }

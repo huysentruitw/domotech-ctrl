@@ -2,7 +2,7 @@
 
 #include "DigitalValue.h"
 #include "DimmerControlValue.h"
-#include "ShutterControlValue.h"
+#include "IPinObserver.h"
 #include "TemperatureValue.h"
 
 #include <algorithm>
@@ -21,23 +21,18 @@ enum class PinDirection
 typedef std::variant<
     DigitalValue,
     DimmerControlValue,
-    ShutterControlValue,
     TemperatureValue> PinState;
 
 constexpr const char* PinStateTypes[] = {
     "DigitalValue",
     "DimmerControlValue",
-    "ShutterControlValue",
     "TemperatureValue"
 };
 
 class Pin final
 {
 public:
-    Pin(
-        const PinDirection direction,
-        const PinState defaultState,
-        const std::function<void(const Pin&)> onStateChange = {}) noexcept;
+    Pin(const PinDirection direction, const PinState defaultState, IPinObserver* observer = nullptr) noexcept;
 
     ~Pin() noexcept;
 
@@ -58,11 +53,17 @@ public:
     static bool Disconnect(std::weak_ptr<Pin> inputPin, std::weak_ptr<Pin> outputPin) noexcept;
     bool IsConnected() const noexcept;
 
+    bool operator==(const std::shared_ptr<Pin>& other) const noexcept
+    {
+        return this == other.get();
+    }
+
 private:
     const PinDirection m_direction;
     const PinState m_defaultState;
     PinState m_state;
-    const std::function<void(const Pin&)> m_onStateChange;
+    IPinObserver* m_observer = nullptr;
+
     std::string_view m_name;
 
     std::weak_ptr<Pin> m_connectedOutputPin;
@@ -70,3 +71,13 @@ private:
 
     void NotifyConnectedInputPins(const PinState& newState) noexcept;
 };
+
+template<typename TContainer>
+int8_t FindIndex(const Pin& pin, const TContainer& list) noexcept
+{
+    for (uint8_t i = 0; i < list.size(); ++i)
+        if (pin == list[i])
+            return i;
+
+    return -1;
+}

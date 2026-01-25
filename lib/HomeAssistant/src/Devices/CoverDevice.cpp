@@ -1,8 +1,10 @@
 #include "CoverDevice.h"
 #include "IdSanitizer.h"
 
-CoverDevice::CoverDevice(const std::shared_ptr<ShutterFilter>& filter) noexcept
-    : Device(filter)
+#include <PinFactory.h>
+
+CoverDevice::CoverDevice(const std::shared_ptr<ShutterFilter>& filter, const std::weak_ptr<IEventBus>& eventBus) noexcept
+    : Device(filter, eventBus)
 {
 }
 
@@ -19,7 +21,7 @@ size_t CoverDevice::BuildDiscoveryPayload(char* buffer, size_t bufferLength) con
         "{"
         "\"unique_id\": \"%.*s\","
         "\"name\": \"%.*s\","
-        "\"state_topic\": \"domo/dev/%.*s/status\","
+        "\"state_topic\": \"domo/dev/%.*s/state\","
         "\"command_topic\": \"domo/dev/%.*s/action\","
         "\"payload_open\": \"OPEN\","
         "\"payload_close\": \"CLOSE\","
@@ -34,6 +36,24 @@ size_t CoverDevice::BuildDiscoveryPayload(char* buffer, size_t bufferLength) con
         (int)id.length(), id.data(),
         (int)id.length(), id.data(),
         (int)id.length(), id.data());
+}
+
+void CoverDevice::SubscribeToStateChanges() noexcept
+{
+    auto filter = TryGetFilter();
+    if (!filter)
+        return;
+
+    auto openPin = filter->TryGetPinByName(PinDirection::Output, "Open"),
+         closePin = filter->TryGetPinByName(PinDirection::Output, "Close");
+
+    if (!openPin || !closePin)
+        return;
+
+    m_tapOpen = PinFactory::CreateInputPin<DigitalValue>(this);
+    m_tapClose = PinFactory::CreateInputPin<DigitalValue>(this);
+    Pin::Connect(m_tapOpen, openPin);
+    Pin::Connect(m_tapClose, closePin);
 }
 
 void CoverDevice::ProcessCommand(std::string_view subtopic, std::string_view command) const noexcept
@@ -52,14 +72,26 @@ void CoverDevice::ProcessCommand(std::string_view subtopic, std::string_view com
     }
 }
 
-void CoverDevice::SetStateChangedCallback(std::function<void(PinState)> callback) const noexcept
+void CoverDevice::OnPinStateChanged(const Pin& pin) noexcept
 {
-    if (auto filter = TryGetFilter())
-    {
-        filter->SetStateChangedCallback(
-            [callback](const ShutterFilter& sender, ShutterControlValue state)
-            {
-                callback(state);
-            });
-    }
+    if (!m_tapOpen || !m_tapClose)
+        return;
+
+    auto eventBus = TryGetEventBus();
+    if (!eventBus)
+        return;
+
+    std::string_view id = GetId();
+    const char* payload = m_tapOpen->GetStateAs<DigitalValue>()
+        ? "OPENING"
+        : m_tapClose->GetStateAs<DigitalValue>()
+            ? "CLOSING"
+            : "STOPPED";
+
+    BridgeEvent event{};
+    event.Type = BridgeEvent::Type::PublishState;
+    event.TopicLength = snprintf(event.Topic, sizeof(event.Topic), "domo/dev/%.*s/state", (int)id.size(), id.data());
+    event.PayloadLength = snprintf(event.Payload, sizeof(event.Payload), payload);
+    event.Retain = false;
+    eventBus->EnqueueEvent(event);
 }

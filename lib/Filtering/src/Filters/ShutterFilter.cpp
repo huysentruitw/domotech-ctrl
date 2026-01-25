@@ -11,61 +11,11 @@
 ShutterFilter::ShutterFilter(std::string_view id) noexcept
     : Filter(FilterType::Shutter, id)
 {
-    m_openInputPin = PinFactory::CreateInputPin<DigitalValue>(
-        "Open",
-        [this](const Pin &pin)
-        {
-            if (pin.GetStateAs<DigitalValue>() == DigitalValue(true))
-            {
-                Open();
-            }
-            else if (m_currentShutterCommand == ShutterCommand::Open && (GetMsSinceBoot() - m_signalStartMs) > 1000)
-            {
-                // Stop the shutter when released after long press
-                Stop();
-            }
-        });
-
-    m_closeInputPin = PinFactory::CreateInputPin<DigitalValue>(
-        "Close",
-        [this](const Pin &pin)
-        {
-            if (pin.GetStateAs<DigitalValue>() == DigitalValue(true))
-            {
-                Close();
-            }
-            else if (m_currentShutterCommand == ShutterCommand::Close && (GetMsSinceBoot() - m_signalStartMs) > 1000)
-            {
-                // Stop the shutter when released after long press
-                Stop();
-            }
-        });
-
-    m_stopInputPin = PinFactory::CreateInputPin<DigitalValue>(
-        "Stop",
-        [this](const Pin &pin)
-        {
-            if (pin.GetStateAs<DigitalValue>() == DigitalValue(true))
-            {
-                Stop();
-            }
-        });
-
-    m_openFeedbackInputPin = PinFactory::CreateInputPin<DigitalValue>(
-        "OpenFeedback",
-        [this](const Pin &pin)
-        {
-            if (pin.GetStateAs<DigitalValue>() == DigitalValue(false) && m_currentShutterCommand == ShutterCommand::Close)
-                m_closeOutputPin->SetState(DigitalValue(true));
-        });
-
-    m_closeFeedbackInputPin = PinFactory::CreateInputPin<DigitalValue>(
-        "CloseFeedback",
-        [this](const Pin &pin)
-        {
-            if (pin.GetStateAs<DigitalValue>() == DigitalValue(false) && m_currentShutterCommand == ShutterCommand::Open)
-                m_openOutputPin->SetState(DigitalValue(true));
-        });
+    m_openInputPin = PinFactory::CreateInputPin<DigitalValue>("Open", this);
+    m_closeInputPin = PinFactory::CreateInputPin<DigitalValue>("Close", this);
+    m_stopInputPin = PinFactory::CreateInputPin<DigitalValue>("Stop", this);
+    m_openFeedbackInputPin = PinFactory::CreateInputPin<DigitalValue>("OpenFeedback", this);
+    m_closeFeedbackInputPin = PinFactory::CreateInputPin<DigitalValue>("CloseFeedback", this);
 
     m_openOutputPin = PinFactory::CreateOutputPin<DigitalValue>("Open");
     m_closeOutputPin = PinFactory::CreateOutputPin<DigitalValue>("Close");
@@ -93,9 +43,6 @@ void ShutterFilter::Open() noexcept
         m_closeOutputPin->SetState(DigitalValue(false));
     else
         m_openOutputPin->SetState(DigitalValue(true));
-
-    if (m_stateChangedCallback)
-        m_stateChangedCallback(*this, ShutterControlValue::Open);
 }
 
 void ShutterFilter::Close() noexcept
@@ -107,9 +54,6 @@ void ShutterFilter::Close() noexcept
         m_openOutputPin->SetState(DigitalValue(false));
     else
         m_closeOutputPin->SetState(DigitalValue(true));
-
-    if (m_stateChangedCallback)
-        m_stateChangedCallback(*this, ShutterControlValue::Close);
 }
 
 void ShutterFilter::Stop() noexcept
@@ -117,16 +61,49 @@ void ShutterFilter::Stop() noexcept
     m_currentShutterCommand = ShutterCommand::Stop;
     m_openOutputPin->SetState(DigitalValue(false));
     m_closeOutputPin->SetState(DigitalValue(false));
-
-    if (m_stateChangedCallback)
-        m_stateChangedCallback(*this, ShutterControlValue::Stop);
 }
 
-bool ShutterFilter::SetStateChangedCallback(const std::function<void(const ShutterFilter&, ShutterControlValue)>& callback) noexcept
+void ShutterFilter::OnPinStateChanged(const Pin& pin) noexcept
 {
-    if (m_stateChangedCallback)
-        return false;
-
-    m_stateChangedCallback = callback;
-    return true;
+    if (pin == m_openInputPin)
+    {
+        if (pin.GetStateAs<DigitalValue>() == DigitalValue(true))
+        {
+            Open();
+        }
+        else if (m_currentShutterCommand == ShutterCommand::Open && (GetMsSinceBoot() - m_signalStartMs) > 1000)
+        {
+            // Stop the shutter when released after long press
+            Stop();
+        }
+    }
+    else if (pin == m_closeInputPin)
+    {
+        if (pin.GetStateAs<DigitalValue>() == DigitalValue(true))
+        {
+            Close();
+        }
+        else if (m_currentShutterCommand == ShutterCommand::Close && (GetMsSinceBoot() - m_signalStartMs) > 1000)
+        {
+            // Stop the shutter when released after long press
+            Stop();
+        }        
+    }
+    else if (pin == m_stopInputPin)
+    {
+        if (pin.GetStateAs<DigitalValue>() == DigitalValue(true))
+        {
+            Stop();
+        }
+    }
+    else if (pin == m_openFeedbackInputPin)
+    {
+        if (pin.GetStateAs<DigitalValue>() == DigitalValue(false) && m_currentShutterCommand == ShutterCommand::Close)
+            m_closeOutputPin->SetState(DigitalValue(true));
+    }
+    else if (pin == m_closeFeedbackInputPin)
+    {
+        if (pin.GetStateAs<DigitalValue>() == DigitalValue(false) && m_currentShutterCommand == ShutterCommand::Open)
+            m_openOutputPin->SetState(DigitalValue(true));
+    }
 }

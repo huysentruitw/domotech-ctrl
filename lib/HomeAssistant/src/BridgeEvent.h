@@ -15,12 +15,13 @@ struct BridgeEvent
         Shutdown,
     } Type;
 
-    char Id[32];            // For CompleteDeviceRegistration, UnregisterDevice & PublishState
-    size_t IdLength;        // For CompleteDeviceRegistration, UnregisterDevice & PublishState
-    PinState State;         // For PublishState
+    char Id[32];            // For CompleteDeviceRegistration, UnregisterDevice
+    size_t IdLength;        // For CompleteDeviceRegistration, UnregisterDevice
 
-    char Topic[64];         // For MqttData
-    size_t TopicLength;     // For MqttData
-    char Payload[64];       // For MqttData
-    size_t PayloadLength;   // For MqttData
+    char Topic[64];         // For MqttData & PublishState
+    size_t TopicLength;     // For MqttData & PublishState
+    char Payload[64];       // For MqttData & PublishState
+    size_t PayloadLength;   // For MqttData & PublishState
+
+    bool Retain;            // For PublishState
 };

@@ -1,8 +1,10 @@
 #include "SwitchDevice.h"
 #include "IdSanitizer.h"
 
-SwitchDevice::SwitchDevice(const std::shared_ptr<SwitchFilter>& filter) noexcept
-    : Device(filter)
+#include <PinFactory.h>
+
+SwitchDevice::SwitchDevice(const std::shared_ptr<SwitchFilter>& filter, const std::weak_ptr<IEventBus>& eventBus) noexcept
+    : Device(filter, eventBus)
 {
 }
 
@@ -19,7 +21,7 @@ size_t SwitchDevice::BuildDiscoveryPayload(char* buffer, size_t bufferLength) co
         "{"
         "\"unique_id\": \"%.*s\","
         "\"name\": \"%.*s\","
-        "\"state_topic\": \"domo/dev/%.*s/status\","
+        "\"state_topic\": \"domo/dev/%.*s/state\","
         "\"command_topic\": \"domo/dev/%.*s/switch\","
         "\"payload_on\": \"ON\","
         "\"payload_off\": \"OFF\","
@@ -32,6 +34,20 @@ size_t SwitchDevice::BuildDiscoveryPayload(char* buffer, size_t bufferLength) co
         (int)id.length(), id.data());
 }
 
+void SwitchDevice::SubscribeToStateChanges() noexcept
+{
+    auto filter = TryGetFilter();
+    if (!filter)
+        return;
+
+    auto controlPin = filter->TryGetPinByName(PinDirection::Output, "Control");
+    if (!controlPin)
+        return;
+    
+    m_tap = PinFactory::CreateInputPin<DigitalValue>(this);
+    Pin::Connect(m_tap, controlPin);
+}
+
 void SwitchDevice::ProcessCommand(std::string_view subtopic, std::string_view command) const noexcept
 {
     if (subtopic != "switch")
@@ -42,14 +58,20 @@ void SwitchDevice::ProcessCommand(std::string_view subtopic, std::string_view co
         filter->SetState(state);
 }
 
-void SwitchDevice::SetStateChangedCallback(std::function<void(PinState)> callback) const noexcept
+void SwitchDevice::OnPinStateChanged(const Pin& pin) noexcept
 {
-    if (auto filter = TryGetFilter())
+    auto eventBus = TryGetEventBus();
+    if (!eventBus)
+        return;
+
+    if (pin == m_tap)
     {
-        filter->SetStateChangedCallback(
-            [callback](const SwitchFilter& sender, DigitalValue state)
-            {
-                callback(state);
-            });
+        std::string_view id = GetId();
+        BridgeEvent event{};
+        event.Type = BridgeEvent::Type::PublishState;
+        event.TopicLength = snprintf(event.Topic, sizeof(event.Topic), "domo/dev/%.*s/state", (int)id.length(), id.data());
+        event.PayloadLength = snprintf(event.Payload, sizeof(event.Payload), pin.GetStateAs<DigitalValue>() ? "ON" : "OFF");
+        event.Retain = true;
+        eventBus->EnqueueEvent(event);
     }
 }

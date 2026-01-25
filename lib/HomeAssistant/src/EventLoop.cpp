@@ -1,15 +1,13 @@
 #ifndef NATIVE_BUILD
 
 #include "EventLoop.h"
-
 #include "Processor.h"
 
 #include "esp_log.h"
 
 #define TAG "HA_LOOP"
 
-EventLoop::EventLoop(Processor& processor) noexcept
-    : m_processor(processor)
+EventLoop::EventLoop() noexcept
 {
     m_queue = xQueueCreate(20, sizeof(BridgeEvent));
 }
@@ -25,8 +23,9 @@ EventLoop::~EventLoop() noexcept
     m_queue = nullptr;
 }
 
-void EventLoop::Start() noexcept
+void EventLoop::Start(std::shared_ptr<Processor> processor) noexcept
 {
+    m_processor = processor;
     xTaskCreate(&EventLoop::TaskEntry, TAG, 4096, this, 5, NULL);
 }
 
@@ -49,7 +48,9 @@ void EventLoop::Task() noexcept
     while (true)
     {
         xQueueReceive(m_queue, &event, portMAX_DELAY);
-        m_processor.Process(event);
+
+        if (auto processor = m_processor.lock())
+            processor->Process(event);
 
         if (event.Type == BridgeEvent::Type::Shutdown)
         {

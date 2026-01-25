@@ -10,12 +10,7 @@ TeleruptorModule::TeleruptorModule(const Bus& bus, const uint8_t address, const 
     m_teleruptorFeedbackPins.reserve(m_numberOfTeleruptors);
     for (uint8_t i = 0; i < m_numberOfTeleruptors; ++i)
     {
-        const auto onStateChange = [this, i](const Pin& pin)
-        {
-            UpdateTeleruptor(i, pin.GetStateAs<DigitalValue>());
-        };
-
-        m_teleruptorPins.emplace_back(PinFactory::CreateInputPin<DigitalValue>(onStateChange));
+        m_teleruptorPins.emplace_back(PinFactory::CreateInputPin<DigitalValue>(this));
         m_teleruptorFeedbackPins.emplace_back(PinFactory::CreateOutputPin<DigitalValue>());
     }
 
@@ -51,6 +46,13 @@ ProcessResponse TeleruptorModule::Process() noexcept
     }
 
     return { .Success = true };
+}
+
+void TeleruptorModule::OnPinStateChanged(const Pin& pin) noexcept
+{
+    int8_t index = FindIndex(pin, m_teleruptorPins);
+    if (index >= 0)
+        UpdateTeleruptor(index, pin.GetStateAs<DigitalValue>());
 }
 
 void TeleruptorModule::UpdateTeleruptor(const uint8_t teleruptorIndex, const DigitalValue newValue) noexcept

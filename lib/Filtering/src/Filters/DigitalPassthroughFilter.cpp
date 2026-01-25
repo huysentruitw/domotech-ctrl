@@ -5,16 +5,7 @@
 DigitalPassthroughFilter::DigitalPassthroughFilter(std::string_view id) noexcept
     : Filter(FilterType::DigitalPassthrough, id)
 {
-    m_inputPin = PinFactory::CreateInputPin<DigitalValue>(
-        "Input",
-        [this](const Pin& pin)
-        {
-            auto state = pin.GetStateAs<DigitalValue>();
-            bool stateHasChanged = m_outputPin->SetState(state);
-
-            if (m_stateChangedCallback && stateHasChanged)
-                m_stateChangedCallback(*this, state);
-        });
+    m_inputPin = PinFactory::CreateInputPin<DigitalValue>("Input", this);
 
     m_outputPin = PinFactory::CreateOutputPin<DigitalValue>("Output");
 
@@ -22,11 +13,11 @@ DigitalPassthroughFilter::DigitalPassthroughFilter(std::string_view id) noexcept
     m_outputPins = { m_outputPin };
 }
 
-bool DigitalPassthroughFilter::SetStateChangedCallback(const std::function<void(const DigitalPassthroughFilter&, DigitalValue)>& callback) noexcept
+void DigitalPassthroughFilter::OnPinStateChanged(const Pin& pin) noexcept
 {
-    if (m_stateChangedCallback)
-        return false;
-
-    m_stateChangedCallback = callback;
-    return true;
+    if (pin == m_inputPin)
+    {
+        const auto state = pin.GetStateAs<DigitalValue>();
+        m_outputPin->SetState(state);
+    }
 }

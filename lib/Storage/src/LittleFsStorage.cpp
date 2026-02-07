@@ -119,6 +119,34 @@ bool LittleFsStorage::ReadFile(const char* path, std::vector<uint8_t>& out) noex
     return read == static_cast<size_t>(size);
 }
 
+bool LittleFsStorage::ReadFileInChunks(const char* path, const std::function<void(const uint8_t*, size_t)>& onChunk) noexcept
+{
+    LockGuard guard(m_syncRoot);
+
+    FILE* f = fopen(path, "rb");
+    if (!f)
+    {
+        ESP_LOGE(TAG, "Failed to open %s for reading", path);
+        return false;
+    }
+
+    uint8_t buffer[256];
+
+    while (true)
+    {
+        size_t n = fread(buffer, 1, sizeof(buffer), f);
+        if (n > 0)
+            onChunk(buffer, n);
+
+        if (n < sizeof(buffer))
+            break; // EOF or error
+    }
+
+    fclose(f);
+
+    return true;
+}
+
 bool LittleFsStorage::RemoveFile(const char* path) noexcept
 {
     LockGuard guard(m_syncRoot);

@@ -16,6 +16,7 @@ public:
     bool Format() noexcept override;
     bool WriteFile(const char* path, const std::vector<uint8_t>& data) noexcept override;
     bool ReadFile(const char* path, std::vector<uint8_t>& out) noexcept override;
+    bool ReadFileInChunks(const char* path, const std::function<void(const uint8_t*, size_t)>& onChunk) noexcept override;
     bool RemoveFile(const char* path) noexcept override;
 
 private:

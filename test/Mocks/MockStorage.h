@@ -18,6 +18,11 @@ public:
         return true;
     }
 
+    bool ReadFileInChunks(const char* path, const std::function<void(const uint8_t*, size_t)>& onChunk) noexcept override
+    {
+        return true;
+    }
+
     bool RemoveFile(const char* path) noexcept override
     {
         return true;

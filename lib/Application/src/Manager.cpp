@@ -15,8 +15,9 @@
 
 #include <sstream>
 
-Manager::Manager(IBridge* bridge) noexcept
-    : m_bridge(bridge)
+Manager::Manager(IStorage* const storage, IBridge* const bridge) noexcept
+    : m_storage(storage)
+    , m_bridge(bridge)
     , m_busDriver()
     , m_bus(m_busDriver)
     , m_syncRoot()

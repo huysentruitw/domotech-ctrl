@@ -1,0 +1,20 @@
+{
+  "name": "Storage",
+  "version": "1.0.0",
+  "description": "Storage library",
+  "keywords": "storage, littlefs, esp32, esp-idf",
+  "frameworks": "espidf",
+  "platforms": [
+    "espressif32"
+  ],
+  "dependencies": {
+    "Locking": "*"
+  },
+  "srcDir": "src",
+  "build": {
+    "flags": [
+      "-I$IDF_PATH/components/driver/include",
+      "-I$IDF_PATH/components/esp_rom/include"
+    ]
+  }
+}

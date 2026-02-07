@@ -1,6 +1,7 @@
 #include <unity.h>
 
 #include <Manager.h>
+#include "../../Mocks/MockStorage.h"
 
 void setUp(void)
 {
@@ -13,7 +14,8 @@ void tearDown(void)
 void Manager_GetKnownFiltersIni()
 {
     // Arrange
-    Manager manager;
+    MockStorage storage;
+    Manager manager(&storage);
     std::string expectedIniContent =
         "[Filter]\n"
         "Type=Switch\n"

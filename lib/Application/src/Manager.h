@@ -5,6 +5,7 @@
 
 #include <Filter.h>
 #include <IBridge.h>
+#include <IStorage.h>
 #include <Lock.h>
 #include <Module.h>
 #include <StringHash.h>
@@ -18,7 +19,7 @@
 class Manager final
 {
 public:
-    Manager(IBridge* bridge = nullptr) noexcept;
+    Manager(IStorage* const storage, IBridge* const bridge = nullptr) noexcept;
 
     void Start() noexcept;
     void ProcessNext() noexcept;
@@ -32,12 +33,13 @@ public:
     std::string GetConfigurationIni() const noexcept;
 
 private:
-    IBridge* m_bridge = nullptr;
+    IStorage* const m_storage;
+    IBridge* const m_bridge = nullptr;
 
-    const BusDriver m_busDriver;
-    const ScanLed m_scanLed;
-    const Bus m_bus;
-    const Lock m_syncRoot;
+    BusDriver m_busDriver;
+    ScanLed m_scanLed;
+    Bus m_bus;
+    Lock m_syncRoot;
 
     uint16_t m_tick = 0;
 

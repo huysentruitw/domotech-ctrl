@@ -14,7 +14,8 @@
     "Filtering": "*",
     "Ini": "*",
     "Locking": "*",
-    "Module": "*"
+    "Module": "*",
+    "Storage": "*"
   },
   "srcDir": "src",
   "build": {

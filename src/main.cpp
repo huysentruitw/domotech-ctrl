@@ -3,6 +3,7 @@
 
 #include <HomeAssistantBridge.h>
 #include <IniReader.h>
+#include <LittleFsStorage.h>
 #include <Manager.h>
 #include <Wifi.h>
 
@@ -16,9 +17,10 @@
 #define VERSION "1.0"
 #define POSIX_TIMEZONE "CET-1CEST,M3.5.0/2,M10.5.0/3" // Belgium
 
+LittleFsStorage storage;
 Wifi wifi;
 HomeAssistantBridge homeAssistantBridge;
-Manager manager(&homeAssistantBridge);
+Manager manager(&storage, &homeAssistantBridge);
 
 void time_init(void)
 {

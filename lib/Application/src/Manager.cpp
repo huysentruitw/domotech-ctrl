@@ -15,6 +15,9 @@
 
 #include <sstream>
 
+#define MODULE_CONFIG_FILE_NAME "ModuleConfig.ini"
+#define FILTER_CONFIG_FILE_NAME "FilterConfig.ini"
+
 Manager::Manager(IStorage* const storage, IBridge* const bridge) noexcept
     : m_storage(storage)
     , m_bridge(bridge)
@@ -46,6 +49,9 @@ void Manager::Clear() noexcept
     LockGuard guard(m_syncRoot);
     m_filtersById.clear();
     m_modules.clear();
+
+    m_storage->RemoveFile(FILTER_CONFIG_FILE_NAME);
+    m_storage->RemoveFile(MODULE_CONFIG_FILE_NAME);
 }
 
 RescanModulesResult Manager::RescanModules() noexcept

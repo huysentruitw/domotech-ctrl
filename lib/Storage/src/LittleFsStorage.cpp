@@ -74,9 +74,16 @@ bool LittleFsStorage::Format() noexcept
     return true;
 }
 
-bool LittleFsStorage::WriteFile(const char* path, const std::vector<uint8_t>& data) noexcept
+bool LittleFsStorage::WriteFile(std::string_view fileName, const std::vector<uint8_t>& data) noexcept
 {
     LockGuard guard(m_syncRoot);
+
+    char path[64];
+    if (!MakeFullPath(fileName, path, sizeof(path)))
+    {
+        ESP_LOGE(TAG, "Invalid or too-long file name");
+        return false;
+    }
 
     FILE* f = fopen(path, "wb");
     if (!f)
@@ -91,9 +98,16 @@ bool LittleFsStorage::WriteFile(const char* path, const std::vector<uint8_t>& da
     return written == data.size();
 }
 
-bool LittleFsStorage::ReadFile(const char* path, std::vector<uint8_t>& out) noexcept
+bool LittleFsStorage::ReadFile(std::string_view fileName, std::vector<uint8_t>& out) noexcept
 {
     LockGuard guard(m_syncRoot);
+
+    char path[64];
+    if (!MakeFullPath(fileName, path, sizeof(path)))
+    {
+        ESP_LOGE(TAG, "Invalid or too-long file name");
+        return false;
+    }
 
     FILE* f = fopen(path, "rb");
     if (!f)
@@ -119,9 +133,16 @@ bool LittleFsStorage::ReadFile(const char* path, std::vector<uint8_t>& out) noex
     return read == static_cast<size_t>(size);
 }
 
-bool LittleFsStorage::ReadFileInChunks(const char* path, const std::function<void(const uint8_t*, size_t)>& onChunk) noexcept
+bool LittleFsStorage::ReadFileInChunks(std::string_view fileName, const std::function<void(const uint8_t*, size_t)>& onChunk) noexcept
 {
     LockGuard guard(m_syncRoot);
+
+    char path[64];
+    if (!MakeFullPath(fileName, path, sizeof(path)))
+    {
+        ESP_LOGE(TAG, "Invalid or too-long file name");
+        return false;
+    }
 
     FILE* f = fopen(path, "rb");
     if (!f)
@@ -147,10 +168,27 @@ bool LittleFsStorage::ReadFileInChunks(const char* path, const std::function<voi
     return true;
 }
 
-bool LittleFsStorage::RemoveFile(const char* path) noexcept
+bool LittleFsStorage::RemoveFile(std::string_view fileName) noexcept
 {
     LockGuard guard(m_syncRoot);
+
+    char path[64];
+    if (!MakeFullPath(fileName, path, sizeof(path)))
+    {
+        ESP_LOGE(TAG, "Invalid or too-long file name");
+        return false;
+    }
+
     return unlink(path);
+}
+
+bool LittleFsStorage::MakeFullPath(std::string_view fileName, char* out, size_t outSize) const noexcept
+{
+    if (fileName.empty() || fileName.find('/') != std::string_view::npos)
+        return false;
+
+    int written = snprintf(out, outSize, "%s/%.*s", m_config.base_path, (int)fileName.size(), fileName.data());
+    return written > 0 && static_cast<size_t>(written) < outSize;
 }
 
 #endif

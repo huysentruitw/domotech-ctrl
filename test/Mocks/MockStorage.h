@@ -8,22 +8,22 @@ public:
         return true;
     }
 
-    bool WriteFile(const char* path, const std::vector<uint8_t>& data) noexcept override
+    bool WriteFile(std::string_view fileName, const std::vector<uint8_t>& data) noexcept override
     {
         return true;
     }
 
-    bool ReadFile(const char* path, std::vector<uint8_t>& out) noexcept override
+    bool ReadFile(std::string_view fileName, std::vector<uint8_t>& out) noexcept override
     {
         return true;
     }
 
-    bool ReadFileInChunks(const char* path, const std::function<void(const uint8_t*, size_t)>& onChunk) noexcept override
+    bool ReadFileInChunks(std::string_view fileName, const std::function<void(const uint8_t*, size_t)>& onChunk) noexcept override
     {
         return true;
     }
 
-    bool RemoveFile(const char* path) noexcept override
+    bool RemoveFile(std::string_view fileName) noexcept override
     {
         return true;
     }

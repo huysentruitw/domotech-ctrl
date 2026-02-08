@@ -1,6 +1,7 @@
 #pragma once
 
-#include <string>
+#include <optional>
+#include <string_view>
 
 enum class ModuleType
 {
@@ -20,3 +21,4 @@ enum class ModuleType
 };
 
 std::string_view GetModuleTypeName(ModuleType moduleType) noexcept;
+std::optional<ModuleType> GetModuleType(std::string_view typeName) noexcept;

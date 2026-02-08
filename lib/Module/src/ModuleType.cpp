@@ -1,10 +1,9 @@
 #include "ModuleType.h"
 
-std::string_view GetModuleTypeName(ModuleType moduleType) noexcept
+constexpr auto& ModuleIdentifiers()
 {
     using enum ModuleType;
-
-    constexpr std::pair<ModuleType, std::string_view> identifiers[] =
+    static constexpr std::pair<ModuleType, std::string_view> identifiers[] =
     {
         { ModuleType::Dimmer, "Dimmer" },
         { ModuleType::Temperature, "Temperature" },
@@ -20,12 +19,27 @@ std::string_view GetModuleTypeName(ModuleType moduleType) noexcept
 
         { ModuleType::Input, "Input" },
     };
+    return identifiers;
+}
 
-    for (auto&& [key, value] : identifiers)
+std::string_view GetModuleTypeName(ModuleType moduleType) noexcept
+{
+    for (auto&& [key, value] : ModuleIdentifiers())
     {
         if (key == moduleType)
             return value;
     }
 
     return "Unknown";
+}
+
+std::optional<ModuleType> GetModuleType(std::string_view typeName) noexcept
+{
+    for (auto&& [key, value] : ModuleIdentifiers())
+    {
+        if (value == typeName)
+            return key;
+    }
+
+    return std::nullopt;
 }

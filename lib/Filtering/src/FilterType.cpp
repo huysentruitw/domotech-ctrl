@@ -1,10 +1,9 @@
 #include "FilterType.h"
 
-std::string_view GetFilterTypeName(FilterType filterType) noexcept
+constexpr auto& FilterIdentifiers()
 {
     using enum FilterType;
-
-    constexpr std::pair<FilterType, std::string_view> identifiers[] =
+    static constexpr std::pair<FilterType, std::string_view> identifiers[] =
     {
         { FilterType::Switch, "Switch" },
         { FilterType::Light, "Light" },
@@ -13,12 +12,27 @@ std::string_view GetFilterTypeName(FilterType filterType) noexcept
         { FilterType::Climate, "Climate" },
         { FilterType::DigitalPassthrough, "DigitalPassthrough" },
     };
+    return identifiers;
+}
 
-    for (auto&& [key, value] : identifiers)
+std::string_view GetFilterTypeName(FilterType filterType) noexcept
+{
+    for (auto&& [key, value] : FilterIdentifiers())
     {
         if (key == filterType)
             return value;
     }
 
     return "Unknown";
+}
+
+std::optional<FilterType> GetFilterType(std::string_view filterTypeName) noexcept
+{
+    for (auto&& [key, value] : FilterIdentifiers())
+    {
+        if (value == filterTypeName)
+            return key;
+    }
+
+    return std::nullopt;
 }

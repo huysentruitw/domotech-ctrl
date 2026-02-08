@@ -1,6 +1,7 @@
 #pragma once
 
-#include <string>
+#include <optional>
+#include <string_view>
 
 enum class FilterType
 {
@@ -13,3 +14,4 @@ enum class FilterType
 };
 
 std::string_view GetFilterTypeName(FilterType filterType) noexcept;
+std::optional<FilterType> GetFilterType(std::string_view filterTypeName) noexcept;

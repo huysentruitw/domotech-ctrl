@@ -77,6 +77,16 @@ bool LittleFsStorage::Format() noexcept
 
 bool LittleFsStorage::WriteFile(std::string_view fileName, std::string_view content) noexcept
 {
+    return InternalWriteFile(fileName, content, false);
+}
+
+bool LittleFsStorage::AppendFile(std::string_view fileName, std::string_view content) noexcept
+{
+    return InternalWriteFile(fileName, content, true);
+}
+
+bool LittleFsStorage::InternalWriteFile(std::string_view fileName, std::string_view content, bool append) noexcept
+{
     LockGuard guard(m_syncRoot);
 
     char path[64];
@@ -86,10 +96,10 @@ bool LittleFsStorage::WriteFile(std::string_view fileName, std::string_view cont
         return false;
     }
 
-    FILE* f = fopen(path, "w");
+    FILE* f = fopen(path, append ? "ab" : "wb");
     if (!f)
     {
-        ESP_LOGE(TAG, "Failed to open %s for writing", path);
+        ESP_LOGE(TAG, "Failed to open %s for %s", path, append ? "appending" : "writing");
         return false;
     }
 
@@ -112,7 +122,7 @@ bool LittleFsStorage::ReadFile(std::string_view fileName, char* buffer, size_t b
         return false;
     }
 
-    FILE* f = fopen(path, "r");
+    FILE* f = fopen(path, "rb");
     if (!f)
     {
         ESP_LOGE(TAG, "Failed to open %s for reading", path);

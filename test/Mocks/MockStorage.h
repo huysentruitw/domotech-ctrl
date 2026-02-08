@@ -13,6 +13,11 @@ public:
         return true;
     }
 
+    bool AppendFile(std::string_view fileName, std::string_view content) noexcept override
+    {
+        return true;
+    }
+
     bool ReadFile(std::string_view fileName, char* buffer, size_t bufferSize, size_t& read) noexcept override
     {
         return true;

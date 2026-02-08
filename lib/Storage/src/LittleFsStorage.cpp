@@ -8,6 +8,7 @@
 
 #include <stdio.h>
 #include <unistd.h>
+#include <sys/errno.h>
 
 #define TAG "STORAGE"
 
@@ -74,7 +75,7 @@ bool LittleFsStorage::Format() noexcept
     return true;
 }
 
-bool LittleFsStorage::WriteFile(std::string_view fileName, const std::vector<uint8_t>& data) noexcept
+bool LittleFsStorage::WriteFile(std::string_view fileName, std::string_view content) noexcept
 {
     LockGuard guard(m_syncRoot);
 
@@ -85,22 +86,24 @@ bool LittleFsStorage::WriteFile(std::string_view fileName, const std::vector<uin
         return false;
     }
 
-    FILE* f = fopen(path, "wb");
+    FILE* f = fopen(path, "w");
     if (!f)
     {
         ESP_LOGE(TAG, "Failed to open %s for writing", path);
         return false;
     }
 
-    const size_t written = fwrite(data.data(), 1, data.size(), f);
+    const size_t written = fwrite(content.data(), 1, content.size(), f);
     fclose(f);
 
-    return written == data.size();
+    return written == content.size();
 }
 
-bool LittleFsStorage::ReadFile(std::string_view fileName, std::vector<uint8_t>& out) noexcept
+bool LittleFsStorage::ReadFile(std::string_view fileName, char* buffer, size_t bufferSize, size_t& read) noexcept
 {
     LockGuard guard(m_syncRoot);
+
+    read = 0;
 
     char path[64];
     if (!MakeFullPath(fileName, path, sizeof(path)))
@@ -109,7 +112,7 @@ bool LittleFsStorage::ReadFile(std::string_view fileName, std::vector<uint8_t>& 
         return false;
     }
 
-    FILE* f = fopen(path, "rb");
+    FILE* f = fopen(path, "r");
     if (!f)
     {
         ESP_LOGE(TAG, "Failed to open %s for reading", path);
@@ -117,23 +120,31 @@ bool LittleFsStorage::ReadFile(std::string_view fileName, std::vector<uint8_t>& 
     }
 
     fseek(f, 0, SEEK_END);
-    const long size = ftell(f);
+    const long ret = ftell(f);
     fseek(f, 0, SEEK_SET);
 
-    if (size < 0)
+    if (ret < 0)
     {
         fclose(f);
         return false;
     }
 
-    out.resize(size);
-    const size_t read = fread(out.data(), 1, size, f);
+    const size_t fileSize = static_cast<size_t>(ret);
+
+    if (fileSize > bufferSize)
+    {
+        ESP_LOGE(TAG, "Buffer of size %d too small to read %s of size %d", bufferSize, path, fileSize);
+        fclose(f);
+        return false;
+    }
+
+    read = fread(buffer, 1, fileSize, f);
     fclose(f);
 
-    return read == static_cast<size_t>(size);
+    return read == fileSize;
 }
 
-bool LittleFsStorage::ReadFileInChunks(std::string_view fileName, const std::function<void(const uint8_t*, size_t)>& onChunk) noexcept
+bool LittleFsStorage::ReadFileInChunks(std::string_view fileName, const std::function<void(const char*, size_t)>& onChunk) noexcept
 {
     LockGuard guard(m_syncRoot);
 
@@ -151,7 +162,7 @@ bool LittleFsStorage::ReadFileInChunks(std::string_view fileName, const std::fun
         return false;
     }
 
-    uint8_t buffer[256];
+    char buffer[256];
 
     while (true)
     {
@@ -179,7 +190,19 @@ bool LittleFsStorage::RemoveFile(std::string_view fileName) noexcept
         return false;
     }
 
-    return unlink(path);
+    if (unlink(path) == 0)
+        return true;
+
+    const int err = errno;
+
+    if (err == ENOENT)
+    {
+        ESP_LOGW(TAG, "Trying to remove %s but file was not found", path);
+        return false;
+    }
+
+    ESP_LOGE(TAG, "Failed to remove %s (errno=%d)", path, err);
+    return false;
 }
 
 bool LittleFsStorage::MakeFullPath(std::string_view fileName, char* out, size_t outSize) const noexcept

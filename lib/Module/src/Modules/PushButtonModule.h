@@ -11,6 +11,7 @@ public:
     PushButtonModule(const Bus& bus, const uint8_t address, const uint8_t numberOfButtons) noexcept;
 
     static std::unique_ptr<PushButtonModule> CreateFromInitialData(const Bus& bus, const uint8_t address, const uint16_t initialData) noexcept;
+    uint16_t GenerateInitialData() const noexcept override;
 
     ProcessResponse Process() noexcept override;
 

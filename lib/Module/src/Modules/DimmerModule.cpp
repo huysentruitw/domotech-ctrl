@@ -20,6 +20,11 @@ std::unique_ptr<DimmerModule> DimmerModule::CreateFromInitialData(const Bus& bus
     return std::make_unique<DimmerModule>(bus, address, 16);
 }
 
+uint16_t DimmerModule::GenerateInitialData() const noexcept
+{
+    return 0;
+}
+
 ProcessResponse DimmerModule::Process() noexcept
 {
     auto response = Exchange(0x00, false);

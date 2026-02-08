@@ -44,7 +44,7 @@ ModuleType Module::GetType() const noexcept
     return m_type;
 }
 
-void Module::WriteConfig(IniWriter& iniWriter) const noexcept
+void Module::WriteDescriptor(IniWriter& iniWriter) const noexcept
 {
     iniWriter.WriteSection("Module");
     iniWriter.WriteKeyValue("Id", GetId());

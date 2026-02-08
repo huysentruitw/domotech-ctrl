@@ -1,8 +1,10 @@
 #include "Manager.h"
 #include "ConnectionsParser.h"
 
+#include <IniReader.h>
 #include <IniWriter.h>
 #include <LockGuard.h>
+#include <ModuleFactory.h>
 #include <ModuleScanner.h>
 
 #include <FilterFactory.h>
@@ -15,7 +17,7 @@
 
 #include <sstream>
 
-#define MODULE_CONFIG_FILE_NAME "ModuleConfig.ini"
+#define MODULES_FILE_NAME "Modules.ini"
 #define FILTER_CONFIG_FILE_NAME "FilterConfig.ini"
 
 Manager::Manager(IStorage* const storage, IBridge* const bridge) noexcept
@@ -30,6 +32,7 @@ Manager::Manager(IStorage* const storage, IBridge* const bridge) noexcept
 void Manager::Start() noexcept
 {
     m_busDriver.Init();
+    LoadModulesFromFile();
 }
 
 void Manager::ProcessNext() noexcept
@@ -46,32 +49,102 @@ void Manager::ProcessNext() noexcept
 
 void Manager::Clear() noexcept
 {
-    LockGuard guard(m_syncRoot);
-    m_filtersById.clear();
-    m_modules.clear();
+    {
+        LockGuard guard(m_syncRoot);
+        m_filtersById.clear();
+        m_modules.clear();
+    }
 
-    m_storage->RemoveFile(FILTER_CONFIG_FILE_NAME);
-    m_storage->RemoveFile(MODULE_CONFIG_FILE_NAME);
+    SaveModulesToFile();
 }
 
 RescanModulesResult Manager::RescanModules() noexcept
 {
-    LockGuard guard(m_syncRoot);
+    {
+        LockGuard guard(m_syncRoot);
 
-    const ModuleScanner scanner(m_bus);
-    auto detectedModules = scanner.DetectModules();
+        m_filtersById.clear();
+        m_modules.clear();
 
-    m_filtersById.clear();
-    m_modules.clear();
+        const ModuleScanner scanner(m_bus);
+        auto detectedModules = scanner.DetectModules();
 
-    m_modules.reserve(detectedModules.size());
-    for (auto& module : detectedModules)
-        m_modules.emplace_back(std::shared_ptr(std::move(module)));
+        m_modules.reserve(detectedModules.size());
+        for (auto& module : detectedModules)
+            m_modules.emplace_back(std::shared_ptr(std::move(module)));
+    }
+
+    SaveModulesToFile();
 
     return
     {
         .NumberOfDetectedModules = m_modules.size(),
     };
+}
+
+void Manager::SaveModulesToFile() noexcept
+{
+    LockGuard guard(m_syncRoot);
+    IniWriter iniWriter;
+
+    for (const auto& module : m_modules)
+    {
+        iniWriter.WriteSection("Module");
+        iniWriter.WriteKeyValue("Type", std::to_string((int)module->GetType()));
+        iniWriter.WriteKeyValue("Address", std::to_string(module->GetAddress()));
+        iniWriter.WriteKeyValue("InitialData", std::to_string(module->GenerateInitialData()));
+    }
+
+    m_storage->WriteFile(MODULES_FILE_NAME, iniWriter.GetContent());
+}
+
+void Manager::LoadModulesFromFile() noexcept
+{
+    LockGuard guard(m_syncRoot);
+    m_filtersById.clear();
+    m_modules.clear();
+
+    std::string type;
+    std::string address;
+    std::string initialData;
+
+    type.reserve(2);
+    address.reserve(3);
+    initialData.reserve(5);
+
+    IniReader iniReader;
+
+    iniReader.OnSection([&](std::string_view section)
+    {
+        type.clear();
+        address.clear();
+        initialData.clear();
+    });
+
+    iniReader.OnKeyValue([&](std::string_view section, std::string_view key, std::string_view value)
+    {
+        if (key == "Type") type = value;
+        else if (key == "Address") address = value;
+        else if (key == "InitialData") initialData = value;
+
+        if (!type.empty() && !address.empty() && !initialData.empty())
+        {
+            std::unique_ptr<Module> module = ModuleFactory::CreateModule(
+                m_bus,
+                static_cast<ModuleType>(std::stoi(type)),
+                static_cast<uint8_t>(std::stoi(address)),
+                static_cast<uint16_t>(std::stoi(initialData)));
+
+            m_modules.emplace_back(std::shared_ptr(std::move(module)));
+        }
+    });
+
+    m_storage->ReadFileInChunks(MODULES_FILE_NAME, [&](const char* chunk, size_t chunkSize)
+    {
+        iniReader.Feed(chunk, chunkSize);
+    });
+
+    iniReader.Finalize();
 }
 
 bool Manager::TryCreateFilter(std::string_view typeName, std::string_view id, std::string_view connections) noexcept
@@ -136,21 +209,32 @@ std::string Manager::GetKnownFiltersIni() const noexcept
     return iniWriter.GetContent();
 }
 
-std::string Manager::GetConfigurationIni() const noexcept
+std::string Manager::ReadModulesIniFile() const noexcept
 {
-    IniWriter iniWriter;
+    std::string result;
 
-    {
-        LockGuard guard(m_syncRoot);
+    bool ok = m_storage->ReadFileInChunks(
+        MODULES_FILE_NAME,
+        [&](const char* data, size_t size)
+        {
+            result.append(data, size);
+        });
 
-        for (const auto& module : m_modules)
-            module->WriteConfig(iniWriter);
+    return ok ? result : std::string{};
 
-        for (const auto& [id, filter] : m_filtersById)
-            filter->WriteConfig(iniWriter);
-    }
+    // IniWriter iniWriter;
 
-    return iniWriter.GetContent();
+    // {
+    //     LockGuard guard(m_syncRoot);
+
+    //     for (const auto& module : m_modules)
+    //         module->WriteConfig(iniWriter);
+
+    //     for (const auto& [id, filter] : m_filtersById)
+    //         filter->WriteConfig(iniWriter);
+    // }
+
+    // return iniWriter.GetContent();
 }
 
 std::shared_ptr<Filter> Manager::TryGetFilterById(std::string_view id) const noexcept

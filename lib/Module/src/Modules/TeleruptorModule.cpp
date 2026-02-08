@@ -28,6 +28,11 @@ std::unique_ptr<TeleruptorModule> TeleruptorModule::CreateFromInitialData(const 
     return std::make_unique<TeleruptorModule>(bus, address, initialData & 0x0F);
 }
 
+uint16_t TeleruptorModule::GenerateInitialData() const noexcept
+{
+    return static_cast<uint16_t>(m_numberOfTeleruptors);
+}
+
 ProcessResponse TeleruptorModule::Process() noexcept
 {
     const bool forceDataExchange = !m_feedbackStateInSync;

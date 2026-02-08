@@ -22,6 +22,11 @@ std::unique_ptr<InputModule> InputModule::CreateFromInitialData(const Bus& bus, 
     return std::make_unique<InputModule>(bus, address, (initialData >> 12) & 0x0F);
 }
 
+uint16_t InputModule::GenerateInitialData() const noexcept
+{
+    return static_cast<uint16_t>(m_numberOfInputs) << 12;
+}
+
 ProcessResponse InputModule::Process() noexcept
 {
     const bool forceDataExchange = !m_stateInSync;

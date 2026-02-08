@@ -30,6 +30,11 @@ std::unique_ptr<PushButtonLedModule> PushButtonLedModule::CreateFromInitialData(
     return std::make_unique<PushButtonLedModule>(bus, address, (initialData >> 12) & 0x0F);
 }
 
+uint16_t PushButtonLedModule::GenerateInitialData() const noexcept
+{
+    return static_cast<uint16_t>(m_numberOfButtons) << 12;
+}
+
 ProcessResponse PushButtonLedModule::Process() noexcept
 {
     const auto forceDataExchange = m_hasPressedButtons;

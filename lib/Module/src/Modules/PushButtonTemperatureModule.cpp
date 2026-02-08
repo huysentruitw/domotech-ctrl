@@ -26,6 +26,11 @@ std::unique_ptr<PushButtonTemperatureModule> PushButtonTemperatureModule::Create
     return std::make_unique<PushButtonTemperatureModule>(bus, address, (initialData >> 12) & 0x0F);
 }
 
+uint16_t PushButtonTemperatureModule::GenerateInitialData() const noexcept
+{
+    return static_cast<uint16_t>(m_numberOfButtons) << 12;
+}
+
 ProcessResponse PushButtonTemperatureModule::Process() noexcept
 {
     const bool forceDataExchange = !m_stateInSync || m_hasPressedButtons;

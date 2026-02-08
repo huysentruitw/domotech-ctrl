@@ -89,7 +89,7 @@ esp_err_t known_filters_handler(httpd_req_t *req)
 
 esp_err_t configuration_handler(httpd_req_t *req)
 {
-    const auto ini = manager.GetConfigurationIni();
+    const auto ini = manager.ReadModulesIniFile();
     httpd_resp_set_hdr(req, "Connection", "close");
     httpd_resp_set_type(req, "text/plain");
     httpd_resp_sendstr(req, ini.c_str());

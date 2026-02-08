@@ -11,6 +11,7 @@ public:
     InputModule(const Bus& bus, const uint8_t address, const uint8_t numberOfInputs) noexcept;
 
     static std::unique_ptr<InputModule> CreateFromInitialData(const Bus& bus, const uint8_t address, const uint16_t initialData) noexcept;
+    uint16_t GenerateInitialData() const noexcept override;
 
     ProcessResponse Process() noexcept override;
 

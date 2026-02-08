@@ -20,13 +20,15 @@ class Module : public Node
 public:
     Module(const Bus& bus, const uint8_t address, const ModuleType moduleType) noexcept;
 
+    virtual uint16_t GenerateInitialData() const noexcept = 0;
+
     void Tick(uint16_t tick) noexcept;
     virtual ProcessResponse Process() noexcept = 0;
 
     uint8_t GetAddress() const noexcept;
     ModuleType GetType() const noexcept;
 
-    void WriteConfig(IniWriter& iniWriter) const noexcept;
+    void WriteDescriptor(IniWriter& iniWriter) const noexcept;
 
 protected:
     ScanResponse Exchange(const uint16_t data, const bool forceDataExchange) const noexcept;

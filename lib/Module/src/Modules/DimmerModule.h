@@ -13,6 +13,7 @@ public:
     DimmerModule(const Bus& bus, const uint8_t address, const uint8_t numberOfChannels) noexcept;
 
     static std::unique_ptr<DimmerModule> CreateFromInitialData(const Bus& bus, const uint8_t address, const uint16_t initialData) noexcept;
+    uint16_t GenerateInitialData() const noexcept override;
 
     ProcessResponse Process() noexcept override;
 

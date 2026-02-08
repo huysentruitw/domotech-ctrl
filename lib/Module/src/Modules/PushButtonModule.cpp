@@ -22,6 +22,11 @@ std::unique_ptr<PushButtonModule> PushButtonModule::CreateFromInitialData(const 
     return std::make_unique<PushButtonModule>(bus, address, (initialData >> 12) & 0x0F);
 }
 
+uint16_t PushButtonModule::GenerateInitialData() const noexcept
+{
+    return static_cast<uint16_t>(m_numberOfButtons) << 12;
+}
+
 ProcessResponse PushButtonModule::Process() noexcept
 {
     const auto forceDataExchange = m_hasPressedButtons;

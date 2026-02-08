@@ -30,7 +30,11 @@ public:
     bool TryCreateFilter(std::string_view typeName, std::string_view id, std::string_view connections) noexcept;
 
     std::string GetKnownFiltersIni() const noexcept;
-    std::string GetConfigurationIni() const noexcept;
+    std::string ReadModulesIniFile() const noexcept;
+
+private:
+    void SaveModulesToFile() noexcept;
+    void LoadModulesFromFile() noexcept;
 
 private:
     IStorage* const m_storage;

@@ -195,20 +195,6 @@ bool Manager::TryCreateFilter(std::string_view typeName, std::string_view id, st
     return true;
 }
 
-std::string Manager::GetKnownFiltersIni() const noexcept
-{
-    IniWriter iniWriter;
-
-    SwitchFilter().WriteDescriptor(iniWriter);
-    LightFilter().WriteDescriptor(iniWriter);
-    DimmerFilter().WriteDescriptor(iniWriter);
-    ShutterFilter().WriteDescriptor(iniWriter);
-    ClimateFilter().WriteDescriptor(iniWriter);
-    DigitalPassthroughFilter().WriteDescriptor(iniWriter);
-
-    return iniWriter.GetContent();
-}
-
 std::string Manager::ReadModulesIniFile() const noexcept
 {
     std::string result;

@@ -29,7 +29,6 @@ public:
 
     bool TryCreateFilter(std::string_view typeName, std::string_view id, std::string_view connections) noexcept;
 
-    std::string GetKnownFiltersIni() const noexcept;
     std::string ReadModulesIniFile() const noexcept;
 
 private:

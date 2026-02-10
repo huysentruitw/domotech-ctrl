@@ -1,6 +1,7 @@
 #include <format>
 #include <string>
 
+#include <FilterFactory.h>
 #include <HomeAssistantBridge.h>
 #include <IniReader.h>
 #include <LittleFsStorage.h>
@@ -80,7 +81,7 @@ esp_err_t index_handler(httpd_req_t *req)
 
 esp_err_t known_filters_handler(httpd_req_t *req)
 {
-    const auto ini = manager.GetKnownFiltersIni();
+    const auto ini = FilterFactory::GetKnownFiltersIni();
     httpd_resp_set_hdr(req, "Connection", "close");
     httpd_resp_set_type(req, "text/plain");
     httpd_resp_sendstr(req, ini.c_str());

@@ -17,3 +17,17 @@ std::unique_ptr<Filter> FilterFactory::TryCreateFilterByTypeName(std::string_vie
     if (typeName == GetFilterTypeName(FilterType::DigitalPassthrough)) return std::make_unique<DigitalPassthroughFilter>(id);
     return nullptr;
 }
+
+std::string FilterFactory::GetKnownFiltersIni() noexcept
+{
+    IniWriter iniWriter;
+
+    SwitchFilter().WriteDescriptor(iniWriter);
+    LightFilter().WriteDescriptor(iniWriter);
+    DimmerFilter().WriteDescriptor(iniWriter);
+    ShutterFilter().WriteDescriptor(iniWriter);
+    ClimateFilter().WriteDescriptor(iniWriter);
+    DigitalPassthroughFilter().WriteDescriptor(iniWriter);
+
+    return iniWriter.GetContent();
+}

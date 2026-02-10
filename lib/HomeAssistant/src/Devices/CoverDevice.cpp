@@ -72,7 +72,7 @@ void CoverDevice::ProcessCommand(std::string_view subtopic, std::string_view com
     }
 }
 
-void CoverDevice::OnPinStateChanged(const Pin& pin) noexcept
+void CoverDevice::EnqueueCurrentState() noexcept
 {
     if (!m_tapOpen || !m_tapClose)
         return;
@@ -94,4 +94,9 @@ void CoverDevice::OnPinStateChanged(const Pin& pin) noexcept
     event.PayloadLength = snprintf(event.Payload, sizeof(event.Payload), payload);
     event.Retain = false;
     eventBus->EnqueueEvent(event);
+}
+
+void CoverDevice::OnPinStateChanged(const Pin& pin) noexcept
+{
+    EnqueueCurrentState();
 }

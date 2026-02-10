@@ -18,6 +18,7 @@ public:
 
     void SubscribeToStateChanges() noexcept override;
     void ProcessCommand(std::string_view subtopic, std::string_view command) const noexcept override;
+    void EnqueueCurrentState() noexcept override;
 
 private:
     mutable std::shared_ptr<Pin> m_tapOpen;

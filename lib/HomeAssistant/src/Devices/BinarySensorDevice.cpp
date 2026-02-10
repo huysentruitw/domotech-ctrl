@@ -51,20 +51,25 @@ void BinarySensorDevice::ProcessCommand(std::string_view subtopic, std::string_v
     // This device doesn't support commands
 }
 
-void BinarySensorDevice::OnPinStateChanged(const Pin& pin) noexcept
+void BinarySensorDevice::EnqueueCurrentState() noexcept
 {
+    if (!m_tap)
+        return;
+
     auto eventBus = TryGetEventBus();
     if (!eventBus)
         return;
+    
+    std::string_view id = GetId();
+    BridgeEvent event{};
+    event.Type = BridgeEvent::Type::PublishState;
+    event.TopicLength = snprintf(event.Topic, sizeof(event.Topic), "domo/dev/%.*s/state", (int)id.length(), id.data());
+    event.PayloadLength = snprintf(event.Payload, sizeof(event.Payload), m_tap->GetStateAs<DigitalValue>() ? "ON" : "OFF");
+    event.Retain = true;
+    eventBus->EnqueueEvent(event);
+}
 
-    if (pin == m_tap)
-    {
-        std::string_view id = GetId();
-        BridgeEvent event{};
-        event.Type = BridgeEvent::Type::PublishState;
-        event.TopicLength = snprintf(event.Topic, sizeof(event.Topic), "domo/dev/%.*s/state", (int)id.length(), id.data());
-        event.PayloadLength = snprintf(event.Payload, sizeof(event.Payload), pin.GetStateAs<DigitalValue>() ? "ON" : "OFF");
-        event.Retain = true;
-        eventBus->EnqueueEvent(event);
-    }
+void BinarySensorDevice::OnPinStateChanged(const Pin& pin) noexcept
+{
+    EnqueueCurrentState();
 }

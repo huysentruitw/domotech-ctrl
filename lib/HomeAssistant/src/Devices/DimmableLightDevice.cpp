@@ -67,39 +67,44 @@ void DimmableLightDevice::ProcessCommand(std::string_view subtopic, std::string_
     }
 }
 
-void DimmableLightDevice::OnPinStateChanged(const Pin& pin) noexcept
+void DimmableLightDevice::EnqueueCurrentState() noexcept
 {
+    if (!m_tap)
+        return;
+
     auto eventBus = TryGetEventBus();
     if (!eventBus)
         return;
 
-    if (pin == m_tap)
+    std::string_view id = GetId();
+    const auto state = m_tap->GetStateAs<DimmerControlValue>();
+
+    // Emit status
+    uint8_t percentage = state.GetPercentage();
     {
-        std::string_view id = GetId();
-        const auto state = pin.GetStateAs<DimmerControlValue>();
-
-        // Emit status
-        uint8_t percentage = state.GetPercentage();
-        {
-            BridgeEvent event{};
-            event.Type = BridgeEvent::Type::PublishState;
-            event.TopicLength = snprintf(event.Topic, sizeof(event.Topic), "domo/dev/%.*s/state", (int)id.size(), id.data());
-            event.PayloadLength = snprintf(event.Payload, sizeof(event.Payload), percentage > 0 ? "ON" : "OFF");
-            event.Retain = true;
-            eventBus->EnqueueEvent(event);
-        }
-
-        // Emit brightness
-        if (percentage > 0)
-        {
-            BridgeEvent event{};
-            event.Type = BridgeEvent::Type::PublishState;
-            event.TopicLength = snprintf(event.Topic, sizeof(event.Topic), "domo/dev/%.*s/brightness", (int)id.size(), id.data());
-            event.PayloadLength = snprintf(event.Payload, sizeof(event.Payload), "%d", percentage);
-            event.Retain = true;
-            eventBus->EnqueueEvent(event);
-        }
+        BridgeEvent event{};
+        event.Type = BridgeEvent::Type::PublishState;
+        event.TopicLength = snprintf(event.Topic, sizeof(event.Topic), "domo/dev/%.*s/state", (int)id.size(), id.data());
+        event.PayloadLength = snprintf(event.Payload, sizeof(event.Payload), percentage > 0 ? "ON" : "OFF");
+        event.Retain = true;
+        eventBus->EnqueueEvent(event);
     }
+
+    // Emit brightness
+    if (percentage > 0)
+    {
+        BridgeEvent event{};
+        event.Type = BridgeEvent::Type::PublishState;
+        event.TopicLength = snprintf(event.Topic, sizeof(event.Topic), "domo/dev/%.*s/brightness", (int)id.size(), id.data());
+        event.PayloadLength = snprintf(event.Payload, sizeof(event.Payload), "%d", percentage);
+        event.Retain = true;
+        eventBus->EnqueueEvent(event);
+    }
+}
+
+void DimmableLightDevice::OnPinStateChanged(const Pin& pin) noexcept
+{
+    EnqueueCurrentState();
 }
 
 uint8_t DimmableLightDevice::ParsePercentage(std::string_view value) noexcept

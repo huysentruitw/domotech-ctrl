@@ -20,6 +20,7 @@ public:
 
     virtual void SubscribeToStateChanges() noexcept = 0;
     virtual void ProcessCommand(std::string_view subtopic, std::string_view command) const noexcept = 0;
+    virtual void EnqueueCurrentState() noexcept = 0;
 };
 
 template<class T, class U>

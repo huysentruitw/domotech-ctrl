@@ -49,3 +49,7 @@ void ClimateDevice::SubscribeToStateChanges() noexcept
 void ClimateDevice::ProcessCommand(std::string_view subtopic, std::string_view command) const noexcept
 {
 }
+
+void ClimateDevice::EnqueueCurrentState() noexcept
+{
+}

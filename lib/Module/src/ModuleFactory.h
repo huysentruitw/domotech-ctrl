@@ -4,7 +4,7 @@
 
 #include <cstdint>
 #include <memory>
-#include <string>
+#include <string_view>
 
 class ModuleFactory final
 {

@@ -1,7 +1,8 @@
 #include <unity.h>
 
-#include <Manager.h>
-#include "../../Mocks/MockStorage.h"
+#include <FilterFactory.h>
+
+#include <string>
 
 void setUp(void)
 {
@@ -11,11 +12,9 @@ void tearDown(void)
 {
 }
 
-void Manager_GetKnownFiltersIni()
+void FilterFactory_GetKnownFiltersIni()
 {
     // Arrange
-    MockStorage storage;
-    Manager manager(&storage);
     std::string expectedIniContent =
         "[Filter]\n"
         "Type=Switch\n"
@@ -56,7 +55,7 @@ void Manager_GetKnownFiltersIni()
         "Output.0=Output,DigitalValue\n";
 
     // Act
-    std::string iniContent = manager.GetKnownFiltersIni();
+    std::string iniContent = FilterFactory::GetKnownFiltersIni();
 
     // Assert
     TEST_ASSERT_EQUAL_STRING(expectedIniContent.c_str(), iniContent.c_str());
@@ -66,7 +65,7 @@ int main()
 {
     UNITY_BEGIN();
     
-    RUN_TEST(Manager_GetKnownFiltersIni);
+    RUN_TEST(FilterFactory_GetKnownFiltersIni);
     
     return UNITY_END();
 }

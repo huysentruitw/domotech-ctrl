@@ -12,8 +12,10 @@
 */
 
 #include <Pin.h>
+#include <StaticList.h>
 
 #include <cstddef>
+#include <optional>
 #include <string_view>
 
 struct PinIdentifier
@@ -32,14 +34,6 @@ struct Mapping
     PinIdentifier LocalPin;        // "I0" -> { Input, Index: 0}
     ModuleIdentifier RemoteModule; // "A13" -> { Address: 13 }
     PinIdentifier RemotePin;       // "O3" -> { Output, Index: 3 }
-};
-
-template<std::size_t MaxMappings>
-struct Connections
-{
-    Mapping mappings[MaxMappings];
-    std::size_t count = 0;
-    bool ok = false;
 };
 
 constexpr bool IsDigit(char c) noexcept
@@ -134,35 +128,24 @@ constexpr bool ParseMapping(Mapping &out, char const *&cur, char const *end) noe
 }
 
 template<std::size_t MaxMappings>
-constexpr Connections<MaxMappings> ParseConnections(std::string_view text) noexcept
+constexpr std::optional<StaticList<Mapping, MaxMappings>> TryParseConnections(std::string_view text) noexcept
 {
-    Connections<MaxMappings> result {};
-
     char const *cur = text.data();
     char const *end = text.data() + text.size();
 
     if (cur == end)
-    {
-        result.ok = true;
-        return result;
-    }
+        return StaticList<Mapping, MaxMappings>{};
+
+    StaticList<Mapping, MaxMappings> result;
 
     // First mapping (required if non-empty)
     {
         Mapping m;
         if (!ParseMapping(m, cur, end))
-        {
-            result.ok = false;
-            return result;
-        }
+            return std::nullopt;
 
-        if (result.count >= MaxMappings)
-        {
-            result.ok = false;
-            return result;
-        }
-
-        result.mappings[result.count++] = m;
+        if (!result.Add(m))
+            return std::nullopt;
     }
 
     // Subsequent mappings: ,Mapping
@@ -172,35 +155,19 @@ constexpr Connections<MaxMappings> ParseConnections(std::string_view text) noexc
             break;
 
         if (!MatchChar(',', cur, end))
-        {
-            result.ok = false;
-            return result;
-        }
+            return std::nullopt;
 
         SkipWhitespace(cur, end);
         if (cur >= end)
-        {
-            // Trailing comma is invalid
-            result.ok = false;
-            return result;
-        }
+            return std::nullopt; // Trailing comma is invalid
 
         Mapping m;
         if (!ParseMapping(m, cur, end))
-        {
-            result.ok = false;
-            return result;
-        }
+            return std::nullopt;
 
-        if (result.count >= MaxMappings)
-        {
-            result.ok = false;
-            return result;
-        }
-
-        result.mappings[result.count++] = m;
+        if (!result.Add(m))
+            return std::nullopt;
     }
 
-    result.ok = true;
     return result;
 }

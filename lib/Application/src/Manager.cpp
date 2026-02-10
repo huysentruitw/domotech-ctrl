@@ -1,5 +1,6 @@
 #include "Manager.h"
 #include "ConnectionsParser.h"
+#include "NumberUtilities.h"
 
 #include <IniReader.h>
 #include <IniWriter.h>
@@ -18,21 +19,23 @@
 #include <sstream>
 
 #define MODULES_FILE_NAME "Modules.ini"
-#define FILTER_CONFIG_FILE_NAME "FilterConfig.ini"
+#define FILTERS_FILE_NAME "Filter.ini"
 
 Manager::Manager(IStorage* const storage, IBridge* const bridge) noexcept
     : m_storage(storage)
     , m_bridge(bridge)
     , m_busDriver()
     , m_bus(m_busDriver)
-    , m_syncRoot()
+    , m_syncRoot(true)
 {
 }
 
 void Manager::Start() noexcept
 {
     m_busDriver.Init();
-    LoadModulesFromFile();
+
+    // LoadModulesFromFile();
+    // LoadFiltersFromFile();
 }
 
 void Manager::ProcessNext() noexcept
@@ -55,24 +58,22 @@ void Manager::Clear() noexcept
         m_modules.clear();
     }
 
-    SaveModulesToFile();
+    m_storage->RemoveFile(MODULES_FILE_NAME);
+    m_storage->RemoveFile(FILTERS_FILE_NAME);
 }
 
 RescanModulesResult Manager::RescanModules() noexcept
 {
-    {
-        LockGuard guard(m_syncRoot);
+    Clear();
 
-        m_filtersById.clear();
-        m_modules.clear();
+    LockGuard guard(m_syncRoot);
 
-        const ModuleScanner scanner(m_bus);
-        auto detectedModules = scanner.DetectModules();
+    const ModuleScanner scanner(m_bus);
+    auto detectedModules = scanner.DetectModules();
 
-        m_modules.reserve(detectedModules.size());
-        for (auto& module : detectedModules)
-            m_modules.emplace_back(std::shared_ptr(std::move(module)));
-    }
+    m_modules.reserve(detectedModules.size());
+    for (auto& module : detectedModules)
+        m_modules.emplace_back(std::shared_ptr(std::move(module)));
 
     SaveModulesToFile();
 
@@ -84,15 +85,17 @@ RescanModulesResult Manager::RescanModules() noexcept
 
 void Manager::SaveModulesToFile() noexcept
 {
-    LockGuard guard(m_syncRoot);
     IniWriter iniWriter;
 
-    for (const auto& module : m_modules)
     {
-        iniWriter.WriteSection("Module");
-        iniWriter.WriteKeyValue("Type", std::to_string((int)module->GetType()));
-        iniWriter.WriteKeyValue("Address", std::to_string(module->GetAddress()));
-        iniWriter.WriteKeyValue("InitialData", std::to_string(module->GenerateInitialData()));
+        LockGuard guard(m_syncRoot);
+        for (const auto& module : m_modules)
+        {
+            iniWriter.WriteSection("Module");
+            iniWriter.WriteKeyValue("Type", GetModuleTypeName(module->GetType()));
+            iniWriter.WriteKeyValue("Address", std::to_string(module->GetAddress()));
+            iniWriter.WriteKeyValue("InitialData", ToHex4(module->GenerateInitialData()));
+        }
     }
 
     m_storage->WriteFile(MODULES_FILE_NAME, iniWriter.GetContent());
@@ -100,127 +103,206 @@ void Manager::SaveModulesToFile() noexcept
 
 void Manager::LoadModulesFromFile() noexcept
 {
-    LockGuard guard(m_syncRoot);
-    m_filtersById.clear();
-    m_modules.clear();
-
-    std::string type;
-    std::string address;
-    std::string initialData;
-
-    type.reserve(2);
-    address.reserve(3);
-    initialData.reserve(5);
-
     IniReader iniReader;
+
+    bool inModuleSection;
+    std::optional<ModuleType> type;
+    std::optional<uint8_t> address;
+    std::optional<uint16_t> initialData;
 
     iniReader.OnSection([&](std::string_view section)
     {
-        type.clear();
-        address.clear();
-        initialData.clear();
+        inModuleSection = (section == "Module");
+        type = std::nullopt;
+        address = std::nullopt;
+        initialData = std::nullopt;
+    });
+
+    std::vector<std::unique_ptr<Module>> modules;
+    iniReader.OnKeyValue([&](std::string_view section, std::string_view key, std::string_view value)
+    {
+        if (!inModuleSection)
+            return;
+
+        if (key == "Type") type = GetModuleType(value);
+        else if (key == "Address") address = ParseInt(value);
+        else if (key == "InitialData") initialData = ParseInt(value, 16);
+
+        if (type && address && initialData)
+        {
+            modules.emplace_back(ModuleFactory::CreateModule(m_bus, *type, *address, *initialData));
+        }
+    });
+
+    if (!m_storage->ReadFileInChunks(
+        MODULES_FILE_NAME,
+        [&](const char* chunk, size_t chunkSize)
+        {
+            iniReader.Feed(chunk, chunkSize);
+        }))
+    {
+        return;
+    }
+
+    iniReader.Finalize();
+
+    LockGuard guard(m_syncRoot);
+    m_modules.reserve(modules.size());
+    for (auto& module : modules)
+        m_modules.emplace_back(std::shared_ptr(std::move(module)));
+}
+
+void Manager::AppendFilterToFile(std::string_view id, std::string_view typeName, std::string_view connections) noexcept
+{
+    IniWriter iniWriter;
+    iniWriter.WriteSection("Filter");
+    iniWriter.WriteKeyValue("Id", id);
+    iniWriter.WriteKeyValue("Type", typeName);
+    iniWriter.WriteKeyValue("Connections", connections);
+    
+    m_storage->AppendFile(FILTERS_FILE_NAME, iniWriter.GetContent());
+    m_storage->AppendFile(FILTERS_FILE_NAME, "\n");
+}
+
+void Manager::LoadFiltersFromFile() noexcept
+{
+    IniReader iniReader;
+
+    bool inFilterSection;
+    std::string id;
+    std::string typeName;
+    std::string connections;
+
+    iniReader.OnSection([&](std::string_view section)
+    {
+        inFilterSection = (section == "Filter");
+        id.clear();
+        typeName.clear();
+        connections.clear();
     });
 
     iniReader.OnKeyValue([&](std::string_view section, std::string_view key, std::string_view value)
     {
-        if (key == "Type") type = value;
-        else if (key == "Address") address = value;
-        else if (key == "InitialData") initialData = value;
+        if (!inFilterSection)
+            return;
 
-        if (!type.empty() && !address.empty() && !initialData.empty())
+        if (key == "Id") id = value;
+        else if (key == "Type") typeName = value;
+        else if (key == "Connections") connections = value;
+
+        if (!id.empty() && !typeName.empty() && !connections.empty())
+            CreateFilter(id, typeName, connections);
+    });
+
+    if (!m_storage->ReadFileInChunks(
+        FILTERS_FILE_NAME,
+        [&](const char* chunk, size_t chunkSize)
         {
-            std::unique_ptr<Module> module = ModuleFactory::CreateModule(
-                m_bus,
-                static_cast<ModuleType>(std::stoi(type)),
-                static_cast<uint8_t>(std::stoi(address)),
-                static_cast<uint16_t>(std::stoi(initialData)));
-
-            m_modules.emplace_back(std::shared_ptr(std::move(module)));
-        }
-    });
-
-    m_storage->ReadFileInChunks(MODULES_FILE_NAME, [&](const char* chunk, size_t chunkSize)
+            iniReader.Feed(chunk, chunkSize);
+        }))
     {
-        iniReader.Feed(chunk, chunkSize);
-    });
+        return;
+    }
 
     iniReader.Finalize();
 }
 
-bool Manager::TryCreateFilter(std::string_view typeName, std::string_view id, std::string_view connections) noexcept
+CreateFilterResult Manager::CreateFilter(std::string_view id, std::string_view typeName, std::string_view connections) noexcept
 {
     LockGuard guard(m_syncRoot);
 
-    if (TryGetFilterById(id) != nullptr)
-        return false;
+    CreateFilterResult result{};
+    auto filter = Manager::CreateFilterInternal(id, typeName, connections, result);
+    if (result.Status != CreateFilterStatus::NoError || filter == nullptr)
+        return result;
 
-    const auto connectionsResult = ParseConnections<8>(connections);
-    if (!connectionsResult.ok)
-        return false;
-
-    auto filter = std::shared_ptr<Filter>(FilterFactory::TryCreateFilterByTypeName(typeName, id));
-    if (filter == nullptr)
-        return false;
-
+    // Register filter
     m_filtersById.emplace(filter->GetId(), filter);
+
+    AppendFilterToFile(id, typeName, connections);
 
     if (m_bridge != nullptr)
         m_bridge->RegisterAsDevice(filter);
 
-    // Apply connections
-    for (size_t i = 0; i < connectionsResult.count; i++)
-    {
-        const auto& mapping = connectionsResult.mappings[i];
-
-        if (mapping.LocalPin.Direction == mapping.RemotePin.Direction)
-            continue;
-
-        const auto& filterPins = mapping.LocalPin.Direction == PinDirection::Input ? filter->GetInputPins() : filter->GetOutputPins();
-        if (mapping.LocalPin.Index >= filterPins.size())
-            continue;
-
-        const auto remoteModule = TryGetModuleByAddress(mapping.RemoteModule.Address);
-        if (remoteModule == nullptr)
-            continue;
-
-        const auto& remotePins = mapping.RemotePin.Direction == PinDirection::Input ? remoteModule->GetInputPins() : remoteModule->GetOutputPins();
-        if (mapping.RemotePin.Index >= remotePins.size())
-            continue;
-
-        const auto& inputPin = mapping.LocalPin.Direction == PinDirection::Input ? filterPins[mapping.LocalPin.Index] : remotePins[mapping.RemotePin.Index];
-        const auto& outputPin = mapping.LocalPin.Direction == PinDirection::Input ? remotePins[mapping.RemotePin.Index] : filterPins[mapping.LocalPin.Index];
-        Pin::Connect(inputPin, outputPin);
-    }
-
-    return true;
+    return result;
 }
 
 std::string Manager::ReadModulesIniFile() const noexcept
 {
     std::string result;
 
-    bool ok = m_storage->ReadFileInChunks(
+    m_storage->ReadFileInChunks(
         MODULES_FILE_NAME,
         [&](const char* data, size_t size)
         {
             result.append(data, size);
         });
 
+    bool ok = m_storage->ReadFileInChunks(
+        FILTERS_FILE_NAME,
+        [&](const char* data, size_t size)
+        {
+            result.append(data, size);
+        });
+
     return ok ? result : std::string{};
+}
 
-    // IniWriter iniWriter;
+std::shared_ptr<Filter> Manager::CreateFilterInternal(std::string_view id, std::string_view typeName, std::string_view connections, CreateFilterResult& result)
+{
+    std::vector<std::pair<std::weak_ptr<Pin>, std::weak_ptr<Pin>>> pinConnections;
+    auto fail = [&](CreateFilterStatus status, std::optional<size_t> failedAtMappingIndex = std::nullopt) -> std::shared_ptr<Filter>
+    {
+        result.Status = status;
+        result.FailedAtMappingIndex = failedAtMappingIndex;
+        for (const auto& pinConnection : pinConnections)
+            Pin::Disconnect(pinConnection.first, pinConnection.second);
+        return nullptr;
+    };
 
-    // {
-    //     LockGuard guard(m_syncRoot);
+    if (TryGetFilterById(id) != nullptr)
+        return fail(CreateFilterStatus::FilterAlreadyExists);
 
-    //     for (const auto& module : m_modules)
-    //         module->WriteConfig(iniWriter);
+    auto filter = std::shared_ptr<Filter>(FilterFactory::TryCreateFilterByTypeName(typeName, id));
+    if (filter == nullptr)
+        return fail(CreateFilterStatus::UnknownFilterType);
 
-    //     for (const auto& [id, filter] : m_filtersById)
-    //         filter->WriteConfig(iniWriter);
-    // }
+    const auto mappings = TryParseConnections<8>(connections);
+    if (!mappings)
+        return fail(CreateFilterStatus::FailedToParseConnections);
 
-    // return iniWriter.GetContent();
+    pinConnections.reserve((*mappings).Count());
+
+    for (size_t i = 0; i < (*mappings).Count(); i++)
+    {
+        const auto& mapping = (*mappings)[i];
+
+        if (mapping.LocalPin.Direction == mapping.RemotePin.Direction)
+            return fail(CreateFilterStatus::PinDirectionsMismatch, i);
+
+        const auto remoteModule = TryGetModuleByAddress(mapping.RemoteModule.Address);
+        if (remoteModule == nullptr)
+            return fail(CreateFilterStatus::UnknownRemoteModule, i);
+
+        const auto& filterPins = mapping.LocalPin.Direction == PinDirection::Input ? filter->GetInputPins() : filter->GetOutputPins();
+        if (mapping.LocalPin.Index >= filterPins.size())
+            return fail(CreateFilterStatus::LocalPinIndexOutOfRange, i);
+
+        const auto& remotePins = mapping.RemotePin.Direction == PinDirection::Input ? remoteModule->GetInputPins() : remoteModule->GetOutputPins();
+        if (mapping.RemotePin.Index >= remotePins.size())
+            return fail(CreateFilterStatus::RemotePinIndexOutOfRange, i);
+
+        const auto inputPin = mapping.LocalPin.Direction == PinDirection::Input ? filterPins[mapping.LocalPin.Index] : remotePins[mapping.RemotePin.Index];
+        const auto outputPin = mapping.LocalPin.Direction == PinDirection::Input ? remotePins[mapping.RemotePin.Index] : filterPins[mapping.LocalPin.Index];
+
+        if (!Pin::Connect(inputPin, outputPin))
+            return fail(CreateFilterStatus::PinConnectionFailed, i);
+
+        pinConnections.emplace_back(inputPin, outputPin);
+    }
+
+    result.Status = CreateFilterStatus::NoError;
+    return filter;
 }
 
 std::shared_ptr<Filter> Manager::TryGetFilterById(std::string_view id) const noexcept

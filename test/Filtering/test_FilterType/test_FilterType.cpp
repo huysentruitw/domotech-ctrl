@@ -2,6 +2,8 @@
 
 #include <FilterType.h>
 
+#include <string>
+
 void setUp(void)
 {
 }

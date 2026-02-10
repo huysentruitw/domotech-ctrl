@@ -16,11 +16,11 @@ void ConnectionsParser_EmptyString()
     std::string connections = "";
 
     // Act
-    auto result = ParseConnections<4>(connections);
+    auto result = TryParseConnections<4>(connections);
 
     // Assert
-    TEST_ASSERT_TRUE(result.ok);
-    TEST_ASSERT_EQUAL(0, result.count);
+    TEST_ASSERT_TRUE(result);
+    TEST_ASSERT_EQUAL(0, (*result).Count());
 }
 
 void ConnectionsParser_InvalidString()
@@ -29,11 +29,10 @@ void ConnectionsParser_InvalidString()
     std::string connections = "ABC";
 
     // Act
-    auto result = ParseConnections<4>(connections);
+    auto result = TryParseConnections<4>(connections);
 
     // Assert
-    TEST_ASSERT_FALSE(result.ok);
-    TEST_ASSERT_EQUAL(0, result.count);
+    TEST_ASSERT_FALSE(result);
 }
 
 void ConnectionsParser_SingleMapping()
@@ -59,13 +58,13 @@ void ConnectionsParser_SingleMapping()
     };
 
     // Act
-    auto result = ParseConnections<4>(connections);
+    auto result = TryParseConnections<4>(connections);
 
     // Assert
-    TEST_ASSERT_TRUE(result.ok);
-    TEST_ASSERT_EQUAL(1, result.count);
+    TEST_ASSERT_TRUE(result);
+    TEST_ASSERT_EQUAL(1, (*result).Count());
 
-    const auto mapping = result.mappings[0];
+    const auto mapping = (*result)[0];
     TEST_ASSERT_EQUAL(expectedMapping.LocalPin.Direction, mapping.LocalPin.Direction);
     TEST_ASSERT_EQUAL(expectedMapping.LocalPin.Index, mapping.LocalPin.Index);
     TEST_ASSERT_EQUAL(expectedMapping.RemoteModule.Address, mapping.RemoteModule.Address);
@@ -79,15 +78,15 @@ void ConnectionsParser_MultipleMapping()
     std::string connections = "I0=A3:O7,O0=A5:I7,I1=A6:O7";
 
     // Act
-    auto result = ParseConnections<4>(connections);
+    auto result = TryParseConnections<4>(connections);
 
     // Assert
-    TEST_ASSERT_TRUE(result.ok);
-    TEST_ASSERT_EQUAL(3, result.count);
+    TEST_ASSERT_TRUE(result);
+    TEST_ASSERT_EQUAL(3, (*result).Count());
 
-    TEST_ASSERT_EQUAL(3, result.mappings[0].RemoteModule.Address);
-    TEST_ASSERT_EQUAL(5, result.mappings[1].RemoteModule.Address);
-    TEST_ASSERT_EQUAL(6, result.mappings[2].RemoteModule.Address);
+    TEST_ASSERT_EQUAL(3, (*result)[0].RemoteModule.Address);
+    TEST_ASSERT_EQUAL(5, (*result)[1].RemoteModule.Address);
+    TEST_ASSERT_EQUAL(6, (*result)[2].RemoteModule.Address);
 }
 
 int main()

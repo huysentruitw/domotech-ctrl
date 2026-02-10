@@ -2,6 +2,8 @@
 
 #include <ModuleType.h>
 
+#include <string>
+
 void setUp(void)
 {
 }

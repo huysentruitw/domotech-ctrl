@@ -1,6 +1,6 @@
 #include "ModuleType.h"
 
-constexpr auto& ModuleIdentifiers()
+const auto& ModuleIdentifiers()
 {
     using enum ModuleType;
     static constexpr std::pair<ModuleType, std::string_view> identifiers[] =

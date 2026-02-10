@@ -1,6 +1,6 @@
 #include "FilterType.h"
 
-constexpr auto& FilterIdentifiers()
+const auto& FilterIdentifiers()
 {
     using enum FilterType;
     static constexpr std::pair<FilterType, std::string_view> identifiers[] =

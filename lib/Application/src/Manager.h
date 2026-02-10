@@ -1,5 +1,6 @@
 #pragma once
 
+#include "CreateFilterResult.h"
 #include "RescanModulesResult.h"
 #include "ScanLed.h"
 
@@ -27,13 +28,16 @@ public:
     void Clear() noexcept;
     RescanModulesResult RescanModules() noexcept;
 
-    bool TryCreateFilter(std::string_view typeName, std::string_view id, std::string_view connections) noexcept;
+    CreateFilterResult CreateFilter(std::string_view id, std::string_view typeName, std::string_view connections) noexcept;
 
     std::string ReadModulesIniFile() const noexcept;
 
 private:
     void SaveModulesToFile() noexcept;
     void LoadModulesFromFile() noexcept;
+
+    void AppendFilterToFile(std::string_view id, std::string_view typeName, std::string_view connections) noexcept;
+    void LoadFiltersFromFile() noexcept;
 
 private:
     IStorage* const m_storage;
@@ -49,6 +53,7 @@ private:
     std::unordered_map<std::string, std::shared_ptr<Filter>, StringHash, std::equal_to<>> m_filtersById;
     std::vector<std::shared_ptr<Module>> m_modules;
 
+    std::shared_ptr<Filter> CreateFilterInternal(std::string_view id, std::string_view typeName, std::string_view connections, CreateFilterResult& result) noexcept;
     std::shared_ptr<Filter> TryGetFilterById(std::string_view id) const noexcept;
     std::shared_ptr<Module> TryGetModuleByAddress(uint8_t address) const noexcept;
 };

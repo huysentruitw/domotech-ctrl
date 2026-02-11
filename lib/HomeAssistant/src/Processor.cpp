@@ -1,7 +1,6 @@
 #include "Processor.h"
 
 #include "Client.h"
-#include "EventLoop.h"
 
 #include <LockGuard.h>
 
@@ -15,40 +14,11 @@
 
 #define TAG "HA_PROC"
 
-Processor::Processor(Client& client, EventLoop& eventLoop) noexcept
+Processor::Processor(Client& client, IEventBus& eventBus) noexcept
     : m_syncRoot()
     , m_client(client)
-    , m_eventLoop(eventLoop)
+    , m_eventBus(eventBus)
 {
-}
-
-void Processor::RegisterDevice(const std::shared_ptr<IDevice>& device) noexcept
-{
-    const std::string_view id = device->GetId();
-    ESP_LOGI(TAG, "RegisterDevice (Id: %.*s)", (int)id.length(), id.data());
-
-    // Already add the device to the map, so we don't have to pass the pointer over the FreeRTOS queue
-    {
-        LockGuard guard(m_syncRoot);
-        m_devices.emplace(id, device);
-    }
-
-    BridgeEvent event{};
-    event.Type = BridgeEvent::Type::CompleteDeviceRegistration;
-    event.IdLength = std::min(id.length(), (size_t)sizeof(event.Id));
-    memcpy(event.Id, id.data(), event.IdLength);
-    m_eventLoop.EnqueueEvent(event);
-}
-
-void Processor::UnregisterDevice(std::string_view id) noexcept
-{
-    ESP_LOGI(TAG, "UnregisterDevice (Id: %.*s)", (int)id.length(), id.data());
-
-    BridgeEvent event{};
-    event.Type = BridgeEvent::Type::UnregisterDevice;
-    event.IdLength = std::min(id.length(), (size_t)sizeof(event.Id));
-    memcpy(event.Id, id.data(), event.IdLength);
-    m_eventLoop.EnqueueEvent(event);
 }
 
 void Processor::Process(const BridgeEvent& event) noexcept
@@ -79,6 +49,35 @@ void Processor::Process(const BridgeEvent& event) noexcept
     }
 }
 
+void Processor::RegisterDevice(const std::shared_ptr<IDevice>& device) noexcept
+{
+    const std::string_view id = device->GetId();
+    ESP_LOGI(TAG, "RegisterDevice (Id: %.*s)", (int)id.length(), id.data());
+
+    // Already add the device to the map, so we don't have to pass the pointer over the FreeRTOS queue
+    {
+        LockGuard guard(m_syncRoot);
+        m_devices.emplace(id, device);
+    }
+
+    BridgeEvent event{};
+    event.Type = BridgeEvent::Type::CompleteDeviceRegistration;
+    event.IdLength = std::min(id.length(), (size_t)sizeof(event.Id));
+    memcpy(event.Id, id.data(), event.IdLength);
+    m_eventBus.EnqueueEvent(event);
+}
+
+void Processor::UnregisterDevice(std::string_view id) noexcept
+{
+    ESP_LOGI(TAG, "UnregisterDevice (Id: %.*s)", (int)id.length(), id.data());
+
+    BridgeEvent event{};
+    event.Type = BridgeEvent::Type::UnregisterDevice;
+    event.IdLength = std::min(id.length(), (size_t)sizeof(event.Id));
+    memcpy(event.Id, id.data(), event.IdLength);
+    m_eventBus.EnqueueEvent(event);
+}
+
 void Processor::OnMqttConnected() noexcept
 {
     ESP_LOGI(TAG, "OnMqttConnected");
@@ -99,7 +98,7 @@ void Processor::OnMqttConnected() noexcept
 
     BridgeEvent event{};
     event.Type = BridgeEvent::Type::PublishNextDiscovery;
-    m_eventLoop.EnqueueEvent(event);
+    m_eventBus.EnqueueEvent(event);
 }
 
 void Processor::OnMqttData(const BridgeEvent& event) noexcept
@@ -182,7 +181,7 @@ void Processor::OnPublishNextDiscovery() noexcept
     {
         BridgeEvent event{};
         event.Type = BridgeEvent::Type::PublishNextDiscovery;
-        m_eventLoop.EnqueueEvent(event);
+        m_eventBus.EnqueueEvent(event);
     }
 }
 

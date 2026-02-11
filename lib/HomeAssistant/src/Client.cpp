@@ -8,8 +8,8 @@
 
 static const char* ToString(esp_mqtt_event_id_t id) noexcept; // forward declaration
 
-Client::Client(const char* uri, const char* username, const char* password, ClientCallback callback, void* callbackContext) noexcept
-    : m_callback(callback), m_callbackContext(callbackContext)
+Client::Client(const char* uri, const char* username, const char* password, IEventBus& eventBus) noexcept
+    : m_eventBus(eventBus)
 {
     esp_mqtt_client_config_t config = {};
     config.broker.address.uri = uri;
@@ -63,19 +63,13 @@ void Client::ForwardEvent(esp_mqtt_event_handle_t handle) noexcept
 {
     ESP_LOGI(TAG, "Event %s", ToString(handle->event_id));
 
-    if (!m_callback)
-    {
-        ESP_LOGW(TAG, "No callback set, dropping MQTT event");
-        return;
-    }
-
     BridgeEvent event{};
 
     switch (static_cast<int>(handle->event_id))
     {
         case MQTT_EVENT_CONNECTED:
             event.Type = BridgeEvent::Type::MqttConnected;
-            m_callback(m_callbackContext, event);
+            m_eventBus.EnqueueEvent(event);
             break;
 
         case MQTT_EVENT_DATA:
@@ -84,7 +78,7 @@ void Client::ForwardEvent(esp_mqtt_event_handle_t handle) noexcept
             memcpy(event.Topic, handle->topic, event.TopicLength);
             event.PayloadLength = std::min((size_t)handle->data_len, (size_t)sizeof(event.Payload));
             memcpy(event.Payload, handle->data, event.PayloadLength);
-            m_callback(m_callbackContext, event);
+            m_eventBus.EnqueueEvent(event);
             break;
     }
 }

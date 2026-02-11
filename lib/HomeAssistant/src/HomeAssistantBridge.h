@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Client.h"
-#include "EventLoop.h"
+#include "EventBus.h"
 #include "Processor.h"
 
 #include <Filter.h>
@@ -18,6 +18,6 @@ public:
 
 private:
     std::shared_ptr<Processor> m_processor;
-    std::shared_ptr<EventLoop> m_eventLoop;
+    std::shared_ptr<EventBus> m_eventBus;
     std::shared_ptr<Client> m_client;
 };

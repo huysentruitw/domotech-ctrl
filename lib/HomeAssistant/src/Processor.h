@@ -4,21 +4,21 @@
 #include <StringHash.h>
 
 #include "BridgeEvent.h"
+#include "Client.h"
 #include "Devices/Device.h"
+#include "IEventBus.h"
+#include "IEventProcessor.h"
 
 #include <memory>
 #include <queue>
 #include <unordered_map>
 
-class Client; // forward declaration
-class EventLoop;
-
-class Processor final
+class Processor final : public IEventProcessor
 {
-    friend class EventLoop;
-
 public:
-    Processor(Client& client, EventLoop& eventLoop) noexcept;
+    Processor(Client& client, IEventBus& eventBus) noexcept;
+
+    void Process(const BridgeEvent& event) noexcept;
 
     void RegisterDevice(const std::shared_ptr<IDevice>& device) noexcept;
     void UnregisterDevice(std::string_view id) noexcept;
@@ -26,11 +26,9 @@ public:
 private:
     const Lock m_syncRoot;
     Client& m_client;
-    EventLoop& m_eventLoop;
+    IEventBus& m_eventBus;
     std::unordered_map<std::string, std::shared_ptr<IDevice>, StringHash, std::equal_to<>> m_devices;
     std::queue<std::string> m_discoveryQueue;
-
-    void Process(const BridgeEvent& event) noexcept;
 
     void OnMqttConnected() noexcept;
     void OnMqttData(const BridgeEvent& event) noexcept;

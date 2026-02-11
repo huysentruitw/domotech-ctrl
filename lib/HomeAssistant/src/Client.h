@@ -1,8 +1,6 @@
 #pragma once
 
-#include "BridgeEvent.h"
-
-using ClientCallback = void(*)(void* context, const BridgeEvent& event);
+#include "IEventBus.h"
 
 #ifndef NATIVE_BUILD
 
@@ -11,7 +9,7 @@ using ClientCallback = void(*)(void* context, const BridgeEvent& event);
 class Client final
 {
 public:
-    Client(const char* uri, const char* username, const char* password, ClientCallback callback, void* callbackContext) noexcept;
+    Client(const char* uri, const char* username, const char* password, IEventBus& eventBus) noexcept;
     ~Client() noexcept;
 
     void Connect() const noexcept;
@@ -20,8 +18,7 @@ public:
     void Publish(const char* topic, const char* payload, bool retain) const noexcept;
 
 private:
-    ClientCallback m_callback = nullptr;
-    void* m_callbackContext = nullptr;
+    IEventBus& m_eventBus;
     esp_mqtt_client_handle_t m_client = nullptr;
 
     static void EventHandler(void* args, esp_event_base_t base, int32_t eventId, void* data) noexcept;
@@ -33,7 +30,7 @@ private:
 class Client final
 {
 public:
-    Client(const char* uri, const char* username, const char* password, ClientCallback callback, void* callbackContext) noexcept {};
+    Client(const char* uri, const char* username, const char* password, IEventBus& eventBus) noexcept {};
     ~Client() noexcept {};
 
     void Connect() const noexcept {};

@@ -1,18 +1,18 @@
 #ifndef NATIVE_BUILD
 
-#include "EventLoop.h"
+#include "EventBus.h"
 #include "Processor.h"
 
 #include "esp_log.h"
 
 #define TAG "HA_LOOP"
 
-EventLoop::EventLoop() noexcept
+EventBus::EventBus() noexcept
 {
     m_queue = xQueueCreate(20, sizeof(BridgeEvent));
 }
 
-EventLoop::~EventLoop() noexcept
+EventBus::~EventBus() noexcept
 {
     BridgeEvent event{};
     event.Type = BridgeEvent::Type::Shutdown;
@@ -23,24 +23,24 @@ EventLoop::~EventLoop() noexcept
     m_queue = nullptr;
 }
 
-void EventLoop::Start(std::shared_ptr<Processor> processor) noexcept
+void EventBus::Start(std::shared_ptr<IEventProcessor> eventProcessor) noexcept
 {
-    m_processor = processor;
-    xTaskCreate(&EventLoop::TaskEntry, TAG, 4096, this, 5, NULL);
+    m_eventProcessor = eventProcessor;
+    xTaskCreate(&EventBus::TaskEntry, TAG, 4096, this, 5, NULL);
 }
 
-void EventLoop::EnqueueEvent(const BridgeEvent& event) noexcept
+void EventBus::EnqueueEvent(const BridgeEvent& event) noexcept
 {
     ESP_LOGI(TAG, "EnqueueEvent (Type: %d)", event.Type);
     xQueueSend(m_queue, &event, portMAX_DELAY);
 }
 
-void EventLoop::TaskEntry(void* arg) noexcept
+void EventBus::TaskEntry(void* arg) noexcept
 {
-    static_cast<EventLoop*>(arg)->Task();
+    static_cast<EventBus*>(arg)->Task();
 }
 
-void EventLoop::Task() noexcept
+void EventBus::Task() noexcept
 {
     BridgeEvent event{};
 
@@ -49,8 +49,8 @@ void EventLoop::Task() noexcept
     {
         xQueueReceive(m_queue, &event, portMAX_DELAY);
 
-        if (auto processor = m_processor.lock())
-            processor->Process(event);
+        if (auto eventProcessor = m_eventProcessor.lock())
+            eventProcessor->Process(event);
 
         if (event.Type == BridgeEvent::Type::Shutdown)
         {
@@ -58,11 +58,6 @@ void EventLoop::Task() noexcept
             break;
         }
     }
-}
-
-void EventLoop::ForwardEvent(void* context, const BridgeEvent& event) noexcept
-{
-    static_cast<EventLoop*>(context)->EnqueueEvent(event);
 }
 
 #endif

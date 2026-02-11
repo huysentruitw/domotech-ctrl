@@ -27,12 +27,12 @@
 void HomeAssistantBridge::Init(const char* uri, const char* username, const char* password) noexcept
 {
     ESP_LOGI(TAG, "Init");
-    m_eventLoop = std::make_shared<EventLoop>();
-    m_client = std::make_shared<Client>(uri, username, password, EventLoop::ForwardEvent, m_eventLoop.get());
-    m_processor = std::make_shared<Processor>(*m_client, *m_eventLoop);
+    m_eventBus = std::make_shared<EventBus>();
+    m_client = std::make_shared<Client>(uri, username, password, *m_eventBus);
+    m_processor = std::make_shared<Processor>(*m_client, *m_eventBus);
 
     m_client->Connect();
-    m_eventLoop->Start(m_processor);
+    m_eventBus->Start(m_processor);
 }
 
 bool HomeAssistantBridge::RegisterAsDevice(std::weak_ptr<Filter> filter) noexcept
@@ -48,42 +48,42 @@ bool HomeAssistantBridge::RegisterAsDevice(std::weak_ptr<Filter> filter) noexcep
     if (filterType == FilterType::Switch)
     {
         auto switchFilter = std::static_pointer_cast<SwitchFilter>(filterPtr);
-        m_processor->RegisterDevice(std::make_shared<SwitchDevice>(switchFilter, m_eventLoop));
+        m_processor->RegisterDevice(std::make_shared<SwitchDevice>(switchFilter, m_eventBus));
         return true;
     }
 
     if (filterType == FilterType::Light)
     {
         auto lightFilter = std::static_pointer_cast<LightFilter>(filterPtr);
-        m_processor->RegisterDevice(std::make_shared<LightDevice>(lightFilter, m_eventLoop));
+        m_processor->RegisterDevice(std::make_shared<LightDevice>(lightFilter, m_eventBus));
         return true;
     }
 
     if (filterType == FilterType::Dimmer)
     {
         auto dimmerFilter = std::static_pointer_cast<DimmerFilter>(filterPtr);
-        m_processor->RegisterDevice(std::make_shared<DimmableLightDevice>(dimmerFilter, m_eventLoop));
+        m_processor->RegisterDevice(std::make_shared<DimmableLightDevice>(dimmerFilter, m_eventBus));
         return true;
     }
 
     if (filterType == FilterType::Shutter)
     {
         auto shutterFilter = std::static_pointer_cast<ShutterFilter>(filterPtr);
-        m_processor->RegisterDevice(std::make_shared<CoverDevice>(shutterFilter, m_eventLoop));
+        m_processor->RegisterDevice(std::make_shared<CoverDevice>(shutterFilter, m_eventBus));
         return true;
     }
 
     if (filterType == FilterType::Climate)
     {
         auto climateFilter = std::static_pointer_cast<ClimateFilter>(filterPtr);
-        m_processor->RegisterDevice(std::make_shared<ClimateDevice>(climateFilter, m_eventLoop));
+        m_processor->RegisterDevice(std::make_shared<ClimateDevice>(climateFilter, m_eventBus));
         return true;
     }
 
     if (filterType == FilterType::DigitalPassthrough)
     {
         auto digitalPassthroughFilter = std::static_pointer_cast<DigitalPassthroughFilter>(filterPtr);
-        m_processor->RegisterDevice(std::make_shared<BinarySensorDevice>(digitalPassthroughFilter, m_eventLoop));
+        m_processor->RegisterDevice(std::make_shared<BinarySensorDevice>(digitalPassthroughFilter, m_eventBus));
         return true;
     }
 

@@ -7,6 +7,7 @@
 #include "Devices/Device.h"
 
 #include <memory>
+#include <queue>
 #include <unordered_map>
 
 class Client; // forward declaration
@@ -27,6 +28,7 @@ private:
     Client& m_client;
     EventLoop& m_eventLoop;
     std::unordered_map<std::string, std::shared_ptr<IDevice>, StringHash, std::equal_to<>> m_devices;
+    std::queue<std::string> m_discoveryQueue;
 
     void Process(const BridgeEvent& event) noexcept;
 
@@ -34,6 +36,7 @@ private:
     void OnMqttData(const BridgeEvent& event) noexcept;
     void OnCompleteDeviceRegistration(const BridgeEvent& event) noexcept;
     void OnUnregisterDevice(const BridgeEvent& event) noexcept;
+    void OnPublishNextDiscovery() noexcept;
     void OnPublishState(const BridgeEvent& event) noexcept;
     void OnShutdown() noexcept;
 

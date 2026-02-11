@@ -44,9 +44,6 @@ void Processor::UnregisterDevice(std::string_view id) noexcept
 {
     ESP_LOGI(TAG, "UnregisterDevice (Id: %.*s)", (int)id.length(), id.data());
 
-    if (!TryGetDeviceById(id))
-        return;
-
     BridgeEvent event{};
     event.Type = BridgeEvent::Type::UnregisterDevice;
     event.IdLength = std::min(id.length(), (size_t)sizeof(event.Id));
@@ -70,6 +67,9 @@ void Processor::Process(const BridgeEvent& event) noexcept
         case BridgeEvent::Type::UnregisterDevice:
             OnUnregisterDevice(event);
             break;
+        case BridgeEvent::Type::PublishNextDiscovery:
+            OnPublishNextDiscovery();
+            break;
         case BridgeEvent::Type::PublishState:
             OnPublishState(event);
             break;
@@ -85,9 +85,21 @@ void Processor::OnMqttConnected() noexcept
 
     m_client.Subscribe("domo/dev/#");
 
-    LockGuard guard(m_syncRoot);
-    for (auto& [_, device] : m_devices)
-        PublishDeviceDiscovery(*device);
+    {
+        LockGuard guard(m_syncRoot);
+        while (!m_discoveryQueue.empty())
+            m_discoveryQueue.pop();
+
+        if (m_devices.empty())
+            return;
+
+        for (auto& [id, _] : m_devices)
+            m_discoveryQueue.emplace(id);
+    }
+
+    BridgeEvent event{};
+    event.Type = BridgeEvent::Type::PublishNextDiscovery;
+    m_eventLoop.EnqueueEvent(event);
 }
 
 void Processor::OnMqttData(const BridgeEvent& event) noexcept
@@ -137,6 +149,40 @@ void Processor::OnUnregisterDevice(const BridgeEvent& event) noexcept
         const auto it = m_devices.find(id);
         if (it != m_devices.end())
             m_devices.erase(it);
+    }
+}
+
+void Processor::OnPublishNextDiscovery() noexcept
+{
+    ESP_LOGI(TAG, "OnPublishNextDiscovery");
+
+    bool hasMore;
+    std::string id;
+
+    {
+        LockGuard guard(m_syncRoot);
+        if (m_discoveryQueue.empty())
+            return;
+
+        id = m_discoveryQueue.front();
+        m_discoveryQueue.pop();
+
+        hasMore = !m_discoveryQueue.empty();
+    }
+
+    if (auto device = TryGetDeviceById(id))
+    {
+        PublishDeviceDiscovery(*device);
+
+        // device->PublishDiscovery(m_client);
+        // device->PublishCurrentState(m_client);
+    }
+
+    if (hasMore)
+    {
+        BridgeEvent event{};
+        event.Type = BridgeEvent::Type::PublishNextDiscovery;
+        m_eventLoop.EnqueueEvent(event);
     }
 }
 

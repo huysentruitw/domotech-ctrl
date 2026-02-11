@@ -11,6 +11,7 @@ struct BridgeEvent
         MqttData,
         CompleteDeviceRegistration,
         UnregisterDevice,
+        PublishNextDiscovery,
         PublishState,
         Shutdown,
     } Type;

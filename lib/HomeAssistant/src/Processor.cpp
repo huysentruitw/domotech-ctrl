@@ -19,34 +19,6 @@ Processor::Processor(MqttClient& client, IEventBus& eventBus) noexcept
 {
 }
 
-void Processor::Process(const BridgeEvent& event) noexcept
-{
-    switch (event.Type)
-    {
-        case BridgeEvent::Type::MqttConnected:
-            OnMqttConnected();
-            break;
-        case BridgeEvent::Type::MqttData:
-            OnMqttData(event);
-            break;
-        case BridgeEvent::Type::CompleteDeviceRegistration:
-            OnCompleteDeviceRegistration(event);
-            break;
-        case BridgeEvent::Type::UnregisterDevice:
-            OnUnregisterDevice(event);
-            break;
-        case BridgeEvent::Type::PublishNextDiscovery:
-            OnPublishNextDiscovery();
-            break;
-        case BridgeEvent::Type::PublishState:
-            OnPublishState(event);
-            break;
-        case BridgeEvent::Type::Shutdown:
-            OnShutdown();
-            break;
-    }
-}
-
 void Processor::RegisterDevice(const std::shared_ptr<IDevice>& device) noexcept
 {
     const std::string_view id = device->GetId();
@@ -74,6 +46,34 @@ void Processor::UnregisterDevice(std::string_view id) noexcept
     event.IdLength = std::min(id.length(), (size_t)sizeof(event.Id));
     memcpy(event.Id, id.data(), event.IdLength);
     m_eventBus.EnqueueEvent(event);
+}
+
+void Processor::Process(const BridgeEvent& event) noexcept
+{
+    switch (event.Type)
+    {
+        case BridgeEvent::Type::MqttConnected:
+            OnMqttConnected();
+            break;
+        case BridgeEvent::Type::MqttData:
+            OnMqttData(event);
+            break;
+        case BridgeEvent::Type::CompleteDeviceRegistration:
+            OnCompleteDeviceRegistration(event);
+            break;
+        case BridgeEvent::Type::UnregisterDevice:
+            OnUnregisterDevice(event);
+            break;
+        case BridgeEvent::Type::PublishNextDiscovery:
+            OnPublishNextDiscovery();
+            break;
+        case BridgeEvent::Type::PublishState:
+            OnPublishState(event);
+            break;
+        case BridgeEvent::Type::Shutdown:
+            OnShutdown();
+            break;
+    }
 }
 
 void Processor::OnMqttConnected() noexcept

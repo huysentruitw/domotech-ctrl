@@ -19,6 +19,7 @@ public:
     virtual size_t BuildDiscoveryPayload(char* buffer, size_t bufferLength) const noexcept = 0;
 
     virtual void SubscribeToStateChanges() noexcept = 0;
+
     virtual void ProcessCommand(std::string_view subtopic, std::string_view command) const noexcept = 0;
     virtual void EnqueueCurrentState() noexcept = 0;
 };
@@ -30,9 +31,9 @@ template<Derived<Filter> TFilter>
 class Device : public IDevice
 {
 public:
-    explicit Device(const std::shared_ptr<TFilter>& filter, const std::weak_ptr<IEventBus>& eventPublisher) noexcept
+    explicit Device(const std::shared_ptr<TFilter>& filter, const std::weak_ptr<IEventBus>& eventBus) noexcept
         : m_filter(filter)
-        , m_eventPublisher(eventPublisher)
+        , m_eventBus(eventBus)
         , m_id(IdSanitizer::Sanitize(filter->GetId())) {}
 
     std::string_view GetId() const noexcept override
@@ -48,11 +49,11 @@ protected:
 
     std::shared_ptr<IEventBus> TryGetEventBus() const noexcept
     {
-        return m_eventPublisher.lock();
+        return m_eventBus.lock();
     }
 
 private:
     const std::weak_ptr<TFilter> m_filter;
-    const std::weak_ptr<IEventBus> m_eventPublisher;
+    const std::weak_ptr<IEventBus> m_eventBus;
     const std::string m_id;
 };

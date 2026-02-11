@@ -18,10 +18,10 @@ class Processor final : public IEventProcessor
 public:
     Processor(MqttClient& mqttClient, IEventBus& eventBus) noexcept;
 
-    void Process(const BridgeEvent& event) noexcept;
-
     void RegisterDevice(const std::shared_ptr<IDevice>& device) noexcept;
     void UnregisterDevice(std::string_view id) noexcept;
+
+    void Process(const BridgeEvent& event) noexcept;
 
 private:
     const Lock m_syncRoot;

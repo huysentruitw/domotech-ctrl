@@ -34,6 +34,9 @@ size_t BinarySensorDevice::BuildDiscoveryPayload(char* buffer, size_t bufferLeng
 
 void BinarySensorDevice::SubscribeToStateChanges() noexcept
 {
+    if (m_tap)
+        return; // Already subscribed
+
     auto filter = TryGetFilter();
     if (!filter)
         return;

@@ -36,6 +36,9 @@ size_t LightDevice::BuildDiscoveryPayload(char* buffer, size_t bufferLength) con
 
 void LightDevice::SubscribeToStateChanges() noexcept
 {
+    if (m_tap)
+        return; // Already subscribed
+
     auto filter = TryGetFilter();
     if (!filter)
         return;

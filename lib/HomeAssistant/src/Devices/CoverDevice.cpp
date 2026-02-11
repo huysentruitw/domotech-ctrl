@@ -40,6 +40,9 @@ size_t CoverDevice::BuildDiscoveryPayload(char* buffer, size_t bufferLength) con
 
 void CoverDevice::SubscribeToStateChanges() noexcept
 {
+    if (m_tapOpen && m_tapClose)
+        return; // Already subscribed
+
     auto filter = TryGetFilter();
     if (!filter)
         return;

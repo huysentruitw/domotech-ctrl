@@ -41,6 +41,9 @@ size_t DimmableLightDevice::BuildDiscoveryPayload(char* buffer, size_t bufferLen
 
 void DimmableLightDevice::SubscribeToStateChanges() noexcept
 {
+    if (m_tap)
+        return; // Already subscribed
+
     auto filter = TryGetFilter();
     if (!filter)
         return;

@@ -36,6 +36,9 @@ size_t SwitchDevice::BuildDiscoveryPayload(char* buffer, size_t bufferLength) co
 
 void SwitchDevice::SubscribeToStateChanges() noexcept
 {
+    if (m_tap)
+        return; // Already subscribed
+
     auto filter = TryGetFilter();
     if (!filter)
         return;

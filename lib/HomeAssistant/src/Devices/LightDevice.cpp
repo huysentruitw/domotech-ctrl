@@ -40,10 +40,7 @@ void LightDevice::SubscribeToStateChanges() noexcept
     if (!filter)
         return;
 
-    auto controlPin = filter->TryGetPinByName(PinDirection::Output, "Control");
-    if (!controlPin)
-        return;
-    
+    auto controlPin = filter->GetControlOutputPin();
     m_tap = PinFactory::CreateInputPin<DigitalValue>(this);
     Pin::Connect(m_tap, controlPin);
 }

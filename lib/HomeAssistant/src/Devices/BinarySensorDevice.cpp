@@ -38,10 +38,7 @@ void BinarySensorDevice::SubscribeToStateChanges() noexcept
     if (!filter)
         return;
 
-    auto outputPin = filter->TryGetPinByName(PinDirection::Output, "Output");
-    if (!outputPin)
-        return;
-
+    auto outputPin = filter->GetOutputPin();
     m_tap = PinFactory::CreateInputPin<DigitalValue>(this);
     Pin::Connect(m_tap, outputPin);
 }

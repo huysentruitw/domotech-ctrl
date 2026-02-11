@@ -44,11 +44,8 @@ void CoverDevice::SubscribeToStateChanges() noexcept
     if (!filter)
         return;
 
-    auto openPin = filter->TryGetPinByName(PinDirection::Output, "Open"),
-         closePin = filter->TryGetPinByName(PinDirection::Output, "Close");
-
-    if (!openPin || !closePin)
-        return;
+    auto openPin = filter->GetOpenOutputPin(),
+         closePin = filter->GetCloseOutputPin();
 
     m_tapOpen = PinFactory::CreateInputPin<DigitalValue>(this);
     m_tapClose = PinFactory::CreateInputPin<DigitalValue>(this);

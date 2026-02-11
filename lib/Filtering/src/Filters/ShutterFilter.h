@@ -26,6 +26,14 @@ public:
     // For testing
     void MoveSignalStartMs(int offsetMs) noexcept;
 
+    std::weak_ptr<Pin> GetOpenInputPin() const noexcept { return m_openInputPin; };
+    std::weak_ptr<Pin> GetCloseInputPin() const noexcept { return m_closeInputPin; };
+    std::weak_ptr<Pin> GetStopInputPin() const noexcept { return m_stopInputPin; };
+    std::weak_ptr<Pin> GetOpenFeedbackInputPin() const noexcept { return m_openFeedbackInputPin; };
+    std::weak_ptr<Pin> GetCloseFeedbackInputPin() const noexcept { return m_closeFeedbackInputPin; };
+    std::weak_ptr<Pin> GetOpenOutputPin() const noexcept { return m_openOutputPin; };
+    std::weak_ptr<Pin> GetCloseOutputPin() const noexcept { return m_closeOutputPin; };
+
 private:
     ShutterCommand m_currentShutterCommand = ShutterCommand::Stop;
     std::shared_ptr<Pin> m_openInputPin;

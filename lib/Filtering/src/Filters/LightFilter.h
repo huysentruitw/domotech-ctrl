@@ -14,6 +14,11 @@ public:
 
     void SetState(DigitalValue state) noexcept;
 
+    std::weak_ptr<Pin> GetToggleInputPin() const noexcept { return m_toggleInputPin; }
+    std::weak_ptr<Pin> GetFeedbackInputPin() const noexcept { return m_feedbackInputPin; }
+    std::weak_ptr<Pin> GetControlOutputPin() const noexcept { return m_controlOutputPin; }
+    std::weak_ptr<Pin> GetFeedbackOutputPin() const noexcept { return m_feedbackOutputPin; }
+
 private:
     std::shared_ptr<Pin> m_toggleInputPin;
     std::shared_ptr<Pin> m_feedbackInputPin;

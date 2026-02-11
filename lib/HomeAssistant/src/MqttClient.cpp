@@ -1,6 +1,6 @@
 #ifndef NATIVE_BUILD
 
-#include "Client.h"
+#include "MqttClient.h"
 
 #include "esp_log.h"
 
@@ -8,7 +8,7 @@
 
 static const char* ToString(esp_mqtt_event_id_t id) noexcept; // forward declaration
 
-Client::Client(const char* uri, const char* username, const char* password, IEventBus& eventBus) noexcept
+MqttClient::MqttClient(const char* uri, const char* username, const char* password, IEventBus& eventBus) noexcept
     : m_eventBus(eventBus)
 {
     esp_mqtt_client_config_t config = {};
@@ -17,10 +17,10 @@ Client::Client(const char* uri, const char* username, const char* password, IEve
     config.credentials.authentication.password = password;
 
     m_client = esp_mqtt_client_init(&config);
-    esp_mqtt_client_register_event(m_client, MQTT_EVENT_ANY, &Client::EventHandler, this);
+    esp_mqtt_client_register_event(m_client, MQTT_EVENT_ANY, &MqttClient::EventHandler, this);
 }
 
-Client::~Client() noexcept
+MqttClient::~MqttClient() noexcept
 {
     if (m_client)
     {
@@ -30,7 +30,7 @@ Client::~Client() noexcept
     }
 }
 
-void Client::Connect() const noexcept
+void MqttClient::Connect() const noexcept
 {
     if (esp_mqtt_client_start(m_client) == ESP_OK)
     {
@@ -42,24 +42,24 @@ void Client::Connect() const noexcept
     }
 }
 
-void Client::Subscribe(const char* topic) const noexcept
+void MqttClient::Subscribe(const char* topic) const noexcept
 {
     ESP_LOGI(TAG, "Subscribe to %s", topic);
     esp_mqtt_client_subscribe(m_client, topic, 1);
 }
 
-void Client::Publish(const char* topic, const char* payload, bool retain) const noexcept
+void MqttClient::Publish(const char* topic, const char* payload, bool retain) const noexcept
 {
     ESP_LOGI(TAG, "Publish to %s (Retain: %s)", topic, retain ? "true" : "false");
     esp_mqtt_client_publish(m_client, topic, payload, 0, 1, retain);
 }
 
-void Client::EventHandler(void* args, esp_event_base_t base, int32_t eventId, void* data) noexcept
+void MqttClient::EventHandler(void* args, esp_event_base_t base, int32_t eventId, void* data) noexcept
 {
-    static_cast<Client*>(args)->ForwardEvent(static_cast<esp_mqtt_event_handle_t>(data));
+    static_cast<MqttClient*>(args)->ForwardEvent(static_cast<esp_mqtt_event_handle_t>(data));
 }
 
-void Client::ForwardEvent(esp_mqtt_event_handle_t handle) noexcept
+void MqttClient::ForwardEvent(esp_mqtt_event_handle_t handle) noexcept
 {
     ESP_LOGI(TAG, "Event %s", ToString(handle->event_id));
 

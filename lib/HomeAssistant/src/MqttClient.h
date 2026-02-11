@@ -6,11 +6,11 @@
 
 #include "mqtt_client.h"
 
-class Client final
+class MqttClient final
 {
 public:
-    Client(const char* uri, const char* username, const char* password, IEventBus& eventBus) noexcept;
-    ~Client() noexcept;
+    MqttClient(const char* uri, const char* username, const char* password, IEventBus& eventBus) noexcept;
+    ~MqttClient() noexcept;
 
     void Connect() const noexcept;
 
@@ -27,11 +27,11 @@ private:
 
 #else
 
-class Client final
+class MqttClient final
 {
 public:
-    Client(const char* uri, const char* username, const char* password, IEventBus& eventBus) noexcept {};
-    ~Client() noexcept {};
+    MqttClient(const char* uri, const char* username, const char* password, IEventBus& eventBus) noexcept {};
+    ~MqttClient() noexcept {};
 
     void Connect() const noexcept {};
 

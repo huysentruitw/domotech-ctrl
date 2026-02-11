@@ -4,10 +4,10 @@
 #include <StringHash.h>
 
 #include "BridgeEvent.h"
-#include "Client.h"
 #include "Devices/Device.h"
 #include "IEventBus.h"
 #include "IEventProcessor.h"
+#include "MqttClient.h"
 
 #include <memory>
 #include <queue>
@@ -16,7 +16,7 @@
 class Processor final : public IEventProcessor
 {
 public:
-    Processor(Client& client, IEventBus& eventBus) noexcept;
+    Processor(MqttClient& mqttClient, IEventBus& eventBus) noexcept;
 
     void Process(const BridgeEvent& event) noexcept;
 
@@ -25,7 +25,7 @@ public:
 
 private:
     const Lock m_syncRoot;
-    Client& m_client;
+    MqttClient& m_mqttClient;
     IEventBus& m_eventBus;
     std::unordered_map<std::string, std::shared_ptr<IDevice>, StringHash, std::equal_to<>> m_devices;
     std::queue<std::string> m_discoveryQueue;

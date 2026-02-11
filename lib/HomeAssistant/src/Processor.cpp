@@ -1,7 +1,5 @@
 #include "Processor.h"
 
-#include "Client.h"
-
 #include <LockGuard.h>
 
 #include <cstring>
@@ -14,9 +12,9 @@
 
 #define TAG "HA_PROC"
 
-Processor::Processor(Client& client, IEventBus& eventBus) noexcept
+Processor::Processor(MqttClient& client, IEventBus& eventBus) noexcept
     : m_syncRoot()
-    , m_client(client)
+    , m_mqttClient(client)
     , m_eventBus(eventBus)
 {
 }
@@ -82,7 +80,7 @@ void Processor::OnMqttConnected() noexcept
 {
     ESP_LOGI(TAG, "OnMqttConnected");
 
-    m_client.Subscribe("domo/dev/#");
+    m_mqttClient.Subscribe("domo/dev/#");
 
     {
         LockGuard guard(m_syncRoot);
@@ -189,7 +187,7 @@ void Processor::OnPublishState(const BridgeEvent& event) noexcept
 {
     std::string_view id(event.Id, event.IdLength);
     ESP_LOGI(TAG, "OnPublishState (Id: %.*s)", (int)id.length(), id.data());
-    m_client.Publish(event.Topic, event.Payload, event.Retain);
+    m_mqttClient.Publish(event.Topic, event.Payload, event.Retain);
 }
 
 void Processor::OnShutdown() noexcept
@@ -206,7 +204,7 @@ void Processor::PublishDeviceDiscovery(const IDevice& device) noexcept
     char payload[640];
     device.BuildDiscoveryTopic(topic, sizeof(topic));
     device.BuildDiscoveryPayload(payload, sizeof(payload));
-    m_client.Publish(topic, payload, false);
+    m_mqttClient.Publish(topic, payload, false);
 }
 
 void Processor::PublishDeviceRemoval(const IDevice& device) noexcept
@@ -216,7 +214,7 @@ void Processor::PublishDeviceRemoval(const IDevice& device) noexcept
 
     char topic[64];
     device.BuildDiscoveryTopic(topic, sizeof(topic));
-    m_client.Publish(topic, "", true);
+    m_mqttClient.Publish(topic, "", true);
 }
 
 std::shared_ptr<IDevice> Processor::TryGetDeviceById(std::string_view id) const noexcept

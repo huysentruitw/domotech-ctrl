@@ -28,10 +28,10 @@ void HomeAssistantBridge::Init(const char* uri, const char* username, const char
 {
     ESP_LOGI(TAG, "Init");
     m_eventBus = std::make_shared<EventBus>();
-    m_client = std::make_shared<Client>(uri, username, password, *m_eventBus);
-    m_processor = std::make_shared<Processor>(*m_client, *m_eventBus);
+    m_mqttClient = std::make_shared<MqttClient>(uri, username, password, *m_eventBus);
+    m_processor = std::make_shared<Processor>(*m_mqttClient, *m_eventBus);
 
-    m_client->Connect();
+    m_mqttClient->Connect();
     m_eventBus->Start(m_processor);
 }
 

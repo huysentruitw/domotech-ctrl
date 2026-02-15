@@ -19,6 +19,7 @@ public:
     bool ReadFile(std::string_view fileName, char* buffer, size_t bufferSize, size_t& read) noexcept override;
     bool ReadFileInChunks(std::string_view fileName, const std::function<bool(const char*, size_t)>& onChunk) noexcept override;
     bool RemoveFile(std::string_view fileName) noexcept override;
+    bool EnumerateFiles(const std::function<bool(std::string_view)>& onFile) const noexcept override;
 
 private:
     bool InternalWriteFile(std::string_view fileName, std::string_view content, bool append) noexcept;

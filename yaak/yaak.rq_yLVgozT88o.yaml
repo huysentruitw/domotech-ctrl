@@ -1,0 +1,18 @@
+type: http_request
+model: http_request
+id: rq_yLVgozT88o
+createdAt: 2026-02-15T16:54:40.796410400
+updatedAt: 2026-02-15T16:54:53.786991300
+workspaceId: wk_u8HifqEVo2
+folderId: null
+authentication: {}
+authenticationType: null
+body: {}
+bodyType: null
+description: ''
+headers: []
+method: GET
+name: Get Filters.ini file
+sortPriority: 2000.003
+url: ${[ api_uri ]}/files/Filters.ini
+urlParameters: []

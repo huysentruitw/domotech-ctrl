@@ -6,6 +6,7 @@
 
 #include "esp_log.h"
 
+#include <dirent.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/errno.h>
@@ -219,6 +220,31 @@ bool LittleFsStorage::RemoveFile(std::string_view fileName) noexcept
 
     ESP_LOGE(TAG, "Failed to remove %s (errno=%d)", path, err);
     return false;
+}
+
+bool LittleFsStorage::EnumerateFiles(const std::function<bool(std::string_view)>& onFile) const noexcept
+{
+    LockGuard guard(m_syncRoot);
+
+    DIR* dir = opendir(m_config.base_path);
+    if (!dir)
+        return false;
+
+    struct dirent* entry;
+    while ((entry = readdir(dir)) != nullptr)
+    {
+        if (entry->d_type == DT_REG)
+        {
+            if (!onFile(entry->d_name))
+            {
+                closedir(dir);
+                return false; // aborted by callback 
+            }
+        }
+    }
+
+    closedir(dir);
+    return true;
 }
 
 bool LittleFsStorage::MakeFullPath(std::string_view fileName, char* out, size_t outSize) const noexcept

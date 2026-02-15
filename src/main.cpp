@@ -155,6 +155,47 @@ esp_err_t configuration_create_filter_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
+esp_err_t list_files_handler(httpd_req_t *req)
+{
+    httpd_resp_set_hdr(req, "Connection", "close");
+    httpd_resp_set_type(req, "test/plain");
+
+    bool ok = storage.EnumerateFiles(
+        [&](std::string_view fileName)
+        {
+            if (httpd_resp_send_chunk(req, fileName.data(), fileName.size()) != ESP_OK)
+                return false;
+
+            if (httpd_resp_send_chunk(req, "\n", 1) != ESP_OK)
+                return false;
+
+            return true;
+        });
+
+    httpd_resp_send_chunk(req, nullptr, 0);
+
+    return ok ? ESP_OK : ESP_FAIL;
+}
+
+esp_err_t get_file_handler(httpd_req_t *req)
+{
+    const char* fileName = req->uri + strlen("/files/");
+
+    httpd_resp_set_hdr(req, "Connection", "close");
+    httpd_resp_set_type(req, "application/octet-stream");
+
+    bool ok = storage.ReadFileInChunks(
+        fileName,
+        [&](const char* chunk, size_t chunkSize)
+        {
+            return httpd_resp_send_chunk(req, chunk, chunkSize) == ESP_OK;
+        });
+
+    httpd_resp_send_chunk(req, nullptr, 0);
+
+    return ok ? ESP_OK : ESP_FAIL;
+}
+
 esp_err_t reset_handler(httpd_req_t *req)
 {
     KeyVault::Clear();
@@ -318,6 +359,7 @@ void start_webserver(void)
     httpd_handle_t server = NULL;
 
     config.stack_size = 8192;
+    config.uri_match_fn = httpd_uri_match_wildcard;
 
     if (httpd_start(&server, &config) == ESP_OK)
     {
@@ -356,6 +398,24 @@ void start_webserver(void)
             .user_ctx  = NULL,
         };
         httpd_register_uri_handler(server, &configuration_create_filter_uri);
+
+        httpd_uri_t list_files_uri =
+        {
+            .uri       = "/files",
+            .method    = HTTP_GET,
+            .handler   = list_files_handler,
+            .user_ctx  = NULL,
+        };
+        httpd_register_uri_handler(server, &list_files_uri);
+
+        httpd_uri_t get_file_uri =
+        {
+            .uri       = "/files/*",
+            .method    = HTTP_GET,
+            .handler   = get_file_handler,
+            .user_ctx  = NULL,
+        };
+        httpd_register_uri_handler(server, &get_file_uri);
 
         httpd_uri_t reset_uri =
         {

@@ -1,0 +1,18 @@
+type: http_request
+model: http_request
+id: rq_NSaJvGgb5a
+createdAt: 2026-02-15T16:50:00.711493800
+updatedAt: 2026-02-15T16:50:14.273463700
+workspaceId: wk_u8HifqEVo2
+folderId: null
+authentication: {}
+authenticationType: null
+body: {}
+bodyType: null
+description: ''
+headers: []
+method: GET
+name: Get Modules.ini file
+sortPriority: 2000.002
+url: ${[ api_uri ]}/files/Modules.ini
+urlParameters: []

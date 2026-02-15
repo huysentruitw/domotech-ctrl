@@ -1,0 +1,18 @@
+type: http_request
+model: http_request
+id: rq_ZpmjWQbd4i
+createdAt: 2026-02-15T16:49:32.612847300
+updatedAt: 2026-02-15T16:49:48.845328300
+workspaceId: wk_u8HifqEVo2
+folderId: null
+authentication: {}
+authenticationType: null
+body: {}
+bodyType: null
+description: ''
+headers: []
+method: GET
+name: Get List Of Files
+sortPriority: 2000.001
+url: ${[ api_uri ]}/files
+urlParameters: []

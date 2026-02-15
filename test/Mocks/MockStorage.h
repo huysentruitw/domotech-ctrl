@@ -32,4 +32,9 @@ public:
     {
         return true;
     }
+
+    bool EnumerateFiles(const std::function<bool(std::string_view)>& onFile) const noexcept override
+    {
+        return true;
+    }
 };

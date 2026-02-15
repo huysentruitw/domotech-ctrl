@@ -1,0 +1,88 @@
+#include "ModuleCollection.h"
+
+#include "NumberUtilities.h"
+
+#include <IniReader.h>
+#include <IniWriter.h>
+
+ModuleCollection::ModuleCollection()
+{
+}
+
+ModuleCollection::ModuleCollection(std::vector<std::unique_ptr<Module>> modules) noexcept
+{
+    m_modules.reserve(modules.size());
+    for (auto& module : modules)
+        m_modules.push_back(std::move(module));
+}
+
+ModuleCollection ModuleCollection::LoadFromFile(IStorage& storage, std::string_view fileName, ModuleFactory& factory) noexcept
+{
+    IniReader iniReader;
+
+    std::optional<ModuleType> type;
+    std::optional<uint8_t> address;
+    std::optional<uint16_t> initialData;
+
+    iniReader.OnSection([&](std::string_view section)
+    {
+        type = std::nullopt;
+        address = std::nullopt;
+        initialData = std::nullopt;
+    });
+
+    std::vector<std::unique_ptr<Module>> modules;
+    iniReader.OnKeyValue([&](std::string_view section, std::string_view key, std::string_view value)
+    {
+        if (section != "Module")
+            return;
+
+        if (key == "Type") type = GetModuleType(value);
+        else if (key == "Address") address = ParseInt(value);
+        else if (key == "InitialData") initialData = ParseInt(value, 16);
+
+        if (type && address && initialData)
+        {
+            modules.emplace_back(factory.CreateModule(type.value(), address.value(), initialData.value()));
+        }
+    });
+
+    if (!storage.ReadFileInChunks(
+        fileName,
+        [&](const char* chunk, size_t chunkSize)
+        {
+            iniReader.Feed(chunk, chunkSize);
+        }))
+    {
+        return ModuleCollection{};
+    }
+
+    iniReader.Finalize();
+    return ModuleCollection(std::move(modules));
+}
+
+void ModuleCollection::SaveToFile(IStorage& storage, std::string_view fileName) const noexcept
+{
+    IniWriter iniWriter;
+
+    for (const auto& module : m_modules)
+    {
+        iniWriter.WriteSection("Module");
+        iniWriter.WriteKeyValue("Type", GetModuleTypeName(module->GetType()));
+        iniWriter.WriteKeyValue("Address", std::to_string(module->GetAddress()));
+        iniWriter.WriteKeyValue("InitialData", ToHex4(module->GenerateInitialData()));
+    }
+
+    storage.WriteFile(fileName, iniWriter.GetContent());
+}
+
+std::shared_ptr<Module> ModuleCollection::TryGetModuleByAddress(uint8_t address) const noexcept
+{
+    for (const auto& module : m_modules)
+    {
+        if (module->GetAddress() == address)
+            return module;
+    }
+
+    return nullptr;
+}

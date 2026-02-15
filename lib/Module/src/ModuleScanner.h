@@ -10,9 +10,9 @@
 class ModuleScanner final
 {
 public:
-    ModuleScanner(const Bus& bus) noexcept;
+    ModuleScanner(Bus& bus) noexcept;
     std::vector<std::unique_ptr<Module>> DetectModules() const noexcept;
 
 private:
-    const Bus& m_bus;
+    Bus& m_bus;
 };

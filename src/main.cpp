@@ -21,7 +21,7 @@
 LittleFsStorage storage;
 Wifi wifi;
 HomeAssistantBridge homeAssistantBridge;
-Manager manager(&storage, &homeAssistantBridge);
+Manager manager(storage, homeAssistantBridge);
 
 void time_init(void)
 {
@@ -82,15 +82,6 @@ esp_err_t index_handler(httpd_req_t *req)
 esp_err_t known_filters_handler(httpd_req_t *req)
 {
     const auto ini = FilterFactory::GetKnownFiltersIni();
-    httpd_resp_set_hdr(req, "Connection", "close");
-    httpd_resp_set_type(req, "text/plain");
-    httpd_resp_sendstr(req, ini.c_str());
-    return ESP_OK;
-}
-
-esp_err_t configuration_handler(httpd_req_t *req)
-{
-    const auto ini = manager.ReadModulesIniFile();
     httpd_resp_set_hdr(req, "Connection", "close");
     httpd_resp_set_type(req, "text/plain");
     httpd_resp_sendstr(req, ini.c_str());
@@ -347,15 +338,6 @@ void start_webserver(void)
             .user_ctx  = NULL,
         };
         httpd_register_uri_handler(server, &known_filters_uri);
-
-        httpd_uri_t configuration_uri =
-        {
-            .uri       = "/configuration",
-            .method    = HTTP_GET,
-            .handler   = configuration_handler,
-            .user_ctx  = NULL,
-        };
-        httpd_register_uri_handler(server, &configuration_uri);
 
         httpd_uri_t configuration_rescan_uri =
         {

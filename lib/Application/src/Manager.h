@@ -1,6 +1,8 @@
 #pragma once
 
 #include "CreateFilterResult.h"
+#include "FilterCollection.h"
+#include "ModuleCollection.h"
 #include "RescanModulesResult.h"
 #include "ScanLed.h"
 
@@ -8,19 +10,15 @@
 #include <IBridge.h>
 #include <IStorage.h>
 #include <Lock.h>
-#include <Module.h>
-#include <StringHash.h>
 
 #include <cstdint>
 #include <memory>
-#include <string>
-#include <unordered_map>
-#include <vector>
+#include <string_view>
 
 class Manager final
 {
 public:
-    Manager(IStorage* const storage, IBridge* const bridge = nullptr) noexcept;
+    Manager(IStorage& storage, IBridge& bridge) noexcept;
 
     void Start() noexcept;
     void ProcessNext() noexcept;
@@ -29,30 +27,23 @@ public:
 
     CreateFilterResult CreateFilter(std::string_view id, std::string_view typeName, std::string_view connections) noexcept;
 
-    std::string ReadModulesIniFile() const noexcept;
-
 private:
-    void SaveModulesToFile() noexcept;
-    void LoadModulesFromFile() noexcept;
-
     void AppendFilterToFile(std::string_view id, std::string_view typeName, std::string_view connections) noexcept;
     void LoadFiltersFromFile() noexcept;
 
 private:
-    IStorage* const m_storage;
-    IBridge* const m_bridge = nullptr;
-
-    BusDriver m_busDriver;
-    ScanLed m_scanLed;
-    Bus m_bus;
     Lock m_syncRoot;
+    IStorage& m_storage;
+    IBridge& m_bridge;
+    BusDriver m_busDriver;
+    Bus m_bus;
+
+    ScanLed m_scanLed;
 
     uint16_t m_tick = 0;
 
-    std::unordered_map<std::string, std::shared_ptr<Filter>, StringHash, std::equal_to<>> m_filtersById;
-    std::vector<std::shared_ptr<Module>> m_modules;
+    ModuleCollection m_modules;
+    FilterCollection m_filters;
 
     std::shared_ptr<Filter> CreateFilterInternal(std::string_view id, std::string_view typeName, std::string_view connections, CreateFilterResult& result) noexcept;
-    std::shared_ptr<Filter> TryGetFilterById(std::string_view id) const noexcept;
-    std::shared_ptr<Module> TryGetModuleByAddress(uint8_t address) const noexcept;
 };

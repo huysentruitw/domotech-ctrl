@@ -6,7 +6,7 @@
 #include <IniWriter.h>
 #include <LockGuard.h>
 
-ModuleCollection::ModuleCollection(IStorage& storage, std::string_view fileName)
+ModuleCollection::ModuleCollection(IStorage& storage, std::string_view fileName) noexcept
     : m_storage(storage)
     , m_fileName(fileName)
 {

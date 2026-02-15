@@ -154,7 +154,7 @@ bool LittleFsStorage::ReadFile(std::string_view fileName, char* buffer, size_t b
     return read == fileSize;
 }
 
-bool LittleFsStorage::ReadFileInChunks(std::string_view fileName, const std::function<void(const char*, size_t)>& onChunk) noexcept
+bool LittleFsStorage::ReadFileInChunks(std::string_view fileName, const std::function<bool(const char*, size_t)>& onChunk) noexcept
 {
     LockGuard guard(m_syncRoot);
 
@@ -178,7 +178,13 @@ bool LittleFsStorage::ReadFileInChunks(std::string_view fileName, const std::fun
     {
         size_t n = fread(buffer, 1, sizeof(buffer), f);
         if (n > 0)
-            onChunk(buffer, n);
+        {
+            if (!onChunk(buffer, n))
+            {
+                fclose(f);
+                return false; // aborted by callback
+            }
+        }
 
         if (n < sizeof(buffer))
             break; // EOF or error

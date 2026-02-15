@@ -52,6 +52,7 @@ ModuleCollection ModuleCollection::LoadFromFile(IStorage& storage, std::string_v
         [&](const char* chunk, size_t chunkSize)
         {
             iniReader.Feed(chunk, chunkSize);
+            return true;
         }))
     {
         return ModuleCollection{};

@@ -23,7 +23,7 @@ public:
         return true;
     }
 
-    bool ReadFileInChunks(std::string_view fileName, const std::function<void(const char*, size_t)>& onChunk) noexcept override
+    bool ReadFileInChunks(std::string_view fileName, const std::function<bool(const char*, size_t)>& onChunk) noexcept override
     {
         return true;
     }

@@ -8,6 +8,8 @@
 class PinFactory final
 {
 public:
+    PinFactory() = delete; // Prevent instantiation of static class
+
     template<typename TState> static const std::shared_ptr<Pin> CreateInputPin(IPinObserver* observer = nullptr, const TState& defaultState = TState()) noexcept
     {
         return std::make_shared<Pin>(PinDirection::Input, defaultState, observer);

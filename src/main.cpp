@@ -409,7 +409,7 @@ void ProcessTask(void *arg)
     while (true)
     {
         manager.ProcessNext();
-        vTaskDelay(0);
+        vTaskDelay(1);
     }
 
     vTaskDelete(NULL);

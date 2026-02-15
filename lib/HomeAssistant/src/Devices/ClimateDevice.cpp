@@ -6,16 +6,17 @@ ClimateDevice::ClimateDevice(const std::shared_ptr<ClimateFilter>& filter, const
 {
 }
 
-size_t ClimateDevice::BuildDiscoveryTopic(char* buffer, size_t bufferLength) const noexcept
+bool ClimateDevice::BuildDiscoveryTopic(char* buffer, size_t bufferLength) const noexcept
 {
     std::string_view id = GetId();
-    return snprintf(buffer, bufferLength, "homeassistant/climate/%.*s/config", (int)id.length(), id.data());
+    int required = snprintf(buffer, bufferLength, "homeassistant/climate/%.*s/config", (int)id.length(), id.data());
+    return required >= 0 && static_cast<size_t>(required) < bufferLength;
 }
 
-size_t ClimateDevice::BuildDiscoveryPayload(char* buffer, size_t bufferLength) const noexcept
+bool ClimateDevice::BuildDiscoveryPayload(char* buffer, size_t bufferLength) const noexcept
 {
     std::string_view id = GetId();
-    return snprintf(buffer, bufferLength,
+    int required = snprintf(buffer, bufferLength,
         "{"
         "\"unique_id\": \"%.*s\","
         "\"name\": \"%.*s\","
@@ -40,6 +41,13 @@ size_t ClimateDevice::BuildDiscoveryPayload(char* buffer, size_t bufferLength) c
         (int)id.length(), id.data(),
         (int)id.length(), id.data(),
         (int)id.length(), id.data());
+
+    return required >= 0 && static_cast<size_t>(required) < bufferLength;
+}
+
+bool ClimateDevice::BuildStateMessages(StateMessageList& list) const noexcept
+{
+    return true;
 }
 
 void ClimateDevice::SubscribeToStateChanges() noexcept
@@ -50,6 +58,3 @@ void ClimateDevice::ProcessCommand(std::string_view subtopic, std::string_view c
 {
 }
 
-void ClimateDevice::EnqueueCurrentState() noexcept
-{
-}

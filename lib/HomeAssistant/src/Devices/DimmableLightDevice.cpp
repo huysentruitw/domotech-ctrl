@@ -8,16 +8,17 @@ DimmableLightDevice::DimmableLightDevice(const std::shared_ptr<DimmerFilter>& fi
 {
 }
 
-size_t DimmableLightDevice::BuildDiscoveryTopic(char* buffer, size_t bufferLength) const noexcept
+bool DimmableLightDevice::BuildDiscoveryTopic(char* buffer, size_t bufferLength) const noexcept
 {
     std::string_view id = GetId();
-    return snprintf(buffer, bufferLength, "homeassistant/light/%.*s/config", (int)id.length(), id.data());
+    int required = snprintf(buffer, bufferLength, "homeassistant/light/%.*s/config", (int)id.length(), id.data());
+    return required >= 0 && static_cast<size_t>(required) < bufferLength;
 }
 
-size_t DimmableLightDevice::BuildDiscoveryPayload(char* buffer, size_t bufferLength) const noexcept
+bool DimmableLightDevice::BuildDiscoveryPayload(char* buffer, size_t bufferLength) const noexcept
 {
     std::string_view id = GetId();
-    return snprintf(buffer, bufferLength,
+    int required = snprintf(buffer, bufferLength,
         "{"
         "\"unique_id\": \"%.*s\","
         "\"name\": \"%.*s\","
@@ -37,6 +38,40 @@ size_t DimmableLightDevice::BuildDiscoveryPayload(char* buffer, size_t bufferLen
         (int)id.length(), id.data(),
         (int)id.length(), id.data(),
         (int)id.length(), id.data());
+
+    return required >= 0 && static_cast<size_t>(required) < bufferLength;        
+}
+
+bool DimmableLightDevice::BuildStateMessages(StateMessageList& list) const noexcept
+{
+    if (!m_tap)
+        return false;
+
+    std::string_view id = GetId();
+    const auto state = m_tap->GetStateAs<DimmerControlValue>();
+
+    // Emit status
+    uint8_t percentage = state.GetPercentage();
+    {
+        StateMessage message{};
+        snprintf(message.Topic, sizeof(message.Topic), "domo/dev/%.*s/state", (int)id.size(), id.data());
+        snprintf(message.Payload, sizeof(message.Payload), percentage > 0 ? "ON" : "OFF");
+        message.Retain = true;
+        if (!list.Add(message))
+            return false;
+    }
+
+    // Emit brightness
+    if (percentage > 0)
+    {
+        StateMessage message{};
+        snprintf(message.Topic, sizeof(message.Topic), "domo/dev/%.*s/brightness", (int)id.size(), id.data());
+        snprintf(message.Payload, sizeof(message.Payload), "%d", percentage);
+        if (!list.Add(message))
+            return false;
+    }
+
+    return true;
 }
 
 void DimmableLightDevice::SubscribeToStateChanges() noexcept
@@ -67,7 +102,7 @@ void DimmableLightDevice::ProcessCommand(std::string_view subtopic, std::string_
     }
 }
 
-void DimmableLightDevice::EnqueueCurrentState() noexcept
+void DimmableLightDevice::OnPinStateChanged(const Pin& pin) noexcept
 {
     if (!m_tap)
         return;
@@ -100,11 +135,6 @@ void DimmableLightDevice::EnqueueCurrentState() noexcept
         event.Retain = true;
         eventBus->EnqueueEvent(event);
     }
-}
-
-void DimmableLightDevice::OnPinStateChanged(const Pin& pin) noexcept
-{
-    EnqueueCurrentState();
 }
 
 uint8_t DimmableLightDevice::ParsePercentage(std::string_view value) noexcept

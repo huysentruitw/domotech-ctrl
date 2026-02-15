@@ -8,16 +8,17 @@ CoverDevice::CoverDevice(const std::shared_ptr<ShutterFilter>& filter, const std
 {
 }
 
-size_t CoverDevice::BuildDiscoveryTopic(char* buffer, size_t bufferLength) const noexcept
+bool CoverDevice::BuildDiscoveryTopic(char* buffer, size_t bufferLength) const noexcept
 {
     std::string_view id = GetId();
-    return snprintf(buffer, bufferLength, "homeassistant/cover/%.*s/config", (int)id.length(), id.data());
+    int required = snprintf(buffer, bufferLength, "homeassistant/cover/%.*s/config", (int)id.length(), id.data());
+    return required >= 0 && static_cast<size_t>(required) < bufferLength;
 }
 
-size_t CoverDevice::BuildDiscoveryPayload(char* buffer, size_t bufferLength) const noexcept
+bool CoverDevice::BuildDiscoveryPayload(char* buffer, size_t bufferLength) const noexcept
 {
     std::string_view id = GetId();
-    return snprintf(buffer, bufferLength,
+    int required = snprintf(buffer, bufferLength,
         "{"
         "\"unique_id\": \"%.*s\","
         "\"name\": \"%.*s\","
@@ -36,6 +37,27 @@ size_t CoverDevice::BuildDiscoveryPayload(char* buffer, size_t bufferLength) con
         (int)id.length(), id.data(),
         (int)id.length(), id.data(),
         (int)id.length(), id.data());
+
+    return required >= 0 && static_cast<size_t>(required) < bufferLength;        
+}
+
+bool CoverDevice::BuildStateMessages(StateMessageList& list) const noexcept
+{
+    if (!m_tapOpen || !m_tapClose)
+        return false;
+
+    std::string_view id = GetId();
+    const char* payload = m_tapOpen->GetStateAs<DigitalValue>()
+        ? "OPENING"
+        : m_tapClose->GetStateAs<DigitalValue>()
+            ? "CLOSING"
+            : "STOPPED";
+
+    StateMessage message{};
+    snprintf(message.Topic, sizeof(message.Topic), "domo/dev/%.*s/state", (int)id.size(), id.data());
+    snprintf(message.Payload, sizeof(message.Payload), payload);
+    message.Retain = false;
+    return list.Add(message);
 }
 
 void CoverDevice::SubscribeToStateChanges() noexcept
@@ -72,7 +94,7 @@ void CoverDevice::ProcessCommand(std::string_view subtopic, std::string_view com
     }
 }
 
-void CoverDevice::EnqueueCurrentState() noexcept
+void CoverDevice::OnPinStateChanged(const Pin& pin) noexcept
 {
     if (!m_tapOpen || !m_tapClose)
         return;
@@ -94,9 +116,4 @@ void CoverDevice::EnqueueCurrentState() noexcept
     event.PayloadLength = snprintf(event.Payload, sizeof(event.Payload), payload);
     event.Retain = false;
     eventBus->EnqueueEvent(event);
-}
-
-void CoverDevice::OnPinStateChanged(const Pin& pin) noexcept
-{
-    EnqueueCurrentState();
 }

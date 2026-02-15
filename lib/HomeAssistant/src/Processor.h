@@ -40,6 +40,7 @@ private:
 
     void PublishDeviceDiscovery(const IDevice& device) noexcept;
     void PublishDeviceRemoval(const IDevice& device) noexcept;
+    void PublishDeviceState(const IDevice& device) noexcept;
 
     std::shared_ptr<IDevice> TryGetDeviceById(std::string_view id) const noexcept;
 };

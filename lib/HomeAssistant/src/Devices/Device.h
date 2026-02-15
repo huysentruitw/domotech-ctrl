@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Filter.h>
+#include <StaticList.h>
 
 #include "IdSanitizer.h"
 #include "IEventBus.h"
@@ -9,19 +10,28 @@
 #include <string>
 #include <type_traits>
 
+struct StateMessage; // Forward declaration
+using StateMessageList = StaticList<StateMessage, 2>;
+
 class IDevice
 {
 public:
     virtual ~IDevice() noexcept = default;
     virtual std::string_view GetId() const noexcept = 0;
 
-    virtual size_t BuildDiscoveryTopic(char* buffer, size_t bufferLength) const noexcept = 0;
-    virtual size_t BuildDiscoveryPayload(char* buffer, size_t bufferLength) const noexcept = 0;
+    virtual bool BuildDiscoveryTopic(char* buffer, size_t bufferLength) const noexcept = 0;
+    virtual bool BuildDiscoveryPayload(char* buffer, size_t bufferLength) const noexcept = 0;
+    virtual bool BuildStateMessages(StateMessageList& out) const noexcept = 0;
 
     virtual void SubscribeToStateChanges() noexcept = 0;
-
     virtual void ProcessCommand(std::string_view subtopic, std::string_view command) const noexcept = 0;
-    virtual void EnqueueCurrentState() noexcept = 0;
+};
+
+struct StateMessage
+{
+    char Topic[64];
+    char Payload[64];
+    bool Retain;
 };
 
 template<class T, class U>

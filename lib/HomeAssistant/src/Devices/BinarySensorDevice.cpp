@@ -8,16 +8,17 @@ BinarySensorDevice::BinarySensorDevice(const std::shared_ptr<DigitalPassthroughF
 {
 }
 
-size_t BinarySensorDevice::BuildDiscoveryTopic(char* buffer, size_t bufferLength) const noexcept
+bool BinarySensorDevice::BuildDiscoveryTopic(char* buffer, size_t bufferLength) const noexcept
 {
     std::string_view id = GetId();
-    return snprintf(buffer, bufferLength, "homeassistant/binary_sensor/%.*s/config", (int)id.length(), id.data());
+    int required = snprintf(buffer, bufferLength, "homeassistant/binary_sensor/%.*s/config", (int)id.length(), id.data());
+    return required >= 0 && static_cast<size_t>(required) < bufferLength;
 }
 
-size_t BinarySensorDevice::BuildDiscoveryPayload(char* buffer, size_t bufferLength) const noexcept
+bool BinarySensorDevice::BuildDiscoveryPayload(char* buffer, size_t bufferLength) const noexcept
 {
     std::string_view id = GetId();
-    return snprintf(buffer, bufferLength,
+    int required = snprintf(buffer, bufferLength,
         "{"
         "\"unique_id\": \"%.*s\","
         "\"name\": \"%.*s\","
@@ -30,6 +31,22 @@ size_t BinarySensorDevice::BuildDiscoveryPayload(char* buffer, size_t bufferLeng
         (int)id.length(), id.data(),
         (int)id.length(), id.data(),
         (int)id.length(), id.data());
+
+    return required >= 0 && static_cast<size_t>(required) < bufferLength;        
+}
+
+bool BinarySensorDevice::BuildStateMessages(StateMessageList& list) const noexcept
+{
+    if (!m_tap)
+        return false;
+
+    std::string_view id = GetId();
+
+    StateMessage message{};
+    snprintf(message.Topic, sizeof(message.Topic), "domo/dev/%.*s/state", (int)id.length(), id.data());
+    snprintf(message.Payload, sizeof(message.Payload), m_tap->GetStateAs<DigitalValue>() ? "ON" : "OFF");
+    message.Retain = true;
+    return list.Add(message);
 }
 
 void BinarySensorDevice::SubscribeToStateChanges() noexcept
@@ -51,7 +68,7 @@ void BinarySensorDevice::ProcessCommand(std::string_view subtopic, std::string_v
     // This device doesn't support commands
 }
 
-void BinarySensorDevice::EnqueueCurrentState() noexcept
+void BinarySensorDevice::OnPinStateChanged(const Pin& pin) noexcept
 {
     if (!m_tap)
         return;
@@ -67,9 +84,4 @@ void BinarySensorDevice::EnqueueCurrentState() noexcept
     event.PayloadLength = snprintf(event.Payload, sizeof(event.Payload), m_tap->GetStateAs<DigitalValue>() ? "ON" : "OFF");
     event.Retain = true;
     eventBus->EnqueueEvent(event);
-}
-
-void BinarySensorDevice::OnPinStateChanged(const Pin& pin) noexcept
-{
-    EnqueueCurrentState();
 }

@@ -129,8 +129,9 @@ void Processor::OnCompleteDeviceRegistration(const BridgeEvent& event) noexcept
     ESP_LOGI(TAG, "OnCompleteDeviceRegistration (Id: %.*s)", (int)id.length(), id.data());
     if (auto device = TryGetDeviceById(id))
     {
-        PublishDeviceDiscovery(*device);
         device->SubscribeToStateChanges();
+        PublishDeviceDiscovery(*device);
+        PublishDeviceState(*device);
     }
 }
 
@@ -170,9 +171,7 @@ void Processor::OnPublishNextDiscovery() noexcept
     if (auto device = TryGetDeviceById(id))
     {
         PublishDeviceDiscovery(*device);
-
-        // device->PublishDiscovery(m_client);
-        // device->PublishCurrentState(m_client);
+        PublishDeviceState(*device);
     }
 
     if (hasMore)
@@ -215,6 +214,17 @@ void Processor::PublishDeviceRemoval(const IDevice& device) noexcept
     char topic[64];
     device.BuildDiscoveryTopic(topic, sizeof(topic));
     m_mqttClient.Publish(topic, "", true);
+}
+
+void Processor::PublishDeviceState(const IDevice& device) noexcept
+{
+    std::string_view id = device.GetId();
+    ESP_LOGI(TAG, "PublishDeviceState (Id: %.*s)", (int)id.length(), id.data());
+
+    StateMessageList list;
+    device.BuildStateMessages(list);
+    for (size_t i = 0; i < list.Count(); i++)
+        m_mqttClient.Publish(list[i].Topic, list[i].Payload, list[i].Retain);
 }
 
 std::shared_ptr<IDevice> Processor::TryGetDeviceById(std::string_view id) const noexcept

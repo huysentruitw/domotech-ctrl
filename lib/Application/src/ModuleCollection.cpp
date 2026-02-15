@@ -4,19 +4,15 @@
 
 #include <IniReader.h>
 #include <IniWriter.h>
+#include <LockGuard.h>
 
-ModuleCollection::ModuleCollection()
+ModuleCollection::ModuleCollection(IStorage& storage, std::string_view fileName)
+    : m_storage(storage)
+    , m_fileName(fileName)
 {
 }
 
-ModuleCollection::ModuleCollection(std::vector<std::unique_ptr<Module>> modules) noexcept
-{
-    m_modules.reserve(modules.size());
-    for (auto& module : modules)
-        m_modules.push_back(std::move(module));
-}
-
-ModuleCollection ModuleCollection::LoadFromFile(IStorage& storage, std::string_view fileName, ModuleFactory& factory) noexcept
+bool ModuleCollection::LoadFromFile(const ModuleFactoryFn& factory) noexcept
 {
     IniReader iniReader;
 
@@ -43,38 +39,43 @@ ModuleCollection ModuleCollection::LoadFromFile(IStorage& storage, std::string_v
 
         if (type && address && initialData)
         {
-            modules.emplace_back(factory.CreateModule(type.value(), address.value(), initialData.value()));
+            if (auto module = factory(type.value(), address.value(), initialData.value()))
+                modules.push_back(std::move(module));
         }
     });
 
-    if (!storage.ReadFileInChunks(
-        fileName,
+    if (!m_storage.ReadFileInChunks(
+        m_fileName,
         [&](const char* chunk, size_t chunkSize)
         {
             iniReader.Feed(chunk, chunkSize);
             return true;
         }))
     {
-        return ModuleCollection{};
+        return false;
     }
 
     iniReader.Finalize();
-    return ModuleCollection(std::move(modules));
+
+    m_modules.assign(
+        std::make_move_iterator(modules.begin()),
+        std::make_move_iterator(modules.end()));
+
+    return true;
 }
 
-void ModuleCollection::SaveToFile(IStorage& storage, std::string_view fileName) const noexcept
+bool ModuleCollection::Emplace(std::vector<std::unique_ptr<Module>> modules) noexcept
 {
-    IniWriter iniWriter;
+    m_modules.assign(
+        std::make_move_iterator(modules.begin()),
+        std::make_move_iterator(modules.end()));
 
-    for (const auto& module : m_modules)
-    {
-        iniWriter.WriteSection("Module");
-        iniWriter.WriteKeyValue("Type", GetModuleTypeName(module->GetType()));
-        iniWriter.WriteKeyValue("Address", std::to_string(module->GetAddress()));
-        iniWriter.WriteKeyValue("InitialData", ToHex4(module->GenerateInitialData()));
-    }
+    return SaveToFile();
+}
 
-    storage.WriteFile(fileName, iniWriter.GetContent());
+size_t ModuleCollection::Count() const noexcept
+{
+    return m_modules.size();
 }
 
 std::shared_ptr<Module> ModuleCollection::TryGetModuleByAddress(uint8_t address) const noexcept
@@ -86,4 +87,19 @@ std::shared_ptr<Module> ModuleCollection::TryGetModuleByAddress(uint8_t address)
     }
 
     return nullptr;
+}
+
+bool ModuleCollection::SaveToFile() const noexcept
+{
+    IniWriter iniWriter;
+
+    for (const auto& module : m_modules)
+    {
+        iniWriter.WriteSection("Module");
+        iniWriter.WriteKeyValue("Type", GetModuleTypeName(module->GetType()));
+        iniWriter.WriteKeyValue("Address", std::to_string(module->GetAddress()));
+        iniWriter.WriteKeyValue("InitialData", ToHex4(module->GenerateInitialData()));
+    }
+
+    return m_storage.WriteFile(m_fileName, iniWriter.GetContent());
 }

@@ -2,7 +2,7 @@ type: http_request
 model: http_request
 id: rq_crxjPT7x6X
 createdAt: 2026-01-18T21:29:46.535424300
-updatedAt: 2026-01-24T22:49:19.914330
+updatedAt: 2026-02-15T22:12:29.629562200
 workspaceId: wk_u8HifqEVo2
 folderId: null
 authentication: {}
@@ -12,7 +12,7 @@ body:
     [Filter]
     Id=inp2
     Type=DigitalPassthrough
-    Connections=I0=A54:O2
+    Connections=I0=A3:O7
 bodyType: other
 description: ''
 headers:

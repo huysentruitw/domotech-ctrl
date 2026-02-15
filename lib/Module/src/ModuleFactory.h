@@ -9,10 +9,7 @@
 class ModuleFactory final
 {
 public:
-    ModuleFactory(Bus& bus);
+    ModuleFactory() = delete; // Prevent instantiation of static class
 
-    std::unique_ptr<Module> CreateModule(const ModuleType type, const uint8_t address, const uint16_t initialData) const noexcept;
-
-private:
-    Bus& m_bus;    
+    static std::unique_ptr<Module> CreateModule(Bus& bus, ModuleType type, uint8_t address, uint16_t initialData) noexcept;
 };

@@ -2,7 +2,7 @@ type: http_request
 model: http_request
 id: rq_GjmTEHqiP7
 createdAt: 2026-01-03T18:54:13.873237100
-updatedAt: 2026-01-24T22:25:13.744257400
+updatedAt: 2026-02-15T22:01:42.208435200
 workspaceId: wk_u8HifqEVo2
 folderId: null
 authentication: {}
@@ -10,7 +10,7 @@ authenticationType: null
 body:
   text: |
     [Filter]
-    Id=Stopcontact A
+    Id=Wouter
     Type=Switch
     Connections=I0=A3:O0,O0=A5:I0,I1=A5:O0
 bodyType: other

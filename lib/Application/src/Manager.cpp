@@ -1,21 +1,10 @@
 #include "Manager.h"
 #include "ConnectionsParser.h"
 
-#include <IniReader.h>
-#include <IniWriter.h>
+#include <FilterFactory.h>
 #include <LockGuard.h>
 #include <ModuleFactory.h>
 #include <ModuleScanner.h>
-
-#include <FilterFactory.h>
-#include <Filters/ClimateFilter.h>
-#include <Filters/DigitalPassthroughFilter.h>
-#include <Filters/DimmerFilter.h>
-#include <Filters/LightFilter.h>
-#include <Filters/ShutterFilter.h>
-#include <Filters/SwitchFilter.h>
-
-#include <sstream>
 
 #define MODULES_FILE_NAME "Modules.ini"
 #define FILTERS_FILE_NAME "Filter.ini"
@@ -26,6 +15,8 @@ Manager::Manager(IStorage& storage, IBridge& bridge) noexcept
     , m_bridge(bridge)
     , m_busDriver()
     , m_bus(m_busDriver)
+    , m_modules(storage, MODULES_FILE_NAME)
+    , m_filters(storage, FILTERS_FILE_NAME)
 {
 }
 
@@ -33,9 +24,21 @@ void Manager::Start() noexcept
 {
     m_busDriver.Init();
 
-    ModuleFactory moduleFactory(m_bus);
-    m_modules = ModuleCollection::LoadFromFile(m_storage, MODULES_FILE_NAME, moduleFactory);
-    m_filters = FilterCollection::LoadFromFile(m_storage, FILTERS_FILE_NAME);
+    m_modules.LoadFromFile(
+        [&](ModuleType type, uint8_t address, uint16_t initialData)
+        {
+            return ModuleFactory::CreateModule(m_bus, type, address, initialData);
+        });
+
+    m_filters.LoadFromFile(
+        [&](std::string_view id, std::string_view typeName, std::string_view connections)
+        {
+            CreateFilterResult result;
+            return CreateFilterInternal(id, typeName, connections, result);
+        });
+
+    for (auto& [_, filter] : m_filters)
+        m_bridge.RegisterAsDevice(filter);
 }
 
 void Manager::ProcessNext() noexcept
@@ -54,99 +57,35 @@ RescanModulesResult Manager::RescanModules() noexcept
 {
     LockGuard guard(m_syncRoot); // Prevent ProcessNext to interrupt this scanning process 
 
-    m_filters = FilterCollection{};
-    m_filters.SaveToFile(m_storage, FILTERS_FILE_NAME);
+    m_filters.Clear();
 
-    ModuleFactory factory(m_bus);
     ModuleScanner scanner(m_bus);
     auto detectedModules = scanner.DetectModules();
 
-    m_modules = ModuleCollection(std::move(detectedModules));
-    m_modules.SaveToFile(m_storage, MODULES_FILE_NAME);
+    m_modules.Emplace(std::move(detectedModules));
 
-    return { .NumberOfDetectedModules = detectedModules.size() };
-}
-
-void Manager::AppendFilterToFile(std::string_view id, std::string_view typeName, std::string_view connections) noexcept
-{
-    // IniWriter iniWriter;
-    // iniWriter.WriteSection("Filter");
-    // iniWriter.WriteKeyValue("Id", id);
-    // iniWriter.WriteKeyValue("Type", typeName);
-    // iniWriter.WriteKeyValue("Connections", connections);
-    
-    // m_storage->AppendFile(FILTERS_FILE_NAME, iniWriter.GetContent());
-    // m_storage->AppendFile(FILTERS_FILE_NAME, "\n");
-}
-
-void Manager::LoadFiltersFromFile() noexcept
-{
-    // IniReader iniReader;
-
-    // bool inFilterSection;
-    // std::string id;
-    // std::string typeName;
-    // std::string connections;
-
-    // iniReader.OnSection([&](std::string_view section)
-    // {
-    //     inFilterSection = (section == "Filter");
-    //     id.clear();
-    //     typeName.clear();
-    //     connections.clear();
-    // });
-
-    // iniReader.OnKeyValue([&](std::string_view section, std::string_view key, std::string_view value)
-    // {
-    //     if (!inFilterSection)
-    //         return;
-
-    //     if (key == "Id") id = value;
-    //     else if (key == "Type") typeName = value;
-    //     else if (key == "Connections") connections = value;
-
-    //     if (!id.empty() && !typeName.empty() && !connections.empty())
-    //         CreateFilter(id, typeName, connections);
-    // });
-
-    // if (!m_storage->ReadFileInChunks(
-    //     FILTERS_FILE_NAME,
-    //     [&](const char* chunk, size_t chunkSize)
-    //     {
-    //         iniReader.Feed(chunk, chunkSize);
-    //     }))
-    // {
-    //     return;
-    // }
-
-    // iniReader.Finalize();
+    return { .NumberOfDetectedModules = m_modules.Count() };
 }
 
 CreateFilterResult Manager::CreateFilter(std::string_view id, std::string_view typeName, std::string_view connections) noexcept
 {
-    // LockGuard guard(m_syncRoot);
+    LockGuard guard(m_syncRoot);
 
-    // CreateFilterResult result{};
-    // auto filter = Manager::CreateFilterInternal(id, typeName, connections, result);
-    // if (result.Status != CreateFilterStatus::NoError || filter == nullptr)
-    //     return result;
+    CreateFilterResult result{};
+    std::unique_ptr<Filter> filter = Manager::CreateFilterInternal(id, typeName, connections, result);
+    if (result.Status != CreateFilterStatus::NoError || filter == nullptr)
+        return result;
 
-    // // Register filter
-    // m_filtersById.emplace(filter->GetId(), filter);
+    auto storedFilter = m_filters.AppendFilter(std::move(filter), connections);
+    m_bridge.RegisterAsDevice(storedFilter);
 
-    // AppendFilterToFile(id, typeName, connections);
-
-    // if (m_bridge != nullptr)
-    //     m_bridge->RegisterAsDevice(filter);
-
-    // return result;
     return CreateFilterResult{};
 }
 
-std::shared_ptr<Filter> Manager::CreateFilterInternal(std::string_view id, std::string_view typeName, std::string_view connections, CreateFilterResult& result) noexcept
+std::unique_ptr<Filter> Manager::CreateFilterInternal(std::string_view id, std::string_view typeName, std::string_view connections, CreateFilterResult& result) noexcept
 {
     std::vector<std::pair<std::weak_ptr<Pin>, std::weak_ptr<Pin>>> pinConnections;
-    auto fail = [&](CreateFilterStatus status, std::optional<size_t> failedAtMappingIndex = std::nullopt) -> std::shared_ptr<Filter>
+    auto fail = [&](CreateFilterStatus status, std::optional<size_t> failedAtMappingIndex = std::nullopt) -> std::unique_ptr<Filter>
     {
         result.Status = status;
         result.FailedAtMappingIndex = failedAtMappingIndex;
@@ -158,7 +97,7 @@ std::shared_ptr<Filter> Manager::CreateFilterInternal(std::string_view id, std::
     if (m_filters.TryGetFilterById(id) != nullptr)
         return fail(CreateFilterStatus::FilterAlreadyExists);
 
-    auto filter = std::shared_ptr<Filter>(FilterFactory::TryCreateFilterByTypeName(typeName, id));
+    auto filter = FilterFactory::TryCreateFilterByTypeName(typeName, id);
     if (filter == nullptr)
         return fail(CreateFilterStatus::UnknownFilterType);
 

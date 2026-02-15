@@ -97,15 +97,6 @@ esp_err_t configuration_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
-esp_err_t configuration_clear_handler(httpd_req_t *req)
-{
-    manager.Clear();
-    httpd_resp_set_hdr(req, "Connection", "close");
-    httpd_resp_set_type(req, "text/plain");
-    httpd_resp_sendstr(req, "Configuration cleared");
-    return ESP_OK;
-}
-
 esp_err_t configuration_rescan_handler(httpd_req_t *req)
 {
     const auto result = manager.RescanModules();
@@ -365,15 +356,6 @@ void start_webserver(void)
             .user_ctx  = NULL,
         };
         httpd_register_uri_handler(server, &configuration_uri);
-
-        httpd_uri_t configuration_clear_uri =
-        {
-            .uri       = "/configuration/clear",
-            .method    = HTTP_POST,
-            .handler   = configuration_clear_handler,
-            .user_ctx  = NULL,
-        };
-        httpd_register_uri_handler(server, &configuration_clear_uri);
 
         httpd_uri_t configuration_rescan_uri =
         {

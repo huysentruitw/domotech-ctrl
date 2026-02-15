@@ -25,7 +25,6 @@ public:
     void Start() noexcept;
     void ProcessNext() noexcept;
 
-    void Clear() noexcept;
     RescanModulesResult RescanModules() noexcept;
 
     CreateFilterResult CreateFilter(std::string_view id, std::string_view typeName, std::string_view connections) noexcept;

@@ -50,21 +50,8 @@ void Manager::ProcessNext() noexcept
     m_tick++;
 }
 
-void Manager::Clear() noexcept
-{
-    {
-        LockGuard guard(m_syncRoot);
-        m_filtersById.clear();
-        m_modules.clear();
-    }
-
-    m_storage->RemoveFile(MODULES_FILE_NAME);
-    m_storage->RemoveFile(FILTERS_FILE_NAME);
-}
-
 RescanModulesResult Manager::RescanModules() noexcept
 {
-    Clear();
 
     LockGuard guard(m_syncRoot);
 

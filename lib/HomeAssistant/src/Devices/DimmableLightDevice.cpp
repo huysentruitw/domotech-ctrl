@@ -1,10 +1,9 @@
 #include "DimmableLightDevice.h"
-#include "IdSanitizer.h"
 
 #include <PinFactory.h>
 
-DimmableLightDevice::DimmableLightDevice(const std::shared_ptr<DimmerFilter>& filter, const std::weak_ptr<IEventBus>& eventBus) noexcept
-    : Device(filter, eventBus)
+DimmableLightDevice::DimmableLightDevice(std::string_view id, const std::weak_ptr<DimmerFilter>& filter, const std::weak_ptr<IEventBus>& eventBus) noexcept
+    : Device(id, filter, eventBus)
 {
 }
 

@@ -11,7 +11,7 @@
 class CoverDevice final : public Device<ShutterFilter>, private IPinObserver
 {
 public:
-    explicit CoverDevice(const std::shared_ptr<ShutterFilter>& filter, const std::weak_ptr<IEventBus>& eventBus) noexcept;
+    CoverDevice(std::string_view id, const std::weak_ptr<ShutterFilter>& filter, const std::weak_ptr<IEventBus>& eventBus) noexcept;
 
     bool BuildDiscoveryTopic(char* buffer, size_t bufferLength) const noexcept override;
     bool BuildDiscoveryPayload(char* buffer, size_t bufferLength) const noexcept override;

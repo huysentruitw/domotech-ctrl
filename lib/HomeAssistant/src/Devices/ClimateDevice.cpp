@@ -1,8 +1,7 @@
 #include "ClimateDevice.h"
-#include "IdSanitizer.h"
 
-ClimateDevice::ClimateDevice(const std::shared_ptr<ClimateFilter>& filter, const std::weak_ptr<IEventBus>& eventBus) noexcept
-    : Device(filter, eventBus)
+ClimateDevice::ClimateDevice(std::string_view id, const std::weak_ptr<ClimateFilter>& filter, const std::weak_ptr<IEventBus>& eventBus) noexcept
+    : Device(id, filter, eventBus)
 {
 }
 
@@ -57,4 +56,3 @@ void ClimateDevice::SubscribeToStateChanges() noexcept
 void ClimateDevice::ProcessCommand(std::string_view subtopic, std::string_view command) const noexcept
 {
 }
-

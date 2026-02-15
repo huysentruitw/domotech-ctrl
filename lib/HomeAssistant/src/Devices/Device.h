@@ -3,7 +3,6 @@
 #include <Filter.h>
 #include <StaticList.h>
 
-#include "IdSanitizer.h"
 #include "IEventBus.h"
 
 #include <memory>
@@ -41,10 +40,12 @@ template<Derived<Filter> TFilter>
 class Device : public IDevice
 {
 public:
-    explicit Device(const std::shared_ptr<TFilter>& filter, const std::weak_ptr<IEventBus>& eventBus) noexcept
-        : m_filter(filter)
+    Device(std::string_view id, const std::weak_ptr<TFilter>& filter, const std::weak_ptr<IEventBus>& eventBus) noexcept
+        : m_id(id)
+        , m_filter(filter)
         , m_eventBus(eventBus)
-        , m_id(IdSanitizer::Sanitize(filter->GetId())) {}
+    {
+    }
 
     std::string_view GetId() const noexcept override
     {
@@ -63,7 +64,7 @@ protected:
     }
 
 private:
+    const std::string m_id;
     const std::weak_ptr<TFilter> m_filter;
     const std::weak_ptr<IEventBus> m_eventBus;
-    const std::string m_id;
 };

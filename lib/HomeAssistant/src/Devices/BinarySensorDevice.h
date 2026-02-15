@@ -11,7 +11,7 @@
 class BinarySensorDevice final : public Device<DigitalPassthroughFilter>, private IPinObserver
 {
 public:
-    explicit BinarySensorDevice(const std::shared_ptr<DigitalPassthroughFilter>& filter, const std::weak_ptr<IEventBus>& eventBus) noexcept;
+    BinarySensorDevice(std::string_view id, const std::weak_ptr<DigitalPassthroughFilter>& filter, const std::weak_ptr<IEventBus>& eventBus) noexcept;
 
     bool BuildDiscoveryTopic(char* buffer, size_t bufferLength) const noexcept override;
     bool BuildDiscoveryPayload(char* buffer, size_t bufferLength) const noexcept override;

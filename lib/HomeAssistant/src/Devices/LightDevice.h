@@ -11,7 +11,7 @@
 class LightDevice final : public Device<LightFilter>, private IPinObserver
 {
 public:
-    explicit LightDevice(const std::shared_ptr<LightFilter>& filter, const std::weak_ptr<IEventBus>& eventBus) noexcept;
+    LightDevice(std::string_view id, const std::weak_ptr<LightFilter>& filter, const std::weak_ptr<IEventBus>& eventBus) noexcept;
 
     bool BuildDiscoveryTopic(char* buffer, size_t bufferLength) const noexcept override;
     bool BuildDiscoveryPayload(char* buffer, size_t bufferLength) const noexcept override;

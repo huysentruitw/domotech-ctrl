@@ -1,10 +1,9 @@
 #include "CoverDevice.h"
-#include "IdSanitizer.h"
 
 #include <PinFactory.h>
 
-CoverDevice::CoverDevice(const std::shared_ptr<ShutterFilter>& filter, const std::weak_ptr<IEventBus>& eventBus) noexcept
-    : Device(filter, eventBus)
+CoverDevice::CoverDevice(std::string_view id, const std::weak_ptr<ShutterFilter>& filter, const std::weak_ptr<IEventBus>& eventBus) noexcept
+    : Device(id, filter, eventBus)
 {
 }
 

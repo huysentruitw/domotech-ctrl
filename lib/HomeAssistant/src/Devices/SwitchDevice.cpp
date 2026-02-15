@@ -1,10 +1,9 @@
 #include "SwitchDevice.h"
-#include "IdSanitizer.h"
 
 #include <PinFactory.h>
 
-SwitchDevice::SwitchDevice(const std::shared_ptr<SwitchFilter>& filter, const std::weak_ptr<IEventBus>& eventBus) noexcept
-    : Device(filter, eventBus)
+SwitchDevice::SwitchDevice(std::string_view id, const std::weak_ptr<SwitchFilter>& filter, const std::weak_ptr<IEventBus>& eventBus) noexcept
+    : Device(id, filter, eventBus)
 {
 }
 

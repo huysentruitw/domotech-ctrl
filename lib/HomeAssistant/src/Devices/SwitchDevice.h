@@ -11,7 +11,7 @@
 class SwitchDevice final : public Device<SwitchFilter>, private IPinObserver
 {
 public:
-    explicit SwitchDevice(const std::shared_ptr<SwitchFilter>& filter, const std::weak_ptr<IEventBus>& eventBus) noexcept;
+    SwitchDevice(std::string_view id, const std::weak_ptr<SwitchFilter>& filter, const std::weak_ptr<IEventBus>& eventBus) noexcept;
 
     bool BuildDiscoveryTopic(char* buffer, size_t bufferLength) const noexcept override;
     bool BuildDiscoveryPayload(char* buffer, size_t bufferLength) const noexcept override;

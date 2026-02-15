@@ -9,7 +9,7 @@
 class ClimateDevice final : public Device<ClimateFilter>
 {
 public:
-    explicit ClimateDevice(const std::shared_ptr<ClimateFilter>& filter, const std::weak_ptr<IEventBus>& eventBus) noexcept;
+    ClimateDevice(std::string_view id, const std::weak_ptr<ClimateFilter>& filter, const std::weak_ptr<IEventBus>& eventBus) noexcept;
 
     bool BuildDiscoveryTopic(char* buffer, size_t bufferLength) const noexcept override;
     bool BuildDiscoveryPayload(char* buffer, size_t bufferLength) const noexcept override;

@@ -1,10 +1,9 @@
 #include "BinarySensorDevice.h"
-#include "IdSanitizer.h"
 
 #include <PinFactory.h>
 
-BinarySensorDevice::BinarySensorDevice(const std::shared_ptr<DigitalPassthroughFilter>& filter, const std::weak_ptr<IEventBus>& eventBus) noexcept
-    : Device(filter, eventBus)
+BinarySensorDevice::BinarySensorDevice(std::string_view id, const std::weak_ptr<DigitalPassthroughFilter>& filter, const std::weak_ptr<IEventBus>& eventBus) noexcept
+    : Device(id, filter, eventBus)
 {
 }
 

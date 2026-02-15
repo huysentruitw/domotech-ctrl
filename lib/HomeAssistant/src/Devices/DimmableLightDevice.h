@@ -11,7 +11,7 @@
 class DimmableLightDevice final : public Device<DimmerFilter>, private IPinObserver
 {
 public:
-    explicit DimmableLightDevice(const std::shared_ptr<DimmerFilter>& filter, const std::weak_ptr<IEventBus>& eventBus) noexcept;
+    DimmableLightDevice(std::string_view id, const std::weak_ptr<DimmerFilter>& filter, const std::weak_ptr<IEventBus>& eventBus) noexcept;
 
     bool BuildDiscoveryTopic(char* buffer, size_t bufferLength) const noexcept override;
     bool BuildDiscoveryPayload(char* buffer, size_t bufferLength) const noexcept override;

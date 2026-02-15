@@ -41,49 +41,49 @@ bool HomeAssistantBridge::RegisterAsDevice(std::weak_ptr<Filter> filter) noexcep
     if (!filterPtr)
         return false;
 
-    const std::string id = IdSanitizer::Sanitize(filterPtr->GetId());
-    ESP_LOGI(TAG, "RegisterAsDevice (Id: %.*s)", (int)id.length(), id.data());
+    const std::string deviceId = IdSanitizer::Sanitize(filterPtr->GetId());
+    ESP_LOGI(TAG, "RegisterAsDevice (Id: %.*s)", (int)deviceId.length(), deviceId.data());
 
     const auto filterType = filterPtr->GetType();
     if (filterType == FilterType::Switch)
     {
         auto switchFilter = std::static_pointer_cast<SwitchFilter>(filterPtr);
-        m_processor->RegisterDevice(std::make_shared<SwitchDevice>(switchFilter, m_eventBus));
+        m_processor->RegisterDevice(std::make_shared<SwitchDevice>(deviceId, switchFilter, m_eventBus));
         return true;
     }
 
     if (filterType == FilterType::Light)
     {
         auto lightFilter = std::static_pointer_cast<LightFilter>(filterPtr);
-        m_processor->RegisterDevice(std::make_shared<LightDevice>(lightFilter, m_eventBus));
+        m_processor->RegisterDevice(std::make_shared<LightDevice>(deviceId, lightFilter, m_eventBus));
         return true;
     }
 
     if (filterType == FilterType::Dimmer)
     {
         auto dimmerFilter = std::static_pointer_cast<DimmerFilter>(filterPtr);
-        m_processor->RegisterDevice(std::make_shared<DimmableLightDevice>(dimmerFilter, m_eventBus));
+        m_processor->RegisterDevice(std::make_shared<DimmableLightDevice>(deviceId, dimmerFilter, m_eventBus));
         return true;
     }
 
     if (filterType == FilterType::Shutter)
     {
         auto shutterFilter = std::static_pointer_cast<ShutterFilter>(filterPtr);
-        m_processor->RegisterDevice(std::make_shared<CoverDevice>(shutterFilter, m_eventBus));
+        m_processor->RegisterDevice(std::make_shared<CoverDevice>(deviceId, shutterFilter, m_eventBus));
         return true;
     }
 
     if (filterType == FilterType::Climate)
     {
         auto climateFilter = std::static_pointer_cast<ClimateFilter>(filterPtr);
-        m_processor->RegisterDevice(std::make_shared<ClimateDevice>(climateFilter, m_eventBus));
+        m_processor->RegisterDevice(std::make_shared<ClimateDevice>(deviceId, climateFilter, m_eventBus));
         return true;
     }
 
     if (filterType == FilterType::DigitalPassthrough)
     {
         auto digitalPassthroughFilter = std::static_pointer_cast<DigitalPassthroughFilter>(filterPtr);
-        m_processor->RegisterDevice(std::make_shared<BinarySensorDevice>(digitalPassthroughFilter, m_eventBus));
+        m_processor->RegisterDevice(std::make_shared<BinarySensorDevice>(deviceId, digitalPassthroughFilter, m_eventBus));
         return true;
     }
 
@@ -96,8 +96,8 @@ bool HomeAssistantBridge::UnregisterAsDevice(std::weak_ptr<Filter> filter) noexc
     if (!filterPtr)
         return false;
 
-    const std::string id = IdSanitizer::Sanitize(filterPtr->GetId());
-    ESP_LOGI(TAG, "UnregisterAsDevice (Id: %.*s)", (int)id.length(), id.data());
-    m_processor->UnregisterDevice(id);
+    const std::string deviceId = IdSanitizer::Sanitize(filterPtr->GetId());
+    ESP_LOGI(TAG, "UnregisterAsDevice (Id: %.*s)", (int)deviceId.length(), deviceId.data());
+    m_processor->UnregisterDevice(deviceId);
     return true;
 }

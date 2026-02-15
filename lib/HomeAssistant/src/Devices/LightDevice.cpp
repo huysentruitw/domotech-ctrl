@@ -1,10 +1,9 @@
 #include "LightDevice.h"
-#include "IdSanitizer.h"
 
 #include <PinFactory.h>
 
-LightDevice::LightDevice(const std::shared_ptr<LightFilter>& filter, const std::weak_ptr<IEventBus>& eventBus) noexcept
-    : Device(filter, eventBus)
+LightDevice::LightDevice(std::string_view id, const std::weak_ptr<LightFilter>& filter, const std::weak_ptr<IEventBus>& eventBus) noexcept
+    : Device(id, filter, eventBus)
 {
 }
 

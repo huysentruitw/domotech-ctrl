@@ -124,6 +124,11 @@ void Wifi::OnEvent(esp_event_base_t eventBase, int32_t eventId) noexcept
     {
         ESP_ERROR_CHECK(esp_wifi_connect());
     }
+    else if (eventBase == WIFI_EVENT && eventId == WIFI_EVENT_STA_DISCONNECTED)
+    {
+        if (m_mode == WifiMode::Station)
+            esp_wifi_connect();
+    }
     else if (eventBase == IP_EVENT && eventId == IP_EVENT_STA_GOT_IP)
     {
         xEventGroupSetBits(m_eventGroup, WIFI_CONNECTED_BIT);

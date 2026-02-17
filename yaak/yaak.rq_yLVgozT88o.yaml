@@ -2,7 +2,7 @@ type: http_request
 model: http_request
 id: rq_yLVgozT88o
 createdAt: 2026-02-15T16:54:40.796410400
-updatedAt: 2026-02-15T16:54:53.786991300
+updatedAt: 2026-02-16T22:42:56.400715100
 workspaceId: wk_u8HifqEVo2
 folderId: null
 authentication: {}
@@ -12,7 +12,7 @@ bodyType: null
 description: ''
 headers: []
 method: GET
-name: Get Filters.ini file
+name: Get Filter.ini file
 sortPriority: 2000.003
-url: ${[ api_uri ]}/files/Filters.ini
+url: ${[ api_uri ]}/files/Filter.ini
 urlParameters: []

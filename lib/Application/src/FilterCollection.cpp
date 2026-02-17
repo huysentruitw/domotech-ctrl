@@ -58,7 +58,10 @@ bool FilterCollection::LoadFromFile(const FilterFactoryFn& factory) noexcept
     m_filters.clear();
     m_filters.reserve(filters.size());
     for (auto& filter : filters)
-        m_filters.emplace(filter->GetId(), std::shared_ptr<Filter>(std::move(filter)));
+    {
+        const auto& id = filter->GetId();
+        m_filters.emplace(id, std::shared_ptr<Filter>(std::move(filter)));
+    }
 
     return true;
 }

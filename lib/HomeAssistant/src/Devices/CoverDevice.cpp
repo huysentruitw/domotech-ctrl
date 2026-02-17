@@ -54,7 +54,7 @@ bool CoverDevice::BuildStateMessages(StateMessageList& list) const noexcept
 
     StateMessage message{};
     snprintf(message.Topic, sizeof(message.Topic), "domo/dev/%.*s/state", (int)id.size(), id.data());
-    snprintf(message.Payload, sizeof(message.Payload), payload);
+    snprintf(message.Payload, sizeof(message.Payload), "%s", payload);
     message.Retain = false;
     return list.Add(message);
 }
@@ -112,7 +112,7 @@ void CoverDevice::OnPinStateChanged(const Pin& pin) noexcept
     BridgeEvent event{};
     event.Type = BridgeEvent::Type::PublishState;
     event.TopicLength = snprintf(event.Topic, sizeof(event.Topic), "domo/dev/%.*s/state", (int)id.size(), id.data());
-    event.PayloadLength = snprintf(event.Payload, sizeof(event.Payload), payload);
+    event.PayloadLength = snprintf(event.Payload, sizeof(event.Payload), "%s", payload);
     event.Retain = false;
     eventBus->EnqueueEvent(event);
 }

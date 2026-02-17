@@ -7,7 +7,7 @@
 #include "Devices/Device.h"
 #include "IEventBus.h"
 #include "IEventProcessor.h"
-#include "MqttClient.h"
+#include "IMqttClient.h"
 
 #include <memory>
 #include <queue>
@@ -16,16 +16,16 @@
 class Processor final : public IEventProcessor
 {
 public:
-    Processor(MqttClient& mqttClient, IEventBus& eventBus) noexcept;
+    Processor(IMqttClient& mqttClient, IEventBus& eventBus) noexcept;
 
     void RegisterDevice(const std::shared_ptr<IDevice>& device) noexcept;
     void UnregisterDevice(std::string_view id) noexcept;
 
-    void Process(const BridgeEvent& event) noexcept;
+    void Process(const BridgeEvent& event) noexcept override;
 
 private:
     const Lock m_syncRoot;
-    MqttClient& m_mqttClient;
+    IMqttClient& m_mqttClient;
     IEventBus& m_eventBus;
     std::unordered_map<std::string, std::shared_ptr<IDevice>, StringHash, std::equal_to<>> m_devices;
     std::queue<std::string> m_discoveryQueue;

@@ -17,7 +17,7 @@ public:
 
     void Start(std::shared_ptr<IEventProcessor> eventProcessor) noexcept;
 
-    void EnqueueEvent(const BridgeEvent& event) noexcept;
+    void EnqueueEvent(const BridgeEvent& event) noexcept override;
 
 private:
     QueueHandle_t m_queue = nullptr;

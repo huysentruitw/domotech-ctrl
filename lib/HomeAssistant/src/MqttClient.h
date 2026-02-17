@@ -1,12 +1,13 @@
 #pragma once
 
 #include "IEventBus.h"
+#include "IMqttClient.h"
 
 #ifndef NATIVE_BUILD
 
 #include "mqtt_client.h"
 
-class MqttClient final
+class MqttClient final : public IMqttClient
 {
 public:
     MqttClient(const char* uri, const char* username, const char* password, IEventBus& eventBus) noexcept;
@@ -14,8 +15,8 @@ public:
 
     void Connect() const noexcept;
 
-    void Subscribe(const char* topic) const noexcept;
-    void Publish(const char* topic, const char* payload, bool retain) const noexcept;
+    void Subscribe(const char* topic) const noexcept override;
+    void Publish(const char* topic, const char* payload, bool retain) const noexcept override;
 
 private:
     IEventBus& m_eventBus;
@@ -27,7 +28,7 @@ private:
 
 #else
 
-class MqttClient final
+class MqttClient final : public IMqttClient
 {
 public:
     MqttClient(const char* uri, const char* username, const char* password, IEventBus& eventBus) noexcept {};
@@ -35,8 +36,8 @@ public:
 
     void Connect() const noexcept {};
 
-    void Subscribe(const char* topic) const noexcept {};
-    void Publish(const char* topic, const char* payload, bool retain) const noexcept {};
+    void Subscribe(const char* topic) const noexcept override {};
+    void Publish(const char* topic, const char* payload, bool retain) const noexcept override {};
 };
 
 #endif

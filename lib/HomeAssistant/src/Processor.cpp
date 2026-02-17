@@ -12,7 +12,7 @@
 
 #define TAG "HA_PROC"
 
-Processor::Processor(MqttClient& client, IEventBus& eventBus) noexcept
+Processor::Processor(IMqttClient& client, IEventBus& eventBus) noexcept
     : m_syncRoot()
     , m_mqttClient(client)
     , m_eventBus(eventBus)

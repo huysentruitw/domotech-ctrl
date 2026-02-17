@@ -34,8 +34,8 @@ bool ModuleCollection::LoadFromFile(const ModuleFactoryFn& factory) noexcept
             return;
 
         if (key == "Type") type = GetModuleType(value);
-        else if (key == "Address") address = ParseInt(value);
-        else if (key == "InitialData") initialData = ParseInt(value, 16);
+        else if (key == "Address") address = NumberUtilities::ParseInt(value);
+        else if (key == "InitialData") initialData = NumberUtilities::ParseInt(value, 16);
 
         if (type && address && initialData)
         {
@@ -98,7 +98,7 @@ bool ModuleCollection::SaveToFile() const noexcept
         iniWriter.WriteSection("Module");
         iniWriter.WriteKeyValue("Type", GetModuleTypeName(module->GetType()));
         iniWriter.WriteKeyValue("Address", std::to_string(module->GetAddress()));
-        iniWriter.WriteKeyValue("InitialData", ToHex4(module->GenerateInitialData()));
+        iniWriter.WriteKeyValue("InitialData", NumberUtilities::ToHex4(module->GenerateInitialData()));
     }
 
     return m_storage.WriteFile(m_fileName, iniWriter.GetContent());

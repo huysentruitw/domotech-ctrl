@@ -87,6 +87,25 @@ public:
         return true;
     }
 
+    bool RenameFile(std::string_view fileName, std::string_view newFileName) noexcept override
+    {
+        std::string key(fileName);
+        std::string newKey(newFileName);
+
+        if (key == newKey)
+            return true;
+
+        auto it = m_testFiles.find(key);
+        if (it == m_testFiles.end())
+            return false; // source does not exist
+        
+        // Overwrite destination if it exists
+        m_testFiles[newKey] = std::move(it->second);
+
+        // Remove old entry
+        m_testFiles.erase(it);
+    }
+
     bool EnumerateFiles(const std::function<bool(std::string_view)>& onFile) const noexcept override
     {
         for (auto& [fileName, _] : m_testFiles)

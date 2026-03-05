@@ -222,6 +222,33 @@ bool LittleFsStorage::RemoveFile(std::string_view fileName) noexcept
     return false;
 }
 
+bool LittleFsStorage::RenameFile(std::string_view fileName, std::string_view newFileName) noexcept
+{
+    LockGuard guard(m_syncRoot);
+
+    char path[64];
+    char newPath[64];
+
+    if (!MakeFullPath(fileName, path, sizeof(path)) ||
+        !MakeFullPath(newFileName, newPath, sizeof(newPath)))
+    {
+        ESP_LOGE(TAG, "Invalid or too-long file name");
+        return false;
+    }
+
+    if (rename(path, newPath) == 0)
+        return true;
+
+    const int err = errno;
+
+    if (err == ENOENT)
+        ESP_LOGW(TAG, "Rename failed: %s does not exist", path);
+    else
+        ESP_LOGW(TAG, "Failed to rename %s to %s (errno=%d)", path, newPath, err);
+
+    return false;
+}
+
 bool LittleFsStorage::EnumerateFiles(const std::function<bool(std::string_view)>& onFile) const noexcept
 {
     LockGuard guard(m_syncRoot);

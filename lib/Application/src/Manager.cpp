@@ -1,4 +1,5 @@
 #include "Manager.h"
+
 #include "ConnectionsParser.h"
 
 #include <FilterFactory.h>
@@ -33,11 +34,11 @@ void Manager::Start() noexcept
     m_filters.LoadFromFile(
         [&](std::string_view id, std::string_view typeName, std::string_view connections)
         {
-            CreateFilterResult result;
-            return CreateFilterInternal(id, typeName, connections, result);
+            CreateFilterResult _{};
+            return CreateAndConnectFilter(id, typeName, connections, _);
         });
 
-    for (auto& [_, filter] : m_filters)
+    for (auto& filter : m_filters)
         m_bridge.RegisterAsDevice(filter);
 }
 
@@ -72,17 +73,19 @@ CreateFilterResult Manager::CreateFilter(std::string_view id, std::string_view t
     LockGuard guard(m_syncRoot);
 
     CreateFilterResult result{};
-    std::unique_ptr<Filter> filter = Manager::CreateFilterInternal(id, typeName, connections, result);
-    if (result.Status != CreateFilterStatus::NoError || filter == nullptr)
+    auto filter = CreateAndConnectFilter(id, typeName, connections, result);
+    if (result.Status != CreateFilterStatus::NoError)
         return result;
 
-    auto storedFilter = m_filters.AppendFilter(std::move(filter), connections);
-    m_bridge.RegisterAsDevice(storedFilter);
+    auto storedFilter = m_filters.AddFilter(std::move(filter), connections);
+    if (!storedFilter)
+        return CreateFilterResult { .Status = CreateFilterStatus::FailedToStoreFilter };
 
-    return CreateFilterResult{};
+    m_bridge.RegisterAsDevice(storedFilter);
+    return CreateFilterResult { .Status = CreateFilterStatus::NoError };
 }
 
-std::unique_ptr<Filter> Manager::CreateFilterInternal(std::string_view id, std::string_view typeName, std::string_view connections, CreateFilterResult& result) noexcept
+std::unique_ptr<Filter> Manager::CreateAndConnectFilter(std::string_view id, std::string_view typeName, std::string_view connections, CreateFilterResult& result) const noexcept
 {
     std::vector<std::pair<std::weak_ptr<Pin>, std::weak_ptr<Pin>>> pinConnections;
     auto fail = [&](CreateFilterStatus status, std::optional<size_t> failedAtMappingIndex = std::nullopt) -> std::unique_ptr<Filter>

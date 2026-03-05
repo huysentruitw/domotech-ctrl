@@ -39,5 +39,5 @@ private:
     uint16_t m_tick = 0;
     ScanLed m_scanLed;
 
-    std::unique_ptr<Filter> CreateFilterInternal(std::string_view id, std::string_view typeName, std::string_view connections, CreateFilterResult& result) noexcept;
+    std::unique_ptr<Filter> CreateAndConnectFilter(std::string_view id, std::string_view typeName, std::string_view connections, CreateFilterResult& result) const noexcept;
 };

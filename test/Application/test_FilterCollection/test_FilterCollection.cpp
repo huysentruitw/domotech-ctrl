@@ -60,29 +60,29 @@ void FilterCollection_Constructor_FileWithContent_LoadsFilters()
     TEST_ASSERT_NOT_NULL(collection.TryGetFilterById("TestFilter"));
 }
 
-void FilterCollection_AppendFilter_AddsSingleFilter()
+void FilterCollection_AddFilter_AddsSingleFilter()
 {
     // Arrange
     FilterCollection collection(mockStorage, "filters.ini");
     auto filter = std::make_unique<MockFilter>("filter1");
 
     // Act
-    auto result = collection.AppendFilter(std::move(filter), "connections");
+    auto result = collection.AddFilter(std::move(filter), "connections");
 
     // Assert
     TEST_ASSERT_NOT_NULL(result.get());
     TEST_ASSERT_EQUAL_STRING("filter1", result->GetId().data());
 }
 
-void FilterCollection_AppendFilter_AddsMultipleFilters()
+void FilterCollection_AddFilter_AddsMultipleFilters()
 {
     // Arrange
     FilterCollection collection(mockStorage, "filters.ini");
 
     // Act
-    auto filter1 = collection.AppendFilter(std::make_unique<MockFilter>("filter1"), "conn1");
-    auto filter2 = collection.AppendFilter(std::make_unique<MockFilter>("filter2"), "conn2");
-    auto filter3 = collection.AppendFilter(std::make_unique<MockFilter>("filter3"), "conn3");
+    auto filter1 = collection.AddFilter(std::make_unique<MockFilter>("filter1"), "conn1");
+    auto filter2 = collection.AddFilter(std::make_unique<MockFilter>("filter2"), "conn2");
+    auto filter3 = collection.AddFilter(std::make_unique<MockFilter>("filter3"), "conn3");
 
     // Assert
     TEST_ASSERT_NOT_NULL(filter1.get());
@@ -94,7 +94,7 @@ void FilterCollection_TryGetFilterById_ReturnsFilterIfExists()
 {
     // Arrange
     FilterCollection collection(mockStorage, "filters.ini");
-    collection.AppendFilter(std::make_unique<MockFilter>("test_filter"), "connections");
+    collection.AddFilter(std::make_unique<MockFilter>("test_filter"), "connections");
 
     // Act
     auto filter = collection.TryGetFilterById("test_filter");
@@ -109,7 +109,7 @@ void FilterCollection_TryGetFilterById_ReturnsNullIfNotExists()
 {
     // Arrange
     FilterCollection collection(mockStorage, "filters.ini");
-    collection.AppendFilter(std::make_unique<MockFilter>("filter1"), "connections");
+    collection.AddFilter(std::make_unique<MockFilter>("filter1"), "connections");
 
     // Act
     auto filter = collection.TryGetFilterById("nonexistent");
@@ -122,8 +122,8 @@ void FilterCollection_Clear_RemovesAllFilters()
 {
     // Arrange
     FilterCollection collection(mockStorage, "filters.ini");
-    collection.AppendFilter(std::make_unique<MockFilter>("filter1"), "conn1");
-    collection.AppendFilter(std::make_unique<MockFilter>("filter2"), "conn2");
+    collection.AddFilter(std::make_unique<MockFilter>("filter1"), "conn1");
+    collection.AddFilter(std::make_unique<MockFilter>("filter2"), "conn2");
 
     // Act
     bool result = collection.Clear();
@@ -138,29 +138,29 @@ void FilterCollection_Iterator_IteratesAllFilters()
 {
     // Arrange
     FilterCollection collection(mockStorage, "filters.ini");
-    collection.AppendFilter(std::make_unique<MockFilter>("filter1"), "conn1");
-    collection.AppendFilter(std::make_unique<MockFilter>("filter2"), "conn2");
-    collection.AppendFilter(std::make_unique<MockFilter>("filter3"), "conn3");
+    collection.AddFilter(std::make_unique<MockFilter>("filter1"), "conn1");
+    collection.AddFilter(std::make_unique<MockFilter>("filter2"), "conn2");
+    collection.AddFilter(std::make_unique<MockFilter>("filter3"), "conn3");
 
     // Act & Assert
     int count = 0;
     for (const auto& filter : collection)
     {
         count++;
-        TEST_ASSERT_NOT_NULL(filter.second.get());
+        TEST_ASSERT_NOT_NULL(filter.get());
     }
 
     TEST_ASSERT_EQUAL(3, count);
 }
 
-void FilterCollection_AppendFilter_ReturnsSharedPointer()
+void FilterCollection_AddFilter_ReturnsSharedPointer()
 {
     // Arrange
     FilterCollection collection(mockStorage, "filters.ini");
     auto filter = std::make_unique<MockFilter>("filter1");
 
     // Act
-    auto sharedPtr = collection.AppendFilter(std::move(filter), "connections");
+    auto sharedPtr = collection.AddFilter(std::move(filter), "connections");
 
     // Assert
     TEST_ASSERT_NOT_NULL(sharedPtr.get());
@@ -175,13 +175,13 @@ int main()
     
     RUN_TEST(FilterCollection_Constructor_FileMissing_InitializesEmpty);
     RUN_TEST(FilterCollection_Constructor_FileWithContent_LoadsFilters);
-    RUN_TEST(FilterCollection_AppendFilter_AddsSingleFilter);
-    RUN_TEST(FilterCollection_AppendFilter_AddsMultipleFilters);
+    RUN_TEST(FilterCollection_AddFilter_AddsSingleFilter);
+    RUN_TEST(FilterCollection_AddFilter_AddsMultipleFilters);
     RUN_TEST(FilterCollection_TryGetFilterById_ReturnsFilterIfExists);
     RUN_TEST(FilterCollection_TryGetFilterById_ReturnsNullIfNotExists);
     RUN_TEST(FilterCollection_Clear_RemovesAllFilters);
     RUN_TEST(FilterCollection_Iterator_IteratesAllFilters);
-    RUN_TEST(FilterCollection_AppendFilter_ReturnsSharedPointer);
+    RUN_TEST(FilterCollection_AddFilter_ReturnsSharedPointer);
 
     return UNITY_END();
 }

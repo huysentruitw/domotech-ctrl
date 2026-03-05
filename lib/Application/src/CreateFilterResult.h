@@ -10,8 +10,9 @@ enum class CreateFilterStatus
     NoError = 0,
 
     FilterAlreadyExists = 1,
-    FailedToParseConnections = 2,
-    UnknownFilterType = 3,
+    FailedToStoreFilter = 2,
+    FailedToParseConnections = 3,
+    UnknownFilterType = 4,
 
     PinDirectionsMismatch = 10,
     UnknownRemoteModule = 11,
@@ -23,5 +24,5 @@ enum class CreateFilterStatus
 struct CreateFilterResult
 {
     CreateFilterStatus Status;
-    std::optional<size_t> FailedAtMappingIndex;
+    std::optional<size_t> FailedAtMappingIndex = std::nullopt;
 };

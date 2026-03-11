@@ -42,7 +42,7 @@ esp_err_t index_handler(httpd_req_t *req)
         response.append("Wifi RSSI: ");
         response.append(std::to_string(rssi));
         response.append("dBm, quality: ");
-        const auto quality = rssi <= -100 ? 0 : rssi >= -50 ? 100 : 2 * (rssi + 100);
+        const auto quality = Wifi::RssiToQuality(rssi);
         response.append(std::to_string(quality));
         response.append("%\n");
     }

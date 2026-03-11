@@ -24,7 +24,9 @@ public:
     bool SwitchToStationMode(std::string_view ssid, std::string_view password, TickType_t timeoutTicks) noexcept;
     bool SwitchToAccessPointMode(std::string_view ssid, std::string_view password) noexcept;
     void SwitchOff() noexcept;
+
     int8_t GetRssi() const noexcept;
+    static int8_t RssiToQuality(int8_t rssi) noexcept;
 
 private:
     const EventGroupHandle_t m_eventGroup;

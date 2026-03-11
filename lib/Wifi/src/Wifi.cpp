@@ -112,6 +112,18 @@ int8_t Wifi::GetRssi() const noexcept
     return INT8_MIN;
 }
 
+int8_t Wifi::RssiToQuality(int8_t rssi) noexcept
+{
+    if (rssi <= -100)
+        return 0;
+    
+    if (rssi >= -50)
+        return 100;
+
+    // rssi = ]-100, -50[
+    return 2 * (rssi + 100);
+}
+
 void Wifi::EventHandler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) noexcept
 {
     auto wifi = static_cast<Wifi*>(arg);

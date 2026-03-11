@@ -9,10 +9,10 @@
 #include <Wifi.h>
 
 #include "KeyVault.h"
+#include "SystemClock.h"
 
 #include "esp_http_server.h"
 #include "esp_log.h"
-#include "esp_sntp.h"
 #include "nvs_flash.h"
 
 #define VERSION "1.0"
@@ -22,30 +22,7 @@ LittleFsStorage storage;
 Wifi wifi;
 HomeAssistantBridge homeAssistantBridge;
 Manager manager(storage, homeAssistantBridge);
-
-void time_init(void)
-{
-    setenv("TZ", POSIX_TIMEZONE, 1);
-    tzset();
-    
-    esp_sntp_setoperatingmode(ESP_SNTP_OPMODE_POLL);
-    esp_sntp_setservername(0, "pool.ntp.org");
-    esp_sntp_init();
-}
-
-std::string GetFormattedTime()
-{
-    time_t now;
-    time(&now);
-
-    struct tm timeInfo;
-    localtime_r(&now, &timeInfo);
-
-    char buffer[32];
-    strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", &timeInfo);
-
-    return std::string(buffer);
-}
+SystemClock systemClock(POSIX_TIMEZONE);
 
 esp_err_t index_handler(httpd_req_t *req)
 {
@@ -71,7 +48,7 @@ esp_err_t index_handler(httpd_req_t *req)
     }
 
     response.append("Current time: ");
-    response.append(GetFormattedTime());
+    systemClock.WriteCurrentTime(response);
 
     httpd_resp_set_hdr(req, "Connection", "close");
     httpd_resp_set_type(req, "text/plain");
@@ -460,6 +437,7 @@ extern "C" void app_main()
 
     ESP_LOGI("MAIN", "Started!");
 
+    systemClock.Init();
     homeAssistantBridge.Init(secrets.HaMqttUri, secrets.HaMqttUser, secrets.HaMqttPass);
     manager.Start();
 
@@ -472,7 +450,6 @@ extern "C" void app_main()
         NULL            // Optional handle
     );
 
-    time_init();
     start_webserver();
 
     while (true)

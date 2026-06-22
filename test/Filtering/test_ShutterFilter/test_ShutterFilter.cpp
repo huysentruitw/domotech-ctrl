@@ -94,7 +94,7 @@ void ShutterFilter_OpenInput_LongPress_ChangesOpenOutputAndStops()
     TEST_ASSERT_EQUAL(DigitalValue(true), openOutput->GetStateAs<DigitalValue>());
 
     // Act: Set open input to false (simulate long press)
-    filter.MoveSignalStartMs(-1100);
+    for (auto i = 0; i < 10; i++) static_cast<Filter&>(filter).Every100Ms();
     openPin->SetState(DigitalValue(false));
 
     // Assert: Open output should now be false
@@ -141,7 +141,7 @@ void ShutterFilter_CloseInput_LongPress_ChangesCloseOutputAndStops()
     TEST_ASSERT_EQUAL(DigitalValue(true), closeOutput->GetStateAs<DigitalValue>());
 
     // Act: Set close input to false (simulate long press)
-    filter.MoveSignalStartMs(-1100);
+    for (auto i = 0; i < 10; i++) static_cast<Filter&>(filter).Every100Ms();
     closePin->SetState(DigitalValue(false));
 
     // Assert: Close output should now be false

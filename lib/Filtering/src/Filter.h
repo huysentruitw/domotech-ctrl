@@ -18,6 +18,8 @@ public:
     void WriteDescriptor(IniWriter& iniWriter) const noexcept;
     void WriteConfig(IniWriter& iniWriter) const noexcept;
 
+    virtual void Every100Ms() noexcept { }
+
 private:
     const FilterType m_type;
 };

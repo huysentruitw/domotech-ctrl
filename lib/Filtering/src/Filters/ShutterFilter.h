@@ -23,9 +23,6 @@ public:
     void Close() noexcept;
     void Stop() noexcept;
 
-    // For testing
-    void MoveSignalStartMs(int offsetMs) noexcept;
-
     std::weak_ptr<Pin> GetOpenInputPin() const noexcept { return m_openInputPin; };
     std::weak_ptr<Pin> GetCloseInputPin() const noexcept { return m_closeInputPin; };
     std::weak_ptr<Pin> GetStopInputPin() const noexcept { return m_stopInputPin; };
@@ -44,8 +41,8 @@ private:
     std::shared_ptr<Pin> m_openOutputPin;
     std::shared_ptr<Pin> m_closeOutputPin;
 
-    uint64_t m_signalStartMs = 0;
-    static uint64_t GetMsSinceBoot() noexcept;
+    int64_t m_signalDurationInMs = -1;
 
+    void Every100Ms() noexcept override;
     void OnPinStateChanged(const Pin& pin) noexcept override;
 };

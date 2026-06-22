@@ -2,12 +2,6 @@
 
 #include <PinFactory.h>
 
-#ifndef NATIVE_BUILD
-    #include "esp_timer.h"
-#else
-    #define esp_timer_get_time() 0
-#endif
-
 ShutterFilter::ShutterFilter(std::string_view id) noexcept
     : Filter(FilterType::Shutter, id)
 {
@@ -24,20 +18,15 @@ ShutterFilter::ShutterFilter(std::string_view id) noexcept
     m_outputPins = { m_openOutputPin, m_closeOutputPin };
 }
 
-uint64_t ShutterFilter::GetMsSinceBoot() noexcept
+void ShutterFilter::Every100Ms() noexcept
 {
-    return static_cast<uint64_t>(esp_timer_get_time()) / 1000ULL;
-}
-
-void ShutterFilter::MoveSignalStartMs(int offsetMs) noexcept
-{
-    m_signalStartMs += offsetMs;
+    if (m_signalDurationInMs >= 0 && m_signalDurationInMs < 10000)
+        m_signalDurationInMs += 100;
 }
 
 void ShutterFilter::Open() noexcept
 {
     m_currentShutterCommand = ShutterCommand::Open;
-    m_signalStartMs = GetMsSinceBoot();
 
     if (m_closeFeedbackInputPin->GetStateAs<DigitalValue>() == DigitalValue(true))
         m_closeOutputPin->SetState(DigitalValue(false));
@@ -48,7 +37,6 @@ void ShutterFilter::Open() noexcept
 void ShutterFilter::Close() noexcept
 {
     m_currentShutterCommand = ShutterCommand::Close;
-    m_signalStartMs = GetMsSinceBoot();
 
     if (m_openFeedbackInputPin->GetStateAs<DigitalValue>() == DigitalValue(true))
         m_openOutputPin->SetState(DigitalValue(false));
@@ -70,11 +58,17 @@ void ShutterFilter::OnPinStateChanged(const Pin& pin) noexcept
         if (pin.GetStateAs<DigitalValue>() == DigitalValue(true))
         {
             Open();
+            m_signalDurationInMs = 0;
         }
-        else if (m_currentShutterCommand == ShutterCommand::Open && (GetMsSinceBoot() - m_signalStartMs) > 1000)
+        else
         {
-            // Stop the shutter when released after long press
-            Stop();
+            if (m_currentShutterCommand == ShutterCommand::Open && m_signalDurationInMs >= 1000)
+            {
+                // Stop the shutter when released after long press
+                Stop();
+            }
+
+            m_signalDurationInMs = -1;
         }
     }
     else if (pin == m_closeInputPin)
@@ -82,18 +76,26 @@ void ShutterFilter::OnPinStateChanged(const Pin& pin) noexcept
         if (pin.GetStateAs<DigitalValue>() == DigitalValue(true))
         {
             Close();
+            m_signalDurationInMs = 0;
         }
-        else if (m_currentShutterCommand == ShutterCommand::Close && (GetMsSinceBoot() - m_signalStartMs) > 1000)
+        else
         {
-            // Stop the shutter when released after long press
-            Stop();
-        }        
+            if (m_currentShutterCommand == ShutterCommand::Close && m_signalDurationInMs >= 1000)
+            {
+                // Stop the shutter when released after long press
+                Stop();
+            }
+
+            m_signalDurationInMs = -1;
+        }
     }
     else if (pin == m_stopInputPin)
     {
         if (pin.GetStateAs<DigitalValue>() == DigitalValue(true))
         {
             Stop();
+
+            m_signalDurationInMs = -1;
         }
     }
     else if (pin == m_openFeedbackInputPin)

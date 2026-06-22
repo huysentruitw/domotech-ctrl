@@ -22,6 +22,7 @@ public:
 
     void Start() noexcept;
     void ProcessNext() noexcept;
+    void Every100Ms() noexcept;
 
     RescanModulesResult RescanModules() noexcept;
 

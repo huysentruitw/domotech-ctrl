@@ -54,6 +54,13 @@ void Manager::ProcessNext() noexcept
     m_tick++;
 }
 
+void Manager::Every100Ms() noexcept
+{
+    LockGuard guard(m_syncRoot);
+    for (const auto& filter : m_filters)
+        filter->Every100Ms();
+}
+
 RescanModulesResult Manager::RescanModules() noexcept
 {
     LockGuard guard(m_syncRoot); // Prevent ProcessNext to interrupt this scanning process 

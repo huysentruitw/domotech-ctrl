@@ -11,6 +11,8 @@
 #include "esp_log.h"
 #include "nvs_flash.h"
 
+#include <freertos/timers.h>
+
 #define VERSION "1.0"
 #define POSIX_TIMEZONE "CET-1CEST,M3.5.0/2,M10.5.0/3" // Belgium
 
@@ -29,6 +31,11 @@ void ProcessTask(void *arg)
     }
 
     vTaskDelete(NULL);
+}
+
+void Every100MsTimerCallback(TimerHandle_t xTimer)
+{
+    manager.Every100Ms();
 }
 
 extern "C" void app_main()
@@ -66,6 +73,17 @@ extern "C" void app_main()
         5,              // Task priority (higher = more important)
         NULL            // Optional handle
     );
+
+    TimerHandle_t timerHandle = xTimerCreate(
+        "EVERY100MS",            // Name (for debugging)
+        pdMS_TO_TICKS(100),      // Period in ticks (100ms)
+        pdTRUE,                  // Auto-reload (repeat)
+        NULL,                    // Timer ID (not used)
+        Every100MsTimerCallback  // Callback function
+    );
+
+    if (timerHandle)
+        xTimerStart(timerHandle, 0);
 
     WebServer::Start(
         VERSION,

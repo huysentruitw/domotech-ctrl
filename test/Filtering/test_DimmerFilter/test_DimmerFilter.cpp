@@ -50,33 +50,69 @@ void DimmerFilter_ToggleInput_ChangesControlOutput()
     auto controlPin = outputPins[0].lock();
     auto feedbackPin = outputPins[1].lock();
 
-    // Act: Set toggle input to true
+    // Act: Short press (true then false quickly, simulating < 300ms press)
     togglePin->SetState(DigitalValue(true));
+    togglePin->SetState(DigitalValue(false));
 
-    // Assert: Control output should now be set to 100% with 2 seconds fade time, feedback output should be true
+    // Assert: After short press release, should toggle to 100% with 2 seconds fade time
     TEST_ASSERT_EQUAL(DimmerControlValue(100, 2), controlPin->GetStateAs<DimmerControlValue>());
     TEST_ASSERT_EQUAL(DigitalValue(true), feedbackPin->GetStateAs<DigitalValue>());
 
-    // Act: Set toggle input to false
+    // Act: Another short press
+    togglePin->SetState(DigitalValue(true));
     togglePin->SetState(DigitalValue(false));
 
-    // Assert: Control output should remain at 100% with 2 seconds fade time, feedback output should remain true
-    TEST_ASSERT_EQUAL(DimmerControlValue(100, 2), controlPin->GetStateAs<DimmerControlValue>());
-    TEST_ASSERT_EQUAL(DigitalValue(true), feedbackPin->GetStateAs<DigitalValue>());
+    // Assert: Should toggle back to 0% with 2 seconds fade time
+    TEST_ASSERT_EQUAL(DimmerControlValue(0, 2), controlPin->GetStateAs<DimmerControlValue>());
+    TEST_ASSERT_EQUAL(DigitalValue(false), feedbackPin->GetStateAs<DigitalValue>());
+}
 
-    // Act: Set toggle input to true again
+void DimmerFilter_LongPress_DimmsUpward()
+{
+    // Arrange
+    DimmerFilter filter;
+    auto inputPins = filter.GetInputPins();
+    auto outputPins = filter.GetOutputPins();
+
+    auto togglePin = inputPins[0].lock();
+    auto controlPin = outputPins[0].lock();
+
+    // Start dimmer at 50%
+    filter.SetState(DimmerControlValue(50, 0));
+    TEST_ASSERT_EQUAL(50, controlPin->GetStateAs<DimmerControlValue>().GetPercentage());
+
+    // Act: Long press - button press
     togglePin->SetState(DigitalValue(true));
 
-    // Assert: Control output should now be set to 0% with 2 seconds fade time, feedback output should be false
-    TEST_ASSERT_EQUAL(DimmerControlValue(0, 2), controlPin->GetStateAs<DimmerControlValue>());
-    TEST_ASSERT_EQUAL(DigitalValue(false), feedbackPin->GetStateAs<DigitalValue>());
+    // Simulate button held - call Every100Ms through Filter interface to increment press duration
+    // First call: duration = 1 (100ms)
+    static_cast<Filter&>(filter).Every100Ms();
+    TEST_ASSERT_EQUAL(50, controlPin->GetStateAs<DimmerControlValue>().GetPercentage());
 
-    // Act: Set toggle input to false again
+    // Second call: duration = 2 (200ms)
+    static_cast<Filter&>(filter).Every100Ms();
+    TEST_ASSERT_EQUAL(50, controlPin->GetStateAs<DimmerControlValue>().GetPercentage());
+
+    // Third call: duration = 3 (300ms) - should start dimming
+    static_cast<Filter&>(filter).Every100Ms();
+    TEST_ASSERT_EQUAL(51, controlPin->GetStateAs<DimmerControlValue>().GetPercentage());
+
+    // Continue dimming up while button is held
+    static_cast<Filter&>(filter).Every100Ms();
+    TEST_ASSERT_EQUAL(52, controlPin->GetStateAs<DimmerControlValue>().GetPercentage());
+
+    static_cast<Filter&>(filter).Every100Ms();
+    TEST_ASSERT_EQUAL(53, controlPin->GetStateAs<DimmerControlValue>().GetPercentage());
+
+    // Act: Button released after long press
     togglePin->SetState(DigitalValue(false));
 
-    // Assert: Control output should remain at 0% with 2 seconds fade time, feedback output should remain false
-    TEST_ASSERT_EQUAL(DimmerControlValue(0, 2), controlPin->GetStateAs<DimmerControlValue>());
-    TEST_ASSERT_EQUAL(DigitalValue(false), feedbackPin->GetStateAs<DigitalValue>());
+    // Assert: Brightness should remain at 53%, dimming should stop
+    TEST_ASSERT_EQUAL(53, controlPin->GetStateAs<DimmerControlValue>().GetPercentage());
+
+    // Verify no further dimming after release
+    static_cast<Filter&>(filter).Every100Ms();
+    TEST_ASSERT_EQUAL(53, controlPin->GetStateAs<DimmerControlValue>().GetPercentage());
 }
 
 int main()
@@ -85,6 +121,7 @@ int main()
     
     RUN_TEST(DimmerFilter_Constructor_CreatesPins);
     RUN_TEST(DimmerFilter_ToggleInput_ChangesControlOutput);
+    RUN_TEST(DimmerFilter_LongPress_DimmsUpward);
     
     return UNITY_END();
 }

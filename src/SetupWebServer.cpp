@@ -2,6 +2,8 @@
 
 #include "KeyVault.h"
 
+#include <FormDecoder.h>
+
 #include "esp_http_server.h"
 #include "esp_log.h"
 
@@ -40,37 +42,10 @@ esp_err_t setup_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
-void urlDecodeInPlace(char* s)
-{
-    char* src = s;
-    char* dst = s;
-
-    while (*src)
-    {
-        if (*src == '%' && isxdigit(src[1]) && isxdigit(src[2]))
-        {
-            char hex[3] = { src[1], src[2], 0 };
-            *dst++ = strtol(hex, nullptr, 16);
-            src += 3;
-        }
-        else if (*src == '+')
-        {
-            *dst++ = ' ';
-            src++;
-        }
-        else
-        {
-            *dst++ = *src++;
-        }
-    }
-
-    *dst = '\0';
-}
-
 esp_err_t setup_post_handler(httpd_req_t *req)
 {
     char buffer[512];
-    int total = req->content_len;
+    const size_t total = req->content_len;
 
     if (total >= sizeof(buffer))
     {
@@ -78,39 +53,46 @@ esp_err_t setup_post_handler(httpd_req_t *req)
         return ESP_FAIL;
     }
 
-    int received = httpd_req_recv(req, buffer, total);
-    if (received <= 0)
+    // httpd_req_recv may return fewer bytes than requested, so keep reading until the whole body is in
+    size_t received = 0;
+    while (received < total)
     {
-        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Failed to read body");
+        const int ret = httpd_req_recv(req, buffer + received, total - received);
+        if (ret == HTTPD_SOCK_ERR_TIMEOUT)
+            continue;
+
+        if (ret <= 0)
+        {
+            httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Failed to read body");
+            return ESP_FAIL;
+        }
+
+        received += ret;
+    }
+
+    const std::string_view body(buffer, received);
+
+    Secrets secrets = {};
+    const bool valid =
+           FormDecoder::TryGetValue(body, "wifi_ssid", secrets.WifiSsid, sizeof(secrets.WifiSsid))
+        && FormDecoder::TryGetValue(body, "wifi_pass", secrets.WifiPass, sizeof(secrets.WifiPass))
+        && FormDecoder::TryGetValue(body, "ha_mqtt_uri", secrets.HaMqttUri, sizeof(secrets.HaMqttUri))
+        && FormDecoder::TryGetValue(body, "ha_mqtt_user", secrets.HaMqttUser, sizeof(secrets.HaMqttUser))
+        && FormDecoder::TryGetValue(body, "ha_mqtt_pass", secrets.HaMqttPass, sizeof(secrets.HaMqttPass));
+
+    if (!valid)
+    {
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Missing or too long field");
         return ESP_FAIL;
     }
 
-    buffer[received] = '\0';
-    ESP_LOGI("WEB", "Received: %s", buffer);
+    ESP_LOGI("WEB", "Received configuration for SSID '%s'", secrets.WifiSsid);
 
-    auto parseNext = [&](const char* key) -> std::string_view
+    if (!KeyVault::SaveSecrets(secrets))
     {
-        char* p = strstr(buffer, key);
-        if (!p) return "";
-        p += strlen(key);
-        char* end = strchr(p, '&');
-        return end ? std::string_view(p, end - p) : std::string_view(p);
-    };
-
-    std::string_view ssid      = parseNext("wifi_ssid=");
-    std::string_view pass      = parseNext("wifi_pass=");
-    std::string_view mqtt_uri  = parseNext("ha_mqtt_uri=");
-    std::string_view mqtt_user = parseNext("ha_mqtt_user=");
-    std::string_view mqtt_pass = parseNext("ha_mqtt_pass=");
-
-    Secrets secrets = {};
-    snprintf(secrets.WifiSsid, sizeof(secrets.WifiSsid), "%.*s", (int)ssid.length(), ssid.data());
-    snprintf(secrets.WifiPass, sizeof(secrets.WifiPass), "%.*s", (int)pass.length(), pass.data());
-    snprintf(secrets.HaMqttUri, sizeof(secrets.HaMqttUri), "%.*s", (int)mqtt_uri.length(), mqtt_uri.data());
-    snprintf(secrets.HaMqttUser, sizeof(secrets.HaMqttUser), "%.*s", (int)mqtt_user.length(), mqtt_user.data());
-    snprintf(secrets.HaMqttPass, sizeof(secrets.HaMqttPass), "%.*s", (int)mqtt_pass.length(), mqtt_pass.data());
-    urlDecodeInPlace(secrets.HaMqttUri);
-    KeyVault::SaveSecrets(secrets);
+        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to store configuration");
+        return ESP_FAIL;
+    }
 
     const char resp[] =
         "<html><body>" "<h1>Saved!</h1>"

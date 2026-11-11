@@ -148,6 +148,107 @@ void ShutterFilter_CloseInput_LongPress_ChangesCloseOutputAndStops()
     TEST_ASSERT_EQUAL(DigitalValue(false), closeOutput->GetStateAs<DigitalValue>());
 }
 
+void ShutterFilter_OpenWhileClosing_NoFeedback_ReleasesCloseOutput()
+{
+    // Arrange
+    ShutterFilter filter;
+    auto openOutput = filter.GetOpenOutputPin().lock();
+    auto closeOutput = filter.GetCloseOutputPin().lock();
+    filter.Close();
+
+    // Act
+    filter.Open();
+
+    // Assert: never both directions at once
+    TEST_ASSERT_EQUAL(DigitalValue(true), openOutput->GetStateAs<DigitalValue>());
+    TEST_ASSERT_EQUAL(DigitalValue(false), closeOutput->GetStateAs<DigitalValue>());
+}
+
+void ShutterFilter_CloseWhileOpening_NoFeedback_ReleasesOpenOutput()
+{
+    // Arrange
+    ShutterFilter filter;
+    auto openOutput = filter.GetOpenOutputPin().lock();
+    auto closeOutput = filter.GetCloseOutputPin().lock();
+    filter.Open();
+
+    // Act
+    filter.Close();
+
+    // Assert: never both directions at once
+    TEST_ASSERT_EQUAL(DigitalValue(false), openOutput->GetStateAs<DigitalValue>());
+    TEST_ASSERT_EQUAL(DigitalValue(true), closeOutput->GetStateAs<DigitalValue>());
+}
+
+void ShutterFilter_ReversalViaInputPins_NoFeedback_NeverDrivesBothOutputs()
+{
+    // Arrange
+    ShutterFilter filter;
+    auto openPin = filter.GetOpenInputPin().lock();
+    auto closePin = filter.GetCloseInputPin().lock();
+    auto openOutput = filter.GetOpenOutputPin().lock();
+    auto closeOutput = filter.GetCloseOutputPin().lock();
+
+    // Act: short press close, then short press open
+    closePin->SetState(DigitalValue(true));
+    closePin->SetState(DigitalValue(false));
+    openPin->SetState(DigitalValue(true));
+
+    // Assert
+    TEST_ASSERT_EQUAL(DigitalValue(true), openOutput->GetStateAs<DigitalValue>());
+    TEST_ASSERT_EQUAL(DigitalValue(false), closeOutput->GetStateAs<DigitalValue>());
+}
+
+void ShutterFilter_OpenWhileClosing_WithFeedback_WaitsForCloseFeedbackToDrop()
+{
+    // Arrange
+    ShutterFilter filter;
+    auto closeFeedbackPin = filter.GetCloseFeedbackInputPin().lock();
+    auto openOutput = filter.GetOpenOutputPin().lock();
+    auto closeOutput = filter.GetCloseOutputPin().lock();
+    filter.Close();
+    closeFeedbackPin->SetState(DigitalValue(true)); // Close relay reports active
+
+    // Act
+    filter.Open();
+
+    // Assert: close released, open not yet energized
+    TEST_ASSERT_EQUAL(DigitalValue(false), closeOutput->GetStateAs<DigitalValue>());
+    TEST_ASSERT_EQUAL(DigitalValue(false), openOutput->GetStateAs<DigitalValue>());
+
+    // Act: close relay reports released
+    closeFeedbackPin->SetState(DigitalValue(false));
+
+    // Assert: open now energized
+    TEST_ASSERT_EQUAL(DigitalValue(true), openOutput->GetStateAs<DigitalValue>());
+    TEST_ASSERT_EQUAL(DigitalValue(false), closeOutput->GetStateAs<DigitalValue>());
+}
+
+void ShutterFilter_CloseWhileOpening_WithFeedback_WaitsForOpenFeedbackToDrop()
+{
+    // Arrange
+    ShutterFilter filter;
+    auto openFeedbackPin = filter.GetOpenFeedbackInputPin().lock();
+    auto openOutput = filter.GetOpenOutputPin().lock();
+    auto closeOutput = filter.GetCloseOutputPin().lock();
+    filter.Open();
+    openFeedbackPin->SetState(DigitalValue(true)); // Open relay reports active
+
+    // Act
+    filter.Close();
+
+    // Assert: open released, close not yet energized
+    TEST_ASSERT_EQUAL(DigitalValue(false), openOutput->GetStateAs<DigitalValue>());
+    TEST_ASSERT_EQUAL(DigitalValue(false), closeOutput->GetStateAs<DigitalValue>());
+
+    // Act: open relay reports released
+    openFeedbackPin->SetState(DigitalValue(false));
+
+    // Assert: close now energized
+    TEST_ASSERT_EQUAL(DigitalValue(false), openOutput->GetStateAs<DigitalValue>());
+    TEST_ASSERT_EQUAL(DigitalValue(true), closeOutput->GetStateAs<DigitalValue>());
+}
+
 int main(int argc, char** argv)
 {
     UNITY_BEGIN();
@@ -157,8 +258,11 @@ int main(int argc, char** argv)
     RUN_TEST(ShutterFilter_OpenInput_ShortPress_ChangesOpenOutputAndRemains);
     RUN_TEST(ShutterFilter_CloseInput_LongPress_ChangesCloseOutputAndStops);
     RUN_TEST(ShutterFilter_CloseInput_ShortPress_ChangesCloseOutputAndRemains);
-
-    // TODO: Add feedback input tests
+    RUN_TEST(ShutterFilter_OpenWhileClosing_NoFeedback_ReleasesCloseOutput);
+    RUN_TEST(ShutterFilter_CloseWhileOpening_NoFeedback_ReleasesOpenOutput);
+    RUN_TEST(ShutterFilter_ReversalViaInputPins_NoFeedback_NeverDrivesBothOutputs);
+    RUN_TEST(ShutterFilter_OpenWhileClosing_WithFeedback_WaitsForCloseFeedbackToDrop);
+    RUN_TEST(ShutterFilter_CloseWhileOpening_WithFeedback_WaitsForOpenFeedbackToDrop);
 
     return UNITY_END();
 }

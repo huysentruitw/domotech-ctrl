@@ -28,9 +28,11 @@ void ShutterFilter::Open() noexcept
 {
     m_currentShutterCommand = ShutterCommand::Open;
 
-    if (m_closeFeedbackInputPin->GetStateAs<DigitalValue>() == DigitalValue(true))
-        m_closeOutputPin->SetState(DigitalValue(false));
-    else
+    // Never energize both directions: always release the opposite output first
+    m_closeOutputPin->SetState(DigitalValue(false));
+
+    // If the close relay still reports active, wait for its feedback to drop (see OnPinStateChanged)
+    if (m_closeFeedbackInputPin->GetStateAs<DigitalValue>() == DigitalValue(false))
         m_openOutputPin->SetState(DigitalValue(true));
 }
 
@@ -38,9 +40,11 @@ void ShutterFilter::Close() noexcept
 {
     m_currentShutterCommand = ShutterCommand::Close;
 
-    if (m_openFeedbackInputPin->GetStateAs<DigitalValue>() == DigitalValue(true))
-        m_openOutputPin->SetState(DigitalValue(false));
-    else
+    // Never energize both directions: always release the opposite output first
+    m_openOutputPin->SetState(DigitalValue(false));
+
+    // If the open relay still reports active, wait for its feedback to drop (see OnPinStateChanged)
+    if (m_openFeedbackInputPin->GetStateAs<DigitalValue>() == DigitalValue(false))
         m_closeOutputPin->SetState(DigitalValue(true));
 }
 

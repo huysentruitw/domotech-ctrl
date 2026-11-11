@@ -20,6 +20,7 @@ LittleFsStorage::LittleFsStorage(const char* partitionLabel) noexcept
         .base_path = "/littlefs",
         .partition_label = partitionLabel,
         .partition = nullptr,
+        .blockdev = nullptr,
         .format_if_mount_failed = true,
         .read_only = false,
         .dont_mount = false,
